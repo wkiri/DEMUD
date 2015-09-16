@@ -58,20 +58,30 @@ class UCIDataset(Dataset):
     
     self.xvals  = numpy.arange(self.data.shape[0]).reshape(-1,1)
   
-  def  plot_item(self, m, ind, x, r, k, label, U, rerr):
-    """plot_item(self, m, ind, x, r, k, label, U, rerr)
+  def  plot_item(self, m, ind, x, r, k, label, U, rerr, feature_weights):
+    """plot_item(self, m, ind, x, r, k, label, U, rerr, feature_weights)
 
     Plot selection m (index ind, data in x) and its reconstruction r,
     with k and label to annotate of the plot.
 
     U and rerr are here ignored.  Could use them to plot a projection
     into the first two PCs' space (see dataset_libs.py).
+
+    If feature_weights are specified, omit any 0-weighted features 
+    from the plot.
     """
     
     if x == [] or r == []: 
       print "Error: No data in x and/or r."
       return
    
+    # Select the features to plot
+    if feature_weights != []:
+      goodfeat = [f for f in range(len(feature_weights)) \
+                    if feature_weights[f] > 0]
+    else:
+      goodfeat = range(len(self.xvals))
+
     # Make a dual bar graph of the original and reconstructed features
     width = 0.35
     offset = (1 - 2*width) / 2
@@ -84,9 +94,9 @@ class UCIDataset(Dataset):
     xvals = [self.xvals[z][0] for z in range(self.xvals.shape[0])]
     x = [x[z] for z in range(x.shape[0])]
     
-    bars1 = ax.bar([xvals[i] + offset for i in range(len(xvals))], 
+    bars1 = ax.bar([xvals[i] + offset for i in goodfeat], 
                       x, width, color='b', label='Observations')
-    bars2 = ax.bar([xvals[i] + width + offset for i in range(len(xvals))], 
+    bars2 = ax.bar([xvals[i] + width + offset for i in goodfeat], 
                       r, width, color='r', label='Expected')
   
     pylab.xlabel(self.xlabel)
