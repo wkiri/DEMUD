@@ -26,8 +26,8 @@ import copy, base64, time
 import csv
 import pylab
 
-#from dataset_uci_classes import GlassData, EcoliData, AbaloneData, IsoletData
-#from dataset_float import FloatDataset
+from dataset_uci_classes import GlassData, EcoliData, AbaloneData, IsoletData
+from dataset_float import FloatDataset
 #from dataset_float_classes import PancamSpectra
 #from dataset_misr import MISRDataTime
 from dataset_libs import LIBSData
