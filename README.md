@@ -39,6 +39,7 @@ To get started
    `ecolidatafile` variables), then running
 
    `$ python demud.py -g`
+
    `$ python demud.py -e`
 
    The results, along with a `demud.log` file, will appear in the
