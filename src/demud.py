@@ -39,6 +39,7 @@ from dataset_envi import ENVIData
 #from dataset_mastcam import MastcamData
 #from dataset_tc import TCData
 #from dataset_navcam import NavcamData
+from dataset_images import ImageData
 #from exoplanet_lookup import ExoplanetLookup
 #import kepler_lookup
 import log
@@ -1329,6 +1330,9 @@ def  clean():
                    "----- Mastcam images: mastcamdatafolder\n"
                    " -j --mastcam\n"
                    "mastcamdatafolder = \n\n"
+                   "----- Images: imagedatafolder\n"
+                   " -I --images\n"
+                   "imagedatafolder = \n\n"
                    "----- Image Sequence data: datafolder, solnumber, initdatasols\n"
                    "-q --navcam\n"
                    "datafolder = \n"
@@ -1390,7 +1394,9 @@ def  parse_args():
                       default=False, action='store_true', dest='navcam')
   dtypes.add_option('-j', '--mastcam', help='MSL Mastcam image data', 
                       default=False, action='store_true', dest='mastcam')
-  
+  dtypes.add_option('-I', '--images', help='Image data in a directory', 
+                      default=False, action='store_true', dest='images')
+
   parser.add_option_group(dtypes)
   
   # Parameter options
@@ -1740,6 +1746,9 @@ def  parse_config(config, data_choice):
   
   # Mastcam
   mastcamdatafolder   = parse_config_term(config, 'mastcamdatafolder')
+
+  # Images
+  imagedatafolder   = parse_config_term(config, 'imagedatafolder')
   
   # Texturecam (image)
   tcfilename     = parse_config_term(config, 'tcfilename')
@@ -1782,6 +1791,8 @@ def  parse_config(config, data_choice):
     return ([tcfilename, tcpklname],'')
   elif data_choice == 'mastcam':
     return ([mastcamdatafolder],'')
+  elif data_choice == 'images':
+    return ([imagedatafolder],'')
   elif data_choice == 'navcam':
     # Parse through initdatasols to convert it into a tuple
     initsols = [];
@@ -1903,6 +1914,7 @@ def  init_default_k_values():
     'texturecam'  : 10,
     'navcam'      : 10,
     'mastcam'     : 2,
+    'images'      : 10,
     'ucis'        : 10,
   }
   
@@ -2020,6 +2032,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## MASTCAM DATA SET (accepts fft)
   elif data_choice == 'mastcam':
     ds = MastcamData(data_files[0])
+  ## IMAGE DATA SET
+  elif data_choice == 'images':
+    ds = ImageData(data_files[0])
   ## TEXTURECAM DATA SET
   elif data_choice == 'texturecam':
     ds = TCData(data_files[0], data_files[1])
@@ -2065,7 +2080,7 @@ def  main():
   datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
-               'pancam', 'mastcam', 'ucis', 'testdata')
+               'pancam', 'mastcam', 'images', 'ucis', 'testdata')
   
   data_choice = check_opts(datatypes)
   
