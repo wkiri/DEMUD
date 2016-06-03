@@ -47,14 +47,14 @@ class Dataset(object):
     self.samples  = []
 
 
-  def  plot_item(self, m, ind, x, r, k, label, U, scores):
-    """plot_item(self, m, ind, x, r, k, label, U, scores)
+  def  plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights):
+    """plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights)
 
     Plot selection m (index ind, data in x) and its reconstruction r,
     with k and label to annotate of the plot.
 
-    U and scores are optional; ignored in this method, used in some
-    classes' submethods.
+    U, scores, and feature_weights  are optional; ignored in this method, u
+    sed in some classes' submethods.
     """
     
     if x == [] or r == []: 

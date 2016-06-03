@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# File: dataset_envi.py
+# File: dataset_images.py
 # Author: Kiri Wagstaff, 5/7/13
 #
 # Readers and plotters for image data sets.
@@ -19,7 +19,6 @@
 import os, sys, fnmatch
 from PIL import Image
 import numpy as np
-import pickle
 from dataset import *
 import matplotlib
 import matplotlib.pyplot as plt

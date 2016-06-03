@@ -39,7 +39,6 @@ class FloatDataset(Dataset):
 
     Dataset.__init__(self, filename, name, '')
 
-    self.readin(0)
 
   def  readin(self, nskip):
     """readin()
@@ -47,17 +46,19 @@ class FloatDataset(Dataset):
 
     with open(self.filename, 'r') as csvfile:
       lines = csvfile.readlines()
+
       for line in lines:
         # Skip over empty lines
         if line.strip() == '' or line[0] == '#':
           continue
         attributes = re.split(',* *', line.strip())
-        
+
         self.data += [[float(x) for x in attributes[nskip:]]]
         if nskip > 0:
           self.labels.append(attributes[0])
         else:  # fake labels
           self.labels.append('None')
+
 
     self.data = numpy.array(self.data)
 

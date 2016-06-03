@@ -45,6 +45,9 @@ To get started
    The results, along with a `demud.log` file, will appear in the
    `results/` directory under `src/`.
 
+   **Please do not check your demud.config file back in to this 
+   repository.  It is a local configuration file for your system.**
+
    Note: UCI data sets were obtained from
 
    Lichman, M. (2013). UCI Machine Learning Repository

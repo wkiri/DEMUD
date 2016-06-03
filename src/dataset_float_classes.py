@@ -20,11 +20,11 @@ import os, sys
 import csv, numpy, pylab
 from dataset_float import FloatDataset
 
-################################################################################
+###############################################################################
 #
 #                                PANCAM SPECTRA
 #
-################################################################################
+###############################################################################
 class PancamSpectra(FloatDataset):
   # Contains code needed to load, plot, and interpret Pancam spectra (CSV) data.
 
@@ -57,6 +57,46 @@ class PancamSpectra(FloatDataset):
 
     self.xlabel = 'Wavelength (um)'
     self.ylabel = 'Reflectance'
+
+
+###############################################################################
+#
+#                 AUTOMATED PLANET FINDER (APF) SPECTRA
+#
+###############################################################################
+class APFSpectra(FloatDataset):
+  # Contains code needed to load, plot, and interpret APF spectra (CSV) data.
+
+  def  __init__(self, filename=None):
+    """APFSpectra(filename="")
+
+    Read in APF spectra in CSV format from filename.
+    """
+
+    FloatDataset.__init__(self, filename, "apf_spectra")
+    
+    self.readin(0)
+
+    self.update_features()
+
+  def  update_features(self):
+
+    # Feature names (wavelengths in Angstroms) are in the data file
+    # on the first line (starts with #)
+
+    with open(self.filename, 'r') as csvfile:
+      header = csvfile.readlines()[0]
+
+      if header[0] != '#':
+        printt('Error: Did not find wavelength header line (must start with #) in %s.' % self.filename)
+        sys.exit(1)
+    
+      # Strip off the #
+      header = header[1:].strip()
+      self.xvals = numpy.array(map(float,header.split(',')))
+
+    self.xlabel = 'Wavelength (A)'
+    self.ylabel = 'Flux'
 
 
 ################################################################################
