@@ -18,7 +18,7 @@
 # countries or providing access to foreign persons.
 
 import os, sys, re
-import csv, numpy, pylab
+import csv, numpy, pylab, math
 from dataset import Dataset
 
 class FloatDataset(Dataset):
@@ -51,7 +51,7 @@ class FloatDataset(Dataset):
         # Skip over empty lines
         if line.strip() == '' or line[0] == '#':
           continue
-        attributes = re.split(',* *', line.strip())
+        attributes = re.split(',', line.strip())
 
         self.data += [[float(x) for x in attributes[nskip:]]]
         if nskip > 0:
@@ -65,5 +65,72 @@ class FloatDataset(Dataset):
     self.data   = self.data.T  # features x samples
     
     self.xvals  = numpy.arange(self.data.shape[0]).reshape(-1,1)
+
+
+  def  plot_item_triangles(self, m, ind, x, r, k, label, U,
+                           rerr, feature_weights):
+    """plot_item_triangles(self, m, ind, x, r, k, label, U, rerr, feature_weights)
+
+    Plot selection m (index ind, data in x) with triangles to
+    mark the largest residual values.
+
+    To use this, define plot_item() in your data set's class
+    to call this function instead.
+    """
+
+    if x == [] or r == []: 
+      print "Error: No data in x and/or r."
+      return
+  
+    pylab.clf()
+    # xvals, x, and r need to be column vectors
+    pylab.plot(self.xvals, r, 'r-',  linewidth=0.5, label='Expected')
+    pylab.plot(self.xvals, x, 'b.-', linewidth=1,   label='Observations')
+    # Boost font sizes for axis and tick labels
+    pylab.xlabel(self.xlabel) #, fontsize=16)
+    pylab.ylabel(self.ylabel) #, fontsize=16)
+    '''
+    pylab.xticks(fontsize=16)
+    pylab.yticks(fontsize=16)
+    '''
+    pylab.title('DEMUD selection %d (%s), item %d, using K=%d' % \
+                (m, label, ind, k))
+    pylab.legend(fontsize=10)
+
+    res = x - r
+    abs_res = numpy.absolute(res)
+    mx = abs_res.max()
+    mn = abs_res.min()
+    print('Absolute residuals: min %2.g, max %.2g.\n' % (mn, mx))
+    if mn == mx and mx == 0:
+      return
+
+    sorted_abs_res = numpy.sort(abs_res,0)
+    frac_annotate = 0.004  # top 4%
+    width = 0.0001
+    min_match_nm  = 2
+    num_annotate = int(math.floor(frac_annotate * len(abs_res)))
+    thresh = sorted_abs_res[-num_annotate]
+    print('Annotating top %.3f%% of residuals (%d above %.2g).' % \
+        (frac_annotate * 100, num_annotate, thresh))
+
+    band_ind = (numpy.where(abs_res >= thresh)[0]).tolist()
+    for band in band_ind:
+      w = float(self.xvals[band])
+      reproj = r[band]
+      # Draw a triangle that points up if r > x
+      # or down if r < x
+      pylab.fill([w-width, w+width, w],
+                 [reproj,  reproj,  x[band]],
+                 '0.6', zorder=1)
+
+    outdir  = os.path.join('results', self.name)
+    if not os.path.exists(outdir):
+      os.mkdir(outdir)
+    figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
+    pylab.savefig(figfile)
+    print 'Wrote plot to %s' % figfile
+
+    
   
 

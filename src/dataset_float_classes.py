@@ -75,7 +75,7 @@ class APFSpectra(FloatDataset):
 
     FloatDataset.__init__(self, filename, "apf_spectra")
     
-    self.readin(0)
+    self.readin(1)
 
     self.update_features()
 
@@ -97,6 +97,13 @@ class APFSpectra(FloatDataset):
 
     self.xlabel = 'Wavelength (A)'
     self.ylabel = 'Flux'
+
+
+  def  plot_item(self, m, ind, x, r, k, label, U,
+                 rerr, feature_weights):
+    # Call the plot_item_triangles() method from dataset_float.py
+    self.plot_item_triangles(m, ind, x, r, k, label, U,
+                             rerr, feature_weights)
 
 
 ################################################################################
