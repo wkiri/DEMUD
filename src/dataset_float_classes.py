@@ -17,7 +17,7 @@
 # countries or providing access to foreign persons.
 
 import os, sys
-import csv, numpy, pylab, math
+import csv, numpy, pylab
 from dataset_float import FloatDataset
 
 ###############################################################################
@@ -74,26 +74,14 @@ class APFSpectra(FloatDataset):
     """
 
     FloatDataset.__init__(self, filename, "apf_spectra")
-    
+
+    # readin(1) means that the first entry on each line is an item name.  
+    # readin(0) means that the first entry on each line is the first feature.
     self.readin(1)
 
-    self.update_features()
-
-  def  update_features(self):
-
     # Feature names (wavelengths in Angstroms) are in the data file
-    # on the first line (starts with #)
-
-    with open(self.filename, 'r') as csvfile:
-      header = csvfile.readlines()[0]
-
-      if header[0] != '#':
-        printt('Error: Did not find wavelength header line (must start with #) in %s.' % self.filename)
-        sys.exit(1)
-    
-      # Strip off the #
-      header = header[1:].strip()
-      self.xvals = numpy.array(map(float,header.split(',')))
+    # on the first line (starts with #).
+    # This is read in by the FloatDataset class.
 
     self.xlabel = 'Wavelength (A)'
     self.ylabel = 'Flux'
@@ -103,24 +91,8 @@ class APFSpectra(FloatDataset):
                  rerr, feature_weights):
 
     # Select which residuals to highlight
-    res = x - r
-    abs_res = numpy.absolute(res)
-    mx = abs_res.max()
-    mn = abs_res.min()
-    print('Absolute residuals: min %2.g, max %.2g.\n' % (mn, mx))
-    if mn == mx and mx == 0:
-      return
-
-    sorted_abs_res = numpy.sort(abs_res,0)
     frac_annotate = 0.004  # top 0.4%, modify to change how many display
-    min_match_nm  = 2
-    num_annotate = int(math.floor(frac_annotate * len(abs_res)))
-    thresh = sorted_abs_res[-num_annotate]
-    
-    print('Annotating top %.3f%% of residuals (%d above %.2g).' % \
-        (frac_annotate * 100, num_annotate, thresh))
-
-    band_ind = (numpy.where(abs_res >= thresh)[0]).tolist()
+    band_ind = self.select_bands(x, r, frac_annotate)
 
     # Call the plot_item_triangles() method from dataset_float.py
     self.plot_item_triangles(m, ind, x, r, k, label, U,

@@ -18,7 +18,7 @@
 # countries or providing access to foreign persons.
 
 import os, sys, re
-import csv, numpy, pylab
+import csv, numpy, pylab, math
 from dataset import Dataset
 
 class FloatDataset(Dataset):
@@ -47,8 +47,14 @@ class FloatDataset(Dataset):
     with open(self.filename, 'r') as csvfile:
       lines = csvfile.readlines()
 
+      # If there's a header (begins with #), use it to
+      # populate the feature names
+      if lines[0][0] == '#':
+        header = lines[0][1:].strip()
+        self.xvals = numpy.array(map(float,header.split(',')))
+
       for line in lines:
-        # Skip over empty lines
+        # Skip over empty or commented lines
         if line.strip() == '' or line[0] == '#':
           continue
         attributes = re.split(',', line.strip())
@@ -99,7 +105,8 @@ class FloatDataset(Dataset):
                 (m, label, ind, k))
     pylab.legend(fontsize=10)
 
-    width = 0.0001  # triangle width (should be adaptive not fixed)
+    # width of triangles to plot
+    width = (self.xvals.max() - self.xvals.min())/50.0
     
     for band in band_ind:
       w = float(self.xvals[band])
@@ -118,5 +125,29 @@ class FloatDataset(Dataset):
     print 'Wrote plot to %s' % figfile
 
     
-  
+  def  select_bands(self, x, r, frac_annotate):
+    """select_bands(self, x, r, frac_annotate)
+
+    Select which bands to highlight (largest magnitude residual).
+    """
+    
+    res = x - r
+    abs_res = numpy.absolute(res)
+    mx = abs_res.max()
+    mn = abs_res.min()
+    print('Absolute residuals: min %2.g, max %.2g.\n' % (mn, mx))
+    if mn == mx and mx == 0:
+      return
+
+    sorted_abs_res = numpy.sort(abs_res,0)
+    num_annotate = int(math.floor(frac_annotate * len(abs_res)))
+    thresh = sorted_abs_res[-num_annotate]
+    
+    print('Marking top %.3f%% of residuals (%d above %.2g).' % \
+        (frac_annotate * 100, num_annotate, thresh))
+
+    band_ind = (numpy.where(abs_res >= thresh)[0]).tolist()
+
+    return band_ind
+
 
