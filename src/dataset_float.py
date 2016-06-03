@@ -18,7 +18,7 @@
 # countries or providing access to foreign persons.
 
 import os, sys, re
-import csv, numpy, pylab, math
+import csv, numpy, pylab
 from dataset import Dataset
 
 class FloatDataset(Dataset):
@@ -68,11 +68,13 @@ class FloatDataset(Dataset):
 
 
   def  plot_item_triangles(self, m, ind, x, r, k, label, U,
-                           rerr, feature_weights):
-    """plot_item_triangles(self, m, ind, x, r, k, label, U, rerr, feature_weights)
+                           rerr, feature_weights, band_ind):
+    """plot_item_triangles(self, m, ind, x, r, k, label, U,
+       rerr, feature_weights, band_ind)
 
     Plot selection m (index ind, data in x) with triangles to
-    mark the largest residual values.
+    mark the largest residual values on band_ind indices
+    (i.e., you need to pick them before calling this).
 
     To use this, define plot_item() in your data set's class
     to call this function instead.
@@ -97,24 +99,8 @@ class FloatDataset(Dataset):
                 (m, label, ind, k))
     pylab.legend(fontsize=10)
 
-    res = x - r
-    abs_res = numpy.absolute(res)
-    mx = abs_res.max()
-    mn = abs_res.min()
-    print('Absolute residuals: min %2.g, max %.2g.\n' % (mn, mx))
-    if mn == mx and mx == 0:
-      return
-
-    sorted_abs_res = numpy.sort(abs_res,0)
-    frac_annotate = 0.004  # top 4%
-    width = 0.0001
-    min_match_nm  = 2
-    num_annotate = int(math.floor(frac_annotate * len(abs_res)))
-    thresh = sorted_abs_res[-num_annotate]
-    print('Annotating top %.3f%% of residuals (%d above %.2g).' % \
-        (frac_annotate * 100, num_annotate, thresh))
-
-    band_ind = (numpy.where(abs_res >= thresh)[0]).tolist()
+    width = 0.0001  # triangle width (should be adaptive not fixed)
+    
     for band in band_ind:
       w = float(self.xvals[band])
       reproj = r[band]

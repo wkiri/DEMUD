@@ -71,7 +71,7 @@ used:
 
 Model options:
 
-* `--k=K`:                 Number of principal components for SVD model; default 10
+* `--k=K`:                 Number of principal components for SVD model; default is specific to data set (demud.py)
 * `--variance=K_VAR`:      Optimize --k to capture this much data variance
                            Range: [0.0 1.0]
 * `--increm`:              Use an incremental SVD update; usually faster.
