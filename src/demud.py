@@ -29,6 +29,7 @@ import pylab
 from dataset_uci_classes import GlassData, EcoliData, AbaloneData, IsoletData
 from dataset_float import FloatDataset
 from dataset_float_classes import *
+from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
@@ -1299,6 +1300,10 @@ def  clean():
                    "----- GBT spectra data set: floatdatafile\n"
                    " --gbt\n"
                    "floatdatafile = \n\n"
+                   "----- GBT filterbank data set: gbtdirname, catalogfile\n"
+                   " --gbtfil\n"
+                   "gbtdirname  = \n\n"
+                   "catalogfile = \n\n"
                    "---- ChemCam: libsdatafile libsinitdatafile\n"
                    " -c --chemcam\n"
                    "libsdatafile = \n\n"
@@ -1380,6 +1385,8 @@ def  parse_args():
                       default=False, action='store_true', dest='apf')
   dtypes.add_option('--gbt', help='GBT spectra',
                       default=False, action='store_true', dest='gbt')
+  dtypes.add_option('--gbtfil', help='GBT filterbank',
+                      default=False, action='store_true', dest='gbtfil')
   dtypes.add_option('-x', '--testdata', help='Test data', 
                       default=False, action='store_true', dest='testdata')
   dtypes.add_option('-c', '--chemcam', help='ChemCam data', default=False, 
@@ -1449,7 +1456,7 @@ def  parse_args():
   dataops = OptionGroup(parser, "Data processing and output options",
                           "Specify additional preprocessing or postprocessing options.")
                       
-  dataops.add_option('--init-item', help='Index of initialization item (default: 0; -1 or svd for full-data SVD; r for random)',
+  dataops.add_option('--init-item', help='Index of initialization item (default: 0; -1 or svd for full-data SVD; r for random; mean for mean)',
                       default=0, type=str, action='store', dest='iitem')
   dataops.add_option('-i', '--interactive', help='Ask for feedback on adding selection to U', 
                       default=False, action='store_true', dest='interactive')
@@ -1728,6 +1735,10 @@ def  parse_config(config, data_choice):
   # Floating point data (or Pancam or APF or GBT)
   floatdatafile   = parse_config_term(config, 'floatdatafile')
 
+  # GBT filterbank
+  gbtdirname      = parse_config_term(config, 'gbtdirname')
+  catalogfile     = parse_config_term(config, 'catalogfile')
+
   # ChemCam
   libsdatafile     = parse_config_term(config, 'libsdatafile')
   libsinitdatafile = parse_config_term(config, 'libsinitdatafile')
@@ -1786,6 +1797,8 @@ def  parse_config(config, data_choice):
     return ([ecolidatafile],'')
   elif data_choice in ['pancam', 'testdata', 'apf', 'gbt']:
     return ([floatdatafile],'')
+  elif data_choice == 'gbtfil':
+    return ([gbtdirname, catalogfile],'')
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     return ([libsdatafile, libsinitdatafile],'')
   elif data_choice == 'finesse':
@@ -1915,6 +1928,7 @@ def  init_default_k_values():
     'pancam'      :  2,
     'apf'         :  2,
     'gbt'         : 10,
+    'gbtfil'      : 10,
     'testdata'    :  2,
     'chemcam'     : 10,
     'finesse'     : 10,
@@ -1969,6 +1983,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## GBT SPECTRA DATA SET
   elif data_choice == 'gbt':
     ds = GBTSpectra(data_files[0])
+  ## GBT FILTERBANK DATA SET
+  elif data_choice == 'gbtfil':
+    ds = GBTFilterbankData(data_files[0], data_files[1])
   ## TEST DATA SET
   elif data_choice == 'testdata':
     ds = FloatDataset(data_files[0])
@@ -2099,7 +2116,7 @@ def  main():
   datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
-               'pancam', 'apf', 'gbt', 'mastcam',
+               'pancam', 'apf', 'gbt', 'gbtfil', 'mastcam',
                'images', 'ucis', 'testdata')
   
   data_choice = check_opts(datatypes)
