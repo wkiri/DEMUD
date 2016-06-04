@@ -50,8 +50,11 @@ class FloatDataset(Dataset):
       # If there's a header (begins with #), use it to
       # populate the feature names
       if lines[0][0] == '#':
+        print 'Populating xvals from data file header.'
         header = lines[0][1:].strip()
         self.xvals = numpy.array(map(float,header.split(',')))
+      else:
+        self.xvals = numpy.arange(self.data.shape[0]).reshape(-1,1)
 
       for line in lines:
         # Skip over empty or commented lines
@@ -65,13 +68,10 @@ class FloatDataset(Dataset):
         else:  # fake labels
           self.labels.append('None')
 
-
     self.data = numpy.array(self.data)
 
     self.data   = self.data.T  # features x samples
     
-    self.xvals  = numpy.arange(self.data.shape[0]).reshape(-1,1)
-
 
   def  plot_item_triangles(self, m, ind, x, r, k, label, U,
                            rerr, feature_weights, band_ind):
@@ -106,7 +106,7 @@ class FloatDataset(Dataset):
     pylab.legend(fontsize=10)
 
     # width of triangles to plot
-    width = (self.xvals.max() - self.xvals.min())/50.0
+    width = (self.xvals.max() - self.xvals.min())/100.0
     
     for band in band_ind:
       w = float(self.xvals[band])

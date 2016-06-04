@@ -116,6 +116,66 @@ class APFSpectra(FloatDataset):
       f.write('\n')
 
 
+###############################################################################
+#
+#              GBT SPECTRA (FILTERBANK DATA INTEGRATED OVER TIME)
+#
+###############################################################################
+class GBTSpectra(FloatDataset):
+  # Contains code needed to load, plot, and interpret GBT spectra (CSV) data.
+
+  def  __init__(self, filename=None):
+    """GBTSpectra(filename="")
+
+    Read in GBT spectra in CSV format from filename.
+    """
+
+    FloatDataset.__init__(self, filename, "gbt_spectra")
+
+    # readin(1) means that the first entry on each line is an item name.  
+    # readin(0) means that the first entry on each line is the first feature.
+    self.readin(1)
+
+    # Feature names (frequencies in MHz) are in the data file
+    # on the first line (starts with #).
+    # This is read in by the FloatDataset class.
+
+    self.xlabel = 'Frequency (MHz)'
+    self.ylabel = 'Flux'
+
+
+  # This is currently identical to the version in APFSpectra,
+  # but can be specialized for different outputs or
+  # different frac_annotate.
+  def  plot_item(self, m, ind, x, r, k, label, U,
+                 rerr, feature_weights):
+
+    # Select which residuals to highlight
+    frac_annotate = 0.004  # top 0.4%, modify to change how many display
+    band_ind = self.select_bands(x, r, frac_annotate)
+
+    # Call the plot_item_triangles() method from dataset_float.py
+    self.plot_item_triangles(m, ind, x, r, k, label, U,
+                             rerr, feature_weights, band_ind)
+
+    # Save out top hits file
+    outdir   = os.path.join('results', self.name)
+    hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
+    # First item gets to create (and clear) the file
+    if m == 0:
+      with open(hitsfile, 'w') as f:
+        f.close()
+
+    # Write out a line for this selection
+    with open(hitsfile, 'a') as f:
+      # Write out the name/label of the selected item
+      f.write(label)
+      # Write out a comma-separated list of selected wavelengths
+      for band in band_ind:
+        f.write(',%f' % float(self.xvals[band]))
+      f.write('\n')
+
+
 ################################################################################
 #
 #                                    MAIN
