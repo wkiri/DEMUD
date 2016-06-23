@@ -137,7 +137,7 @@ class LIBSData(Dataset):
 
     # Read in the init data file, if present
     if self.initfilename != '':
-      print 'Reading initialization data set from %s' % self.initfilename
+      printt('Reading initialization data set from %s' % self.initfilename)
       (self.initdata, unused_labels) = LIBSData.read_csv_data(self.initfilename)
 
       # Prune off first column (wavelengths)
@@ -193,7 +193,7 @@ class LIBSData(Dataset):
     newdata = data
     remove_ind = []
 
-    print "Filtering out data with large, broad features."
+    printt("Filtering out data with large, broad features.")
     #for i in [78]: # test data gap
     #for i in [1461]: # test broad feature
     #for i in [3400]: # test broad feature
@@ -307,11 +307,11 @@ class LIBSData(Dataset):
                           if i not in remove_ind]).T
     newlabels = np.array([labels[i] for i in range(len(labels)) \
                           if i not in remove_ind])
-    print " ... from %d to %d items (%d removed)." % (n, newdata.shape[1],
-                                                      n-newdata.shape[1])
+    printt(" ... from %d to %d items (%d removed)." % (n, newdata.shape[1],
+                                                      n-newdata.shape[1]))
     n = newdata.shape[1]
 
-    print "Filtering out low-SNR data."
+    printt("Filtering out low-SNR data.")
 
     # Filter out any item left that has a max peak value < 0.01.
     # (these are normalized probabilities now)
