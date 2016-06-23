@@ -1306,7 +1306,7 @@ def  clean():
                    "catalogfile = \n\n"
                    "---- ChemCam: libsdatafile libsinitdatafile\n"
                    " -c --chemcam\n"
-                   "libsdatafile = \n\n"
+                   "libsdatafile = \n"
                    "libsinitdatafile = \n\n"
                    "----- FINESSE: finessedirname\n"
                    " -f --finesse\n"
@@ -1341,9 +1341,10 @@ def  clean():
                    "----- Mastcam images: mastcamdatafolder\n"
                    " -j --mastcam\n"
                    "mastcamdatafolder = \n\n"
-                   "----- Images: imagedatafolder\n"
+                   "----- Images: imagedatafolder, imageinitdatafolder\n"
                    " -I --images\n"
-                   "imagedatafolder = \n\n"
+                   "imagedatafolder = \n"
+                   "imageinitdatafolder = \n\n"
                    "----- Image Sequence data: datafolder, solnumber, initdatasols\n"
                    "-q --navcam\n"
                    "datafolder = \n"
@@ -1770,7 +1771,8 @@ def  parse_config(config, data_choice):
   mastcamdatafolder   = parse_config_term(config, 'mastcamdatafolder')
 
   # Images
-  imagedatafolder   = parse_config_term(config, 'imagedatafolder')
+  imagedatafolder       = parse_config_term(config, 'imagedatafolder')
+  imageinitdatafolder   = parse_config_term(config, 'imageinitdatafolder')
   
   # Texturecam (image)
   tcfilename     = parse_config_term(config, 'tcfilename')
@@ -1816,7 +1818,7 @@ def  parse_config(config, data_choice):
   elif data_choice == 'mastcam':
     return ([mastcamdatafolder],'')
   elif data_choice == 'images':
-    return ([imagedatafolder],'')
+    return ([imagedatafolder, imageinitdatafolder],'')
   elif data_choice == 'navcam':
     # Parse through initdatasols to convert it into a tuple
     initsols = [];
@@ -2070,7 +2072,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = MastcamData(data_files[0])
   ## IMAGE DATA SET
   elif data_choice == 'images':
-    ds = ImageData(data_files[0])
+    ds = ImageData(data_files[0], data_files[1])
   ## TEXTURECAM DATA SET
   elif data_choice == 'texturecam':
     ds = TCData(data_files[0], data_files[1])

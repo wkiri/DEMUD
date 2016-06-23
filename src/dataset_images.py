@@ -28,14 +28,18 @@ from log import printt
 class ImageData(Dataset):
   # Contains code needed to load, plot, and interpret image data.
 
-  def  __init__(self, dirname=None):
+  def  __init__(self, dirname=None, initdirname=''):
     """ImageData(dirname="")
 
     Read in image data from dirname.
+
+    Optionally, specify a directory in initdirname that contains
+    data to initialize the model with.
     """
 
     Dataset.__init__(self, dirname,
-                     'img-' + os.path.splitext(os.path.basename(dirname))[0], '')
+                     'img-' + os.path.splitext(os.path.basename(dirname))[0], 
+                     initdirname)
 
     self.readin()
 
@@ -46,46 +50,27 @@ class ImageData(Dataset):
     Read in image data from a directory.
     """
     
-    dirname = self.filename
+    # Read in the initialization data (images) from initdirname, if present.
+    # This variable is called 'initfilename', but it's a directory here.
+    if self.initfilename != '':
+      printt('Reading initialization data set from %s' % self.initfilename)
+      (self.initdata, unused_labels, width, height) = ImageData.read_image_dir(self.initfilename)
+      self.initdata = np.asarray(self.initdata)
+      self.initdata = self.initdata.T
+      print self.initdata.shape
 
-    data   = []
-    labels = []  # Save the individual file names
-
-    (width, height) = (-1, -1)
-
-    # Read in the image data
-    files = sorted(os.listdir(dirname))
-    for f in files:
-      # Unix-style wildcards. 
-      if fnmatch.fnmatch(f, '*.jpg'):
-        # Read in the image
-        filename = dirname + '/' + f
-        im = Image.open(filename)
-
-        if width == -1:
-          (width, height) = im.size
-        else:
-          # Ensure that all images are the same dimensions
-          (w, h) = im.size
-          if w != width or h != height:
-            raise ValueError('Images must all have the same dimensions.')
-        
-        data.append(list(im.getdata()))
-
-        labels.append(f)
-
-        # Close the file
-        im.close()
-
-    data = np.asarray(data)
-    print 'Read %d image files with %d pixels each.' % data.shape
-    data = data.T
-        
+    ########## Read in the data to analyze
     # Labels are individual filenames
-    (self.width, self.height, self.data, self.labels) = \
-        (width, height, data, labels)
-
+    (self.data, self.labels, self.width, self.height) = \
+        ImageData.read_image_dir(self.filename)
+      
+    self.data = np.asarray(self.data)
+    print 'Read %d image files with %d pixels each.' % self.data.shape
+    self.data = self.data.T
+    print self.data.shape
+        
     print ' Dimensions: %d width, %d height.' % (self.width, self.height)
+
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights):
     """
@@ -200,6 +185,48 @@ class ImageData(Dataset):
     #print 'Wrote plot to %s' % figfile
     
 
+  @classmethod
+  def  read_image_dir(cls, dirname):
+    """read_image_dir(dirname)
+
+    Read in all of the images in dirname and return
+    - a list of data
+    - a list of labels
+    - image width
+    - image height
+    """
+
+    data   = []
+    labels = []  # Save the individual file names
+
+    (width, height) = (-1, -1)
+
+    # Read in the image data
+    files = sorted(os.listdir(dirname))
+    for f in files:
+      # Unix-style wildcards. 
+      if (fnmatch.fnmatch(f, '*.jpg') or
+          fnmatch.fnmatch(f, '*.png')):
+        # Read in the image
+        filename = dirname + '/' + f
+        im = Image.open(filename)
+
+        if width == -1:
+          (width, height) = im.size
+        else:
+          # Ensure that all images are the same dimensions
+          (w, h) = im.size
+          if w != width or h != height:
+            raise ValueError('Images must all have the same dimensions.')
+        
+        data.append(list(im.getdata()))
+
+        labels.append(f)
+
+        # Close the file
+        im.close()
+
+    return (data, labels, width, height)
 
 
 
