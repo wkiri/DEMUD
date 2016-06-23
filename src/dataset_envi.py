@@ -561,6 +561,7 @@ class ENVIData(Dataset):
     fid.write('data type = 1\n')              # byte (max 255 priorities)
     fid.write('interleave = bip\n')           # Irrelevant for single 'band'
     fid.write('byte order = 0\n')             # Least-significant byte first
+    fid.write('classes = %d\n' % k)           # Number of classes
     # Classes include None (0) and then integers up to number of classes.
     fid.write("class names = {'None', " + ', '.join(["'%d'" % a for a in range(1, max_c)]) + '}\n')
     fid.write('class lookup = {' + 
