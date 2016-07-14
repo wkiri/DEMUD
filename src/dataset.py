@@ -114,7 +114,7 @@ class Dataset(object):
       
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
-    pylab.title('SVD of dataset ' + self.name + ' before selection ' + str(m))
+    pylab.title('SVD of dataset ' + self.name + ' after selection ' + str(m))
     xvals = [self.xvals[z] for z in range(self.xvals.shape[0])]
     diff = pylab.mean([xvals[i] - xvals[i-1] for i in range(1, len(xvals))])
     pylab.xlim([float(xvals[0]) - diff / 6.0, float(xvals[-1]) + diff / 6.0])

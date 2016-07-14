@@ -178,12 +178,64 @@ class ImageData(Dataset):
                    (m, label, ind, k))
     
     outdir = os.path.join('results', self.name)
+    if not os.path.exists('results'):
+      os.mkdir('results')
     if not os.path.exists(outdir):
       os.mkdir(outdir)
-    figfile = os.path.join(outdir, '%s-sel-%d-k-%d.pdf' % (self.name, m, k))
+    figfile = os.path.join(outdir, 'sel-%d-k-%d.pdf' % (m, k))
     plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
     #print 'Wrote plot to %s' % figfile
     
+
+  def plot_pcs(self, m, U, mu, k, S):
+    """plot_pcs(m, U, mu, k, S)
+    Plot the principal components in U, after DEMUD iteration m, 
+        by adding back in the mean in mu.
+    Ensure that there are k of them, 
+        and list the corresponding singular values from S.
+    """
+
+    #assert (k == U.shape[1])
+  
+    cur_pcs = U.shape[1]
+    max_num_pcs = min(min(cur_pcs,k), 9)
+
+    pylab.figure()
+    pylab.subplots_adjust(wspace=0.1, left=0)
+
+    # Display each image in its own subplot
+    for i in range(max_num_pcs):
+      pylab.subplot(3,3,i+1)
+
+      #im = pylab.imshow((U[:,i] + mu[:,0]).reshape((self.width,
+      im = pylab.imshow((U[:,i]).reshape((self.width,
+                                                    self.height)),
+                        cmap='gray')
+
+      pylab.tick_params(\
+        axis='both',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom='off',      # ticks along the bottom edge are off
+        left='off',      # ticks along the left edge are off
+        right='off',      # ticks along the right edge are off
+        top='off',         # ticks along the top edge are off
+        labelbottom='off', # labels along the bottom edge are off
+        labelleft='off')   # labels along the left edge are off?
+      pylab.xlabel('PC %d' % i)
+  
+    shortname = self.name[:self.name.find('-k=')]
+    pylab.suptitle('SVD of dataset ' + shortname + 
+                   ' after selection ' + str(m))
+    
+    outdir = os.path.join('results', self.name)
+    if not os.path.exists('results'):
+      os.mkdir('results')
+    if not os.path.exists(outdir):
+      os.mkdir(outdir)
+    figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d.pdf' % (m, k))
+    pylab.savefig(figfile)
+    print 'Wrote SVD to %s' % figfile
+
 
   @classmethod
   def  read_image_dir(cls, dirname):
