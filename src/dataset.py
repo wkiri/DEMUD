@@ -126,7 +126,7 @@ class Dataset(object):
       os.mkdir('results')
     if not os.path.exists(outdir):
       os.mkdir(outdir)
-    figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s)-PCs.pdf' % (m, k, label))
+    figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote SVD to %s' % figfile
     

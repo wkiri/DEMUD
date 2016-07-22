@@ -125,8 +125,14 @@ class ENVIData(Dataset):
 
     envi_file = filename
 
-    # Read in the header file 
-    hdrfile = '%s.hdr' % envi_file
+    # Read in the header file.  Try a few options to find the .hdr file. 
+    hdrfilenames = [envi_file + '.hdr',
+                    envi_file[0:envi_file.rfind('.IMG')] + '.hdr',
+                    envi_file[0:envi_file.rfind('.img')] + '.hdr']
+    for hdrfile in hdrfilenames:
+      if os.path.exists(hdrfile):
+        break
+      
     info = ENVIData.read_envihdr(hdrfile)
     self.lines   = info['lines']
     self.samples = info['samples']
@@ -189,7 +195,6 @@ class ENVIData(Dataset):
 
     if (band_format == 'bsq'):
       print "Reading BSQ: Band, Row, Col; %s" % machine
-      print raw_data.shape
       raw_data = raw_data.reshape((info['bands'],info['lines'],info['samples']))
       for b in range(info['bands']):
         for i in range(info['lines'] * info['samples']):
@@ -482,8 +487,11 @@ class ENVIData(Dataset):
         # Use Euclidean distance.
         #abund[l,s] = math.sqrt(pow(np.sum(x - d), 2)) / float(nbands)
         # Use spectral angle distance
-        abund[l_ind,s_ind] = math.acos(np.dot(x, d) /
-                                       (np.linalg.norm(x) * np.linalg.norm(d)))
+        num   = np.dot(x, d)
+        denom = np.linalg.norm(x) * np.linalg.norm(d)
+        if num > denom: # ensure math.acos() doesn't freak out; clip to 1.0
+          num = denom
+        abund[l_ind,s_ind] = math.acos(num / denom)
         
         # Propagate current priority to similar items (not yet prioritized)
         # This threshold is subjectively chosen.
