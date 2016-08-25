@@ -1863,7 +1863,12 @@ def  optimize_k(ds, v):
   """
   assert v >= 0.0 and v <= 1.0
   
-  X = ds.data
+  # If initialization data is present, optimize k using that data
+  if len(ds.initdata) > 0:
+    X = ds.initdata
+  # Otherwise analyze the new data 
+  else:
+    X = ds.data
   
   if X == []:
     printt("Error: No data in input.")

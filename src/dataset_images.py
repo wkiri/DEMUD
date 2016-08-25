@@ -65,6 +65,10 @@ class ImageData(Dataset):
         ImageData.read_image_dir(self.filename)
       
     self.data = np.asarray(self.data)
+    if len(self.data) == 0: 
+      print 'Error: no image files found.'
+      sys.exit(1)
+
     print 'Read %d image files with %d pixels each.' % self.data.shape
     self.data = self.data.T
     print self.data.shape
