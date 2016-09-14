@@ -20,7 +20,7 @@ import os, fnmatch, sys, pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import pylab
-from scipy.stats import nanmean
+from numpy import nanmean
 from pyhdf import HDF, SD
 from dataset import Dataset
 import matplotlib

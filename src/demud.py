@@ -20,7 +20,7 @@
 import sys, os
 import numpy as np
 from numpy import linalg
-from scipy.stats import nanmean
+from numpy import nanmean
 import math
 import copy, base64, time
 import csv
@@ -110,7 +110,7 @@ def  select_next(X, U, S, mu,
     reproj = np.dot(U, proj) + mu
     # 1c. Compute the residual
     err    = X - reproj
-    
+
   else:
     # We want to ignore (work around) NaNs, without imputing.
     # This is less efficient than with no NaNs:
@@ -118,7 +118,7 @@ def  select_next(X, U, S, mu,
     # since they might have different missing values.
     diagS  = np.diag(S).reshape(len(S), len(S))
     reproj = np.zeros(X.shape) * np.nan
-    err    = np.zeros(X.shape) 
+    err    = np.zeros(X.shape)
     for i in range(X.shape[1]):
       x        = X[:,i].reshape(-1, 1)
       # Usable features are not NaN in x nor in mu
@@ -150,7 +150,7 @@ def  select_next(X, U, S, mu,
     err[err<0] = 0
   else: # default, count everything
     pass
-  
+
   # Weight features if requested
   if feature_weights != []:
     for i in range(len(feature_weights)):
@@ -163,7 +163,7 @@ def  select_next(X, U, S, mu,
     scores = np.nansum(np.array(np.power(err, 2)), axis=0)
   else:
     scores = np.sum(np.array(np.power(err, 2)), axis=0)
-  
+
   # Select and return item with max reconstruction error
   # and its index
   m = scores.argmax()
@@ -245,7 +245,7 @@ def  update_model(X, U, S, k, n, mu,
     return U, S, mu, n, pcts
 
   #############################################################################
-  # Do full SVD of X if this is requested, regardless of what is in U 
+  # Do full SVD of X if this is requested, regardless of what is in U
   # Also, if n = 0 or U is empty, start from scratch
   output_k = False
   if svdmethod == 'full' or U == [] or n == 0:
@@ -271,7 +271,7 @@ def  update_model(X, U, S, k, n, mu,
     mu      = np.mean(X, axis=1).reshape(-1,1)
     X       = X - mu
     U, S, V = linalg.svd(X, full_matrices=False)
-    
+
     # Keep only the first k components
     S_full = S
     S = S[0:k]
@@ -279,7 +279,7 @@ def  update_model(X, U, S, k, n, mu,
 
     # Update n to number of new items in X
     n = X.shape[1]
-    
+
   #############################################################################
   # Incremental SVD from Ross
   elif svdmethod == 'increm-ross':
@@ -296,7 +296,7 @@ def  update_model(X, U, S, k, n, mu,
       sys.exit(1)
 
     n_new  = X.shape[1]
-    
+
     # Compute mean
     # Weirdly, the later 'X-mu_new' is MUCH faster if you reshape as shown.
     #  This is because of differences in the way numpy treats a 1d array versus a 2d column.
@@ -340,12 +340,12 @@ def  update_model(X, U, S, k, n, mu,
     R[0:k_now,k_now:] = proj
     orthog_reproj_err = np.dot(q.T, reproj_err)
     R[k_now:, k_now:] = orthog_reproj_err
-    
+
     # Perform SVD of R.  Then finally update U.
     U, S, V = linalg.svd(R, full_matrices=False)
 
     U = np.dot(Q, U)
-    
+
     # Keep only the first k components
     U = U[:,0:min([n,k])]
     S_full = S
@@ -379,7 +379,7 @@ def  update_model(X, U, S, k, n, mu,
       # At this point, the only NaNs that should appear are
       # values that were NaN for both mu and X to start with.
       # They will stay NaN and that's okay.
-      
+
       # New mu is a weighted sum of old and new mus
       mu     = (n * mu_old + n_new * mu_new) / (n + n_new)
       printt("Now tracking mean for %d -> %d items; mu.min %f, mu.max %f " % \
@@ -418,7 +418,7 @@ def  update_model(X, U, S, k, n, mu,
                            np.linalg.pinv(X[goodinds,:] -
                                           np.dot(U[goodinds,:],
                                                  L))).T
-      
+
       # Bottom row of Q matrix (eqn 12, Brand 2002)
       Q2 = np.hstack([np.zeros([1, len(S)]), np.array(K).reshape(1,1)])
       Q = np.vstack([Q1, Q2])
@@ -434,9 +434,9 @@ def  update_model(X, U, S, k, n, mu,
       S = Sq
       # Updating V requires knowing old V,
       # but we don't need the new one either so it's okay to skip.
-      
+
       ############# end ###########
-      
+
       #print "Amount of new U which is NaN:", \
       # 100 * np.isnan(U).sum() / float(U.size)
 
@@ -474,7 +474,7 @@ def  update_model(X, U, S, k, n, mu,
       S = Sq
       # V requires knowing old V,
       # but we don't need the new one either so it's okay.
-    
+
 
     # Keep only the first k components
     U = U[:,0:min([n,k])]
@@ -495,7 +495,7 @@ def  update_model(X, U, S, k, n, mu,
 
   # This only works if a full SVD was done
   if (svdmethod == 'full' and output_k and log.opts['k_var'] == -773038.0):
-    # Calculate percent variance captured by each 
+    # Calculate percent variance captured by each
     cumsum      = np.cumsum(S_full)
     #print cumsum.shape
     if cumsum[-1] != 0:
@@ -520,7 +520,7 @@ def  update_model(X, U, S, k, n, mu,
 #
 
 #@profile
-def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='none', 
+def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='none',
            feature_weights=[], start_sol=None, end_sol=None, flush_parameters=False):
   """demud(ds, k, nsel, scoremethod, svdmethod, missingmethod, feature_weights):
 
@@ -552,10 +552,10 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
   # Check to ensure that parameters are valid
   if ds.data == []:
     printt("Error: No data in ds.data.")
-    return 
+    return
   if k < 1:
     printt("Error: k must be at least 1.")
-    return 
+    return
   if nsel < 1:
     printt("Error: nsel must be at least 1.")
     return
@@ -620,11 +620,11 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     ds.name += '-init_item=' + str(log.opts['iitem'])
   if log.opts['shotfilt'] != 0: ds.name += '-shotfilt=%d' % log.opts['shotfilt']
   if log.opts['fft']: ds.name += "-fft"
-  if log.opts['static']: ds.name += '-static' 
+  if log.opts['static']: ds.name += '-static'
   if log.opts['coi'] != None: ds.name += '-coi-' + log.opts['coiaction'] \
       + '=' + log.opts['coi']
   if log.opts['note'] != None: ds.name += '-' + log.opts['note']
-  
+
   ###############################################
   # Set up output directories for plots and logging
   if not os.path.exists('results'):
@@ -634,12 +634,12 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     os.mkdir(outdir)
   log.logfilename = os.path.join(outdir, 'demud.log')
   log.logfile     = open(log.logfilename, 'w')
-  
+
   ###############################################
   # Print dataset info
   printt("Dataset: " + ds.name)
   printt(" Dimensions (features x items): %d x %d" % ds.data.shape)
- 
+
   ###############################################
   # Plot variance
   if log.opts['plotvariance']:
@@ -647,9 +647,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
 
   ###############################################
   # Check once and for all if the input data contains NaN's.
-  
+
   X = ds.data
-  
+
   # Warn user what to do if it's true and s/he aren't ready for it
   nans = np.isnan(X)
   if np.sum(nans) > 0:
@@ -676,14 +676,14 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
 
   ###############################################
   # Initialize the model
-  
+
   U = []
   # S = np.array([0])
   S = np.array([1])
   mu = []
   n = 0
   pcts = []
-  
+
   # Initial dataset is supplied
   if ds.initfilename != '' and ds.initfilename != None:
     log.opts['iitem'] = -1  # not really, but default is 0
@@ -691,20 +691,20 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     U, S, mu, n, pcts = update_model(ds.initdata, U, S, k, n=0, mu=[],
                                      svdmethod=svdmethod,
                                      missingmethod=missingmethod)
-    
+
   # Doing a full SVD
   elif log.opts['static'] or log.opts['iitem'] in ('-1','svd','SVD'):
     log.opts['iitem'] = -1
     printt('Doing initial SVD to get started.')
     U, S, mu, n, pcts = update_model(X, U, S, k, n=0, mu=[],
                                svdmethod=svdmethod, missingmethod=missingmethod)
-    
+
   # Select random item
   elif log.opts['iitem'] in ('r','R','random','RANDOM'):
     randitem = np.random.randint(X.shape[1])
     printt('Selecting random item = %d to get started.'%randitem)
     log.opts['iitem'] = randitem
-  
+
   # Use dataset mean
   elif log.opts['iitem'] in ('mean', 'average', 'mu', '-2', -2):
     printt('Initializing model to mean and skipping to selection 1')
@@ -727,14 +727,14 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     log.opts['iitem'] = -2
 
   log.opts['iitem'] = int(log.opts['iitem'])
-  
+
   printt('')
-  
+
   # print "Shape of U: ", U.shape
   # print "Length of S: ", len(S)
   # print "Shape of mu: ", mu.shape
   # print "n: ", n
-    
+
   ###############################################
   # Initialize all of the counters, sums, etc for demud
   n_items  = X.shape[1]
@@ -746,10 +746,10 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
   maxscoresum = -1
   sels = []
   sels_idx = []
-    
+
   ##############################################################################
   ## MAIN ITERATIVE DISCOVERY LOOP
-  
+
   for i in range(nsel):
     printt("Time elapsed at start of iteration %d/%d:" % (i, nsel-1),
            time.clock())
@@ -758,7 +758,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     # If we just found a COI in the previous round and the coi-action is 'seek',
     #   then don't use the model to select the next item.
     # Instead, do a nearest-neighbor search through X based on sels[-1].
-    
+
     if whencoiswerefound != [] and (whencoiswerefound[-1] == i-1) and \
         (log.opts['coiaction'] == 'seek'):
       printt("Actively searching for the next COI based on item %d"
@@ -774,7 +774,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       score = -1
       # We update scores simply by removing this item.
       scores = np.delete(scores, ind)
-      
+
     ###############################################
     # Get the selection, according to model U
     else:
@@ -792,13 +792,13 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       '''
       ind, r, score, scores = select_next(X, U, S, mu, scoremethod,
                                           missingmethod, feature_weights)
-    
+
     sels += [orig_ind[ind]]
     sels_idx += [ind]
 
     printt("%d) Selected item %d (%s), score %g." % \
         (i, orig_ind[ind], ds.labels[orig_ind[ind]], score))
-        
+
     ###############################################
     # Report the fractional change in sum of reconstruction scores
     scoresum = sum(scores)
@@ -824,14 +824,14 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
                                  np.mean(diff[np.where(~np.isnan(diff))])))
     printt("    Class = %s" % ds.labels[orig_ind[ind]])
     printt('')
-    
+
     ###############################################
     # Report on how many nans are in this selection.
     if len(np.where(np.isnan(X))[0]) > 0 or len(np.where(np.isnan(seen))[0]) > 0:
       goodinds = np.where(~np.isnan(x))[0]
       print '  Sel. %d: %d (%.2f%%) good indices (not NaN)' % \
           (i, len(goodinds), 100*len(goodinds) / float(len(x)))
-    
+
     ###############################################
     # Plot item using dataset's plotting method.
     if log.opts['kepler']:
@@ -848,7 +848,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       if log.opts['plot']:
         ds.plot_item(i, orig_ind[ind], x, r, k, ds.labels[orig_ind[ind]],
                      U, scores, feature_weights)
-    
+
     ###############################################
     # Plot the top 4 principal components of the current model
     if U != [] and log.opts['plot']:
@@ -862,7 +862,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     # Setup for checking if to update or not.
     do_update = True
 
-    # This code is relevant only to one specific study which was part of James' 2014 results and 
+    # This code is relevant only to one specific study which was part of James' 2014 results and
     #   can be deleted at will if desired.  It used a amsk image to identify a COI in one Mastcam
     #   segmentation image.
 
@@ -887,12 +887,12 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     ###############################################
     # Don't update if class of interest is found in item label
     if log.opts['coi'] is not None:
-      if log.opts['coi'] in ds.labels[orig_ind[ind]]: 
+      if log.opts['coi'] in ds.labels[orig_ind[ind]]:
         do_update = False
         printt("Not updating, it's the class of interest!")
         ncois = ncois + 1
         whencoiswerefound += [i]
-        
+
         # If the coi-action is 'keep', proceed normally (do_update is false).
         # If the coi-action is 'seek', next selection should be
         #  the nearest neighbor to the last one.  This check is done
@@ -903,9 +903,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
           printt("\nFound class of interest on these picks:\n")
           if not log.opts['kepler']:
             for ff in whencoiswerefound: printt(ff)
-          else:    
+          else:
             el = ExoplanetLookup()
-            for fff in whencoiswerefound: 
+            for fff in whencoiswerefound:
               kid = int(ds.labels[sels[fff]].split(':')[0])
               kidmin = el.min_period(kid)
               if kidmin == "Unknown":
@@ -938,15 +938,15 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
           elif userpref.lower() == 'n' or 'no' or 'no thank you':
             bad_input = False
             do_update = False
-    
+
     ###############################################
     # Check for static SVD
-    if log.opts['alwaysupdate'] and do_update == False: 
+    if log.opts['alwaysupdate'] and do_update == False:
       do_update = True
       printt("Doing an update!")
-      
+
     if log.opts['static']: do_update = False
-          
+
     ###############################################
     # Update the model
     if do_update:
@@ -962,7 +962,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
         # Reset U to empty if this is the first iteration
         # in case an SVD was used to select the first item,
         # UNLESS an initial data set was specified.
-        if (i == 0 and ds.initdata == []): 
+        if (i == 0 and ds.initdata == []):
           U = []
 
       # print "S before update:", S
@@ -974,7 +974,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       # print "S after update:", S
     else:
       printt("Skipped updating model U because data was interesting.")
-    
+
     ###############################################
     # Remove this item from X
     keep     = range(X.shape[1])
@@ -990,39 +990,39 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     printt("\nFound class of interest on these picks:\n")
     if not log.opts['kepler']:
       for ff in whencoiswerefound: printt(ff)
-    else:    
+    else:
       el = ExoplanetLookup()
-      for fff in whencoiswerefound: 
+      for fff in whencoiswerefound:
         kid = int(ds.labels[sels[fff]].split(':')[0])
         minper = el.min_period(kid)
         if minper != 'Unknown':
           printt("%3d) %8d: min period %7.4f days" % (fff, kid, float(minper)))
         else:
           printt("%3d) %8d: min period unknown" % (fff, kid))
-  
+
   ###############################################
   # Return
   return (sels, sels_idx)
-    
+
 #___________________________________________________________________________________________________________________________________________________________
 #______________________________generate_feature_weights_____________________________________________________________________________________________________
 #
 
 def  generate_feature_weights(d, xvals):
   """generate_feature_weights(d, xvals):
-  
-  Generate feature weights for a dataset with d items based on the 
+
+  Generate feature weights for a dataset with d items based on the
     value of the optparse variable 'fw' specified by --featureweightmethod=
-  
+
   This is the place in the code to add more feature weighting methods.
     You do not need to worry about modifying the check_opts() method below,
     but you may want to edit fw_print() (--featureweightmethods).
-  
+
   """
-  
+
   if log.opts['fw'] == 'flat' or log.opts['fw'] == '':
     return []
-  elif log.opts['fw'] == 'boostlow':  
+  elif log.opts['fw'] == 'boostlow':
     return [(1. / (i ** (1. / math.log(d, 2)))) for i in range(1, d+1)]
   elif log.opts['fw'] == 'boosthigh':
     ocelot = [(1. / (i ** (1. / math.log(d, 2)))) for i in range(1, d+1)]
@@ -1037,9 +1037,9 @@ def  generate_feature_weights(d, xvals):
 
 def  read_feature_weights(fwfile, xvals):
   """read_feature_weights(fwfile, xvals)
-  
+
   Read feature weights from the specified file.
-  The data set's xvals must be provided so this method can 
+  The data set's xvals must be provided so this method can
     sanity-check the number of weights (and match to wavelengths,
     if specified).
   """
@@ -1080,7 +1080,7 @@ def  read_feature_weights(fwfile, xvals):
   for weight in wolf:
     if weight < 0 or weight > 1:
       raise ValueError("Weights must be between 0 and 1.")
-    
+
   return wolf
 
 #___________________________________________________________________________________________________________________________________________________________
@@ -1098,9 +1098,9 @@ def  finish_initialization(ds, action='reading in dataset'):
     default_n_value = ds.data.shape[1]
 
   fw = generate_feature_weights(ds.data.shape[0], ds.xvals)
-  
+
   return fw
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #__________________________________check_if_files_exist_____________________________________________________________________________________________________
 #
@@ -1112,7 +1112,7 @@ def  check_if_files_exist(files, ftype='input'):
   if files[0] == '':
     printt("%s file not specified." % ftype)
     return False
-  
+
   for f in files:
     # Allow .pkl files to not exist, since they will be generated.
     if f == '' or f.endswith('.pkl'):
@@ -1121,11 +1121,11 @@ def  check_if_files_exist(files, ftype='input'):
       printt("Error: specified %s file %s does not exist" % (ftype, f))
       return False
   return True
-     
+
 #___________________________________________________________________________________________________________________________________________________________
 #_____________________________________report_classes________________________________________________________________________________________________________
 #
-      
+
 # Reports upon classes found.  Suppressed with --no-report option.
 def report_classes(ds, n, sels, sels_idx, data_choice):
   # print a list of all classes found in first nsel selections
@@ -1148,13 +1148,13 @@ def report_classes(ds, n, sels, sels_idx, data_choice):
       file_sels[ds.datafiles[file_idx]] += [sels[i]];
 
     for key in file_sels:
-      if file_sels[key]: 
+      if file_sels[key]:
         print("File: %s" %(key));
         for csels in file_sels[key]:
-          i = sels.index(csels) 
+          i = sels.index(csels)
           printt('Class found on selection %d: %s' % (i,ds.labels[csels]))
 
-      
+
 #___________________________________________________________________________________________________________________________________________________________
 #_______________________________________svd_print___________________________________________________________________________________________________________
 #
@@ -1171,7 +1171,7 @@ def  svd_print():
   printt("--increm is a shortcut for --svdmethod=increm-ross.")
   printt("")
   exit()
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #______________________________________score_print__________________________________________________________________________________________________________
 #
@@ -1183,7 +1183,7 @@ def  score_print():
   printt("- 'high': positive residuals")
   printt("- 'lowhigh': both (Default)")
   exit()
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #________________________________________md_print___________________________________________________________________________________________________________
 #
@@ -1195,7 +1195,7 @@ def  md_print():
   printt("- 'ignore': ignore missing values following Brand (2002)")
   printt("- 'none': assert nothing is missing (NaN).  Die horribly if not true.")
   exit()
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #________________________________________fw_print___________________________________________________________________________________________________________
 #
@@ -1222,12 +1222,12 @@ def  fw_print():
   printt("  This will weight the most important feature at 1.0")
   printt("    and the least important at 0.5, with an exponential curve between.")
   exit()
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #_______________________________________make_config_________________________________________________________________________________________________________
 #
 
-# Remake demud.config. 
+# Remake demud.config.
 def  clean():
 
   #global log.opts
@@ -1242,11 +1242,11 @@ def  clean():
     if y.lower() != 'y' and y.lower() != 'yes' and y.lower() != 'yes please':
       printt("Aborting.")
       exit()
-    
-    if y.lower() == 'yes please': 
+
+    if y.lower() == 'yes please':
       if log.opts['fun']:
         printt("Certainly!  Thank you for saying please!")
-    
+
   printt("\nWriting to demud.config\n")
 
 
@@ -1271,7 +1271,7 @@ def  clean():
                    " -h --help\n\n"
                    "Do not delete the headers, or demud.py as is "
                    "may suffer an ignominious demise by IndexError\n\n")
-  
+
   # this is the part in
   # the code where a haiku is
   # lurking silently
@@ -1351,11 +1351,11 @@ def  clean():
                    "solnumber = \n"
                    "scaleInvariant = \n"
                    "initdatasols = \n")
-    
+
   outputfile.close()
-    
+
   exit()
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #______________________________________parse_args___________________________________________________________________________________________________________
 #
@@ -1367,20 +1367,20 @@ def  parse_args():
   #
   global __VERSION__
   vers = __VERSION__
-  parser = optparse.OptionParser(usage="python %prog [-gecmasktofuzj] [options]", 
+  parser = optparse.OptionParser(usage="python %prog [-gecmasktofuzj] [options]",
                                   version=vers)
-  
+
   # Datatype options
-  dtypes = OptionGroup(parser, "Datatype Options", 
+  dtypes = OptionGroup(parser, "Datatype Options",
                           "Exactly one must be selected.")
-  
-  dtypes.add_option('-g', '--glass', help='Glass classification', 
+
+  dtypes.add_option('-g', '--glass', help='Glass classification',
                       default=False, action='store_true', dest='glass')
-  dtypes.add_option('-e', '--ecoli', help='E. coli classification', 
+  dtypes.add_option('-e', '--ecoli', help='E. coli classification',
                       default=False, action='store_true', dest='ecoli')
-  dtypes.add_option('-o', '--abalone', help='Abalone classification', 
+  dtypes.add_option('-o', '--abalone', help='Abalone classification',
                       default=False, action='store_true', dest='abalone')
-  dtypes.add_option('-p', '--pancam', help='Pancam spectra', 
+  dtypes.add_option('-p', '--pancam', help='Pancam spectra',
                       default=False, action='store_true', dest='pancam')
   dtypes.add_option('-b', '--apf', help='APF spectra',
                       default=False, action='store_true', dest='apf')
@@ -1388,57 +1388,57 @@ def  parse_args():
                       default=False, action='store_true', dest='gbt')
   dtypes.add_option('--gbtfil', help='GBT filterbank',
                       default=False, action='store_true', dest='gbtfil')
-  dtypes.add_option('-x', '--testdata', help='Test data', 
+  dtypes.add_option('-x', '--testdata', help='Test data',
                       default=False, action='store_true', dest='testdata')
-  dtypes.add_option('-c', '--chemcam', help='ChemCam data', default=False, 
+  dtypes.add_option('-c', '--chemcam', help='ChemCam data', default=False,
                       action='store_true', dest='chemcam')
-  dtypes.add_option('-f', '--finesse', help='FINESSE data', default=False, 
+  dtypes.add_option('-f', '--finesse', help='FINESSE data', default=False,
                       action='store_true', dest='finesse')
-  dtypes.add_option('-m', '--misr', help='MISR aerosol data', default=False, 
+  dtypes.add_option('-m', '--misr', help='MISR aerosol data', default=False,
                       action='store_true', dest='misr')
-  dtypes.add_option('-a', '--aviris', help='AVIRIS data', default=False, 
+  dtypes.add_option('-a', '--aviris', help='AVIRIS data', default=False,
                       action='store_true', dest='aviris')
   dtypes.add_option('-s', '--spitzer', help='Spitzer IRS exoplanet atmosphere data',
                       default=False, action='store_true', dest='irs')
-  dtypes.add_option('-k', '--kepler', help='Kepler exoplanet data', 
+  dtypes.add_option('-k', '--kepler', help='Kepler exoplanet data',
                       default=False, action='store_true', dest='kepler')
-  dtypes.add_option('-t', '--texturecam', help='TextureCam image data', 
+  dtypes.add_option('-t', '--texturecam', help='TextureCam image data',
                       default=False, action='store_true', dest='texturecam')
   dtypes.add_option('-u', '--ucis', help='UCIS hyperspectral data',
                       default=False, action='store_true', dest='ucis')
-  dtypes.add_option('-z', '--isolet', help='ISOLET letter recognition data', 
+  dtypes.add_option('-z', '--isolet', help='ISOLET letter recognition data',
                       default=False, action='store_true', dest='isolet')
-  dtypes.add_option('-q', '--navcam', help='Run for sequence of Images (MER purpose)', 
+  dtypes.add_option('-q', '--navcam', help='Run for sequence of Images (MER purpose)',
                       default=False, action='store_true', dest='navcam')
-  dtypes.add_option('-j', '--mastcam', help='MSL Mastcam image data', 
+  dtypes.add_option('-j', '--mastcam', help='MSL Mastcam image data',
                       default=False, action='store_true', dest='mastcam')
-  dtypes.add_option('-I', '--images', help='Image data in a directory', 
+  dtypes.add_option('-I', '--images', help='Image data in a directory',
                       default=False, action='store_true', dest='images')
 
   parser.add_option_group(dtypes)
-  
+
   # Parameter options
   params = OptionGroup(parser, "Parameter Options",
                           "Specify DEMUD parameters."
                           "  Override the defaults in demud.config.")
-                          
+
   params.add_option('--k', help='Number of principal components for reconstructing data',
                       default=-773038, type=int, action='store', dest='k')
   params.add_option('--n', '--iters', help='Number of iterations of SVD and selection; default 10',
                       default=-773038, type=int, action='store', dest='n')
   params.add_option('--all', help="Iterate through all data items",
-                      default=False, action='store_true', dest='all') 
+                      default=False, action='store_true', dest='all')
 
   params.add_option('--svdmethod', help="SVD method to use on each iteration (see --svdmethods for a list)",
                       default='default', type=str, action='store', dest='svdmethod')
   params.add_option('--increm', help="Same as --svdmethod=increm-ross",
                       default=False, action='store_true', dest='increm')
   params.add_option('--missingdatamethod', help="How to handle missing data (see --missingdatamethods for a list)",
-                      default='none', type=str, action='store', dest='missingdatamethod')    
+                      default='none', type=str, action='store', dest='missingdatamethod')
   params.add_option('--scoremethod', help="How to score data residuals (see --scoremethods for a list)",
-                      default='lowhigh', type=str, action='store', dest='scoremethod')             
+                      default='lowhigh', type=str, action='store', dest='scoremethod')
   params.add_option('--featureweightmethod', help="How to weight features for scoring (see --featureweightmethods for a list)",
-                      default='', type=str, action='store', dest='fw')  
+                      default='', type=str, action='store', dest='fw')
   params.add_option('--static', help='Static SVD: truncate to k vectors and never update again',
                       default=False, action='store_true', dest='static')
 
@@ -1449,24 +1449,24 @@ def  parse_args():
   params.add_option('--initpriorsols', help="Initialize with data from sols prior to the specified sol or sol range.  Use with -c.",
                     default=False, action='store_true', dest='init_prior_sols')
   params.add_option('--note', help='Note to append to output directory name',
-                      default=None, action='store', dest='note')                   
-  
-  parser.add_option_group(params)              
-                   
+                      default=None, action='store', dest='note')
+
+  parser.add_option_group(params)
+
   # Data processing and output options
   dataops = OptionGroup(parser, "Data processing and output options",
                           "Specify additional preprocessing or postprocessing options.")
-                      
+
   dataops.add_option('--init-item', help='Index of initialization item (default: 0; -1 or svd for full-data SVD; r for random; mean for mean)',
                       default=0, type=str, action='store', dest='iitem')
-  dataops.add_option('-i', '--interactive', help='Ask for feedback on adding selection to U', 
+  dataops.add_option('-i', '--interactive', help='Ask for feedback on adding selection to U',
                       default=False, action='store_true', dest='interactive')
   dataops.add_option('--variance', help="Optimize --k to capture this much data variance\n Range: [0.0 1.0]",
                       default=-773038.0, type=float, action='store', dest='k_var')
 
   dataops.add_option('--shotnoisefilter', help='Apply median filter of specified width. Used with [-cu].',
                       default=0, type=int, action='store', dest='shotfilt')
-  dataops.add_option('--fft', help='Perform FFT on data first. Only supported by [-k].', 
+  dataops.add_option('--fft', help='Perform FFT on data first. Only supported by [-k].',
                       default=False, action='store_true', dest='fft')
   dataops.add_option('--lookup', help="Look up sources' status tags from MAST.  Used with [-k].",
                       default=False, action='store_true', dest='lookup')
@@ -1488,15 +1488,15 @@ def  parse_args():
                       default=-773038, type=int, action='store', dest='n_coi')
   dataops.add_option('--always-update', help='Always update model, ignoring COI.  Still use COI for output.  Total hack.',
                       default=False, action='store_true', dest='alwaysupdate')
-                                     
+
   parser.add_option_group(dataops)
-  
-  # Other options                
-  parser.add_option('--config', help='Specify config file other than demud.config', 
+
+  # Other options
+  parser.add_option('--config', help='Specify config file other than demud.config',
                       default=None, type='string', action='store', dest='config')
   parser.add_option('--make-config', help='Re-create demud.config with empty variables; exit.',
                       default=False, action='store_true', dest='clean')
-  parser.add_option('--easter-eggs', '--fun', help=optparse.SUPPRESS_HELP, default=False, 
+  parser.add_option('--easter-eggs', '--fun', help=optparse.SUPPRESS_HELP, default=False,
                       action='store_true', dest='fun')
 
   parser.add_option('--svdmethods', help='Provide details on available SVD methods and exit',
@@ -1512,11 +1512,11 @@ def  parse_args():
                       default=False, action='store_true', dest='printk')
   parser.add_option('--plot-variance', help='Make a plot of k vs. variance explained.',
                       default=False, action='store_true', dest='plotvariance')
-                      
+
   (options, args) = parser.parse_args()
 
   return vars(options)
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #______________________________________check_opts___________________________________________________________________________________________________________
 #
@@ -1526,7 +1526,7 @@ def  check_opts(datatypes):
 
   # Check if a function argument was supplied
   global opts, use_max_n
-  if (log.opts['svd_print'] or log.opts['md_print'] or log.opts['clean'] 
+  if (log.opts['svd_print'] or log.opts['md_print'] or log.opts['clean']
       or log.opts['printk'] or log.opts['score_print'] or log.opts['fw_print']):
     if len(sys.argv) == 3 and log.opts['fun']:
         pass
@@ -1552,21 +1552,21 @@ def  check_opts(datatypes):
   # Check to make sure that exactly one datatype argument was supplied.
   sum = 0
   selected = None
-           
+
   for k in log.opts: 
-    if log.opts[k] == True and k in datatypes: 
+    if log.opts[k] == True and k in datatypes:
       sum += 1
       selected = k
-  
+
   if sum != 1:
     printt("Error: Exactly one datatype argument must be supplied.  Use -h for help.")
     exit()
-    
+
   # Check to make sure that --k and --variance are not both specified
   if log.opts['k'] != -773038 and log.opts['k_var'] != -773038.0:
     printt("Error: conflicting arguments: --k and --variance.  Use -h for help.")
     exit()
-    
+
   # Check to make sure that --missingdatamethod has an appropriate argument
   mdmethods = ('none', 'ignore', 'zero')
   if (log.opts['missingdatamethod'] != None):
@@ -1575,19 +1575,19 @@ def  check_opts(datatypes):
       printt("Choose between 'zero', 'ignore', and 'none'.")
       printt("Use --missingdatamethods for more info.")
       exit()
-          
+
   # Check to make sure that --svdmethod has an appropriate argument
   if log.opts['svdmethod'] != 'increm-ross' and log.opts['svdmethod'] != 'default' and log.opts['increm']:
     printt("Error: cannot specify --increm along with different svdmethod.")
     printt("Use --svdmethods for more info.")
     exit()
-  
-  if log.opts['svdmethod'] == 'default': log.opts['svdmethod'] = 'full'    
-  
-  if log.opts['increm']: 
+
+  if log.opts['svdmethod'] == 'default': log.opts['svdmethod'] = 'full'
+
+  if log.opts['increm']:
     log.opts['svdmethod'] = 'increm-ross'
     printt("Using increm")
-    
+
   svdmethods = ('full', 'increm-ross', 'increm-brand')
   if (log.opts['svdmethod'] != None):
     if (log.opts['svdmethod'] not in svdmethods):
@@ -1595,7 +1595,7 @@ def  check_opts(datatypes):
       printt("Choose between 'full', 'increm-ross', and 'increm-brand'.")
       printt("Use --svdmethods for more info.")
       exit()
-      
+
   # Check to make sure that --scoremethod has an appropriate argument
   scoremethods = ('low', 'high', 'lowhigh')
   if (log.opts['scoremethod'] != None):
@@ -1604,7 +1604,7 @@ def  check_opts(datatypes):
       printt("Choose between 'low', 'high', and 'lowhigh'.")
       printt("Use --scoremethods for more info.")
       exit()
-  
+
   # Check to make sure that --shotnoisefilt was supplied only with a valid argument
   if log.opts['shotfilt'] > 0:
     if log.opts['shotfilt'] < 3:
@@ -1619,13 +1619,13 @@ def  check_opts(datatypes):
     if not (log.opts['kepler']):
       printt("Error: FFT not supported with datatype %s" % selected)
       exit()
-      
+
   # Check to make sure that --lookup was only supplied with a valid argument
   if (log.opts['lookup']):
     if not (log.opts['kepler']):
       printt("Error: --lookup supplied with invalid datatype.  Use -h for help.")
       exit()
-      
+
   # Check to make sure that --no-report was only supplied with a valid argument
   if not (log.opts['report']):
     if not (log.opts['glass'] or log.opts['ecoli'] or log.opts['abalone'] or
@@ -1634,7 +1634,7 @@ def  check_opts(datatypes):
       exit()
   if selected not in ['glass', 'ecoli', 'abalone', 'isolet']:
     log.opts['report'] = False
-      
+
   # Check to make sure that a valid value of k or k_var and n were given
   if (log.opts['k'] != -773038 and log.opts['k'] < 1):
     printt("Error: bad argument to --k.  Number of PCs must be at least 1.")
@@ -1671,7 +1671,7 @@ def  check_opts(datatypes):
     else:
       printt("Error parsing start and end sols from %s." % log.opts['sols'])
       exit()
-   
+
   # Check to see if n-coi was given
   if (log.opts['n_coi'] != -773038 and log.opts['coi'] == None):
     printt("Error: cannot supply --n-coi without specifying --coi.")
@@ -1685,14 +1685,14 @@ def  check_opts(datatypes):
   if (log.opts['coiaction'] not in [None, 'keep', 'seek']):
     printt("Error: --coi-action must be specified as 'keep' or 'seek'.")
     exit()
-    
+
   # Check to see if all was given
   if (log.opts['all']):
     printt("Using the whole data set.")
     use_max_n = True
 
   return selected
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #____________________________________parse_config_term______________________________________________________________________________________________________
 #
@@ -1705,7 +1705,7 @@ def  parse_config_term(config, term):
   """
 
   # Matching lines
-  lines = [line for line in config if term in line 
+  lines = [line for line in config if term in line
            and line.strip()[0] != '#']
 
   # This term may not be defined in the config file
@@ -1714,7 +1714,7 @@ def  parse_config_term(config, term):
 
   # If the term is used multiple times, it uses the last one
   return lines[-1].split('=')[-1].strip().replace("'", "").replace('"', '')
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #____________________________________parse_config___________________________________________________________________________________________________________
 #
@@ -1766,14 +1766,14 @@ def  parse_config(config, data_choice):
   # Kepler
   keplerdatafolder    = parse_config_term(config, 'keplerdatafolder')
   keplerdataextension = parse_config_term(config, 'keplerdataextension')
-  
+
   # Mastcam
   mastcamdatafolder   = parse_config_term(config, 'mastcamdatafolder')
 
   # Images
   imagedatafolder       = parse_config_term(config, 'imagedatafolder')
   imageinitdatafolder   = parse_config_term(config, 'imageinitdatafolder')
-  
+
   # Texturecam (image)
   tcfilename     = parse_config_term(config, 'tcfilename')
   tcpklname      = parse_config_term(config, 'tcpklname')
@@ -1788,7 +1788,7 @@ def  parse_config(config, data_choice):
 
   # UCIS
   ucisrawfile    = parse_config_term(config, 'ucisrawfile')
-  
+
   if data_choice == 'glass':
     return ([glassdatafile],'')
   elif data_choice == 'abalone':
@@ -1834,7 +1834,7 @@ def  parse_config(config, data_choice):
                     printt("Example initdatasols: '(1950,1955),1959'")
                 end_sols.append(int(sols[:4]));
                 continue;
-            
+
             if sols[0] == '(':
                 start_sols.append(int(sols[1:]));
             else:
@@ -1842,7 +1842,7 @@ def  parse_config(config, data_choice):
 
         for start,end in zip(start_sols, end_sols):
             initsols.extend(range(start,end + 1));
-    
+
     return ([datafolder], (int(solnumber), initsols, scaleInvariant))
 
   elif data_choice == 'ucis':
@@ -1862,14 +1862,14 @@ def  optimize_k(ds, v):
   Assumes missingmethod = zero.
   """
   assert v >= 0.0 and v <= 1.0
-  
+
   # If initialization data is present, optimize k using that data
   if len(ds.initdata) > 0:
     X = ds.initdata
-  # Otherwise analyze the new data 
+  # Otherwise analyze the new data
   else:
     X = ds.data
-  
+
   if X == []:
     printt("Error: No data in input.")
     exit()
@@ -1881,7 +1881,7 @@ def  optimize_k(ds, v):
           (z[0].shape[1], X.shape[0] * X.shape[1]))
     X = copy.deepcopy(X)
     X[z] = 0
-  
+
   # Set up svd so we can operate on S
   mu      = np.mean(X, axis=1).reshape(-1,1)
   X       = X - mu
@@ -1897,14 +1897,14 @@ def  optimize_k(ds, v):
   percents = S / cumsum[-1]
   #minind = np.argmin(abs(cumpercents - v))
   minind = [i for i, x in enumerate(cumpercents) if x > v][0]
-  
+
   printt("\nChose k = %d, capturing %5.2f%% of the data variance\n" % \
         (minind + 1, 100 * cumpercents[minind]))
-  
+
   if log.opts['pause']: raw_input("Press enter to continue\n")
-  
+
   return minind + 1
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #____________________________________plot_variance__________________________________________________________________________________________________________
 #
@@ -1921,7 +1921,7 @@ def plot_variance(ds):
   if not os.path.exists(outdir):
     os.mkdir(outdir)
   pylab.savefig(os.path.join(outdir, '__variance.pdf'))
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #__________________________________init_default_k_values____________________________________________________________________________________________________
 #
@@ -1951,7 +1951,7 @@ def  init_default_k_values():
     'images'      : 10,
     'ucis'        : 10,
   }
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #_________________________________print_default_k_values____________________________________________________________________________________________________
 #
@@ -1961,7 +1961,7 @@ def  print_default_k_values():
   global default_k_values
   printt(default_k_values)
   exit()
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #_________________________________load_data_________________________________________________________________________________________________________________
 #
@@ -1970,10 +1970,10 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
 
   ##############################################################################
   ## GLASS DATA SET (classification)
-  if data_choice == 'glass': 
+  if data_choice == 'glass':
     ds = GlassData(data_files[0])
   ## ABALONE DATA SET (classification)
-  elif data_choice == 'abalone': 
+  elif data_choice == 'abalone':
     ds = AbaloneData(data_files[0])
   ## E. COLI DATA SET (classification)
   elif data_choice == 'ecoli':
@@ -2022,7 +2022,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
 
 
     ds = MISRDataTime(data_files[0], data_files[1], data_files[2])
-    
+
     '''
     #
     # THIS IS ALL OLD STUFF FROM KIRI WHICH IS NOW DEAD.
@@ -2056,7 +2056,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
                  svdmethod='increm-ross',
                  missingmethod='ignore')
     # Selections should be:
-    # k=10 
+    # k=10
     # k=5  [128, 24, 127, 0, 152, 153, 159, 120, 46, 52]
     ds.name = origname
     '''
@@ -2065,7 +2065,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   elif data_choice == 'aviris':
     #ds = ENVIData(avirisrawfile)
     ds = SegENVIData(data_files[1], data_files[2])
-    ds.write_RGB(data_files[0] + 'f970619t01p02_r02_sc04.png')    
+    ds.write_RGB(data_files[0] + 'f970619t01p02_r02_sc04.png')
   ## SPITZER IRS DATA SET
   elif data_choice == 'irs':
     ds = IRSData(data_files[0], data_files[1], data_files[2], data_files[3])
@@ -2084,10 +2084,10 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds.selections = np.zeros((ds.height, ds.width))
   ## NAVCAM
   elif data_choice == 'navcam':
-    ds = NavcamData(data_files[0], sol_number, initsols, scaleInvariant); 
+    ds = NavcamData(data_files[0], sol_number, initsols, scaleInvariant);
   ## UCIS (ENVI) DATA SET
   elif data_choice == 'ucis':
-    ds = ENVIData(data_files[0], 
+    ds = ENVIData(data_files[0],
                   shotnoisefilt = log.opts['shotfilt'],
                   fwfile        = log.opts['fw'])
     ds.write_RGB(os.path.join(os.path.dirname(data_files[0]),
@@ -2103,7 +2103,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     exit()
 
   return ds
-  
+
 #___________________________________________________________________________________________________________________________________________________________
 #__________________________________________main_____________________________________________________________________________________________________________
 #
@@ -2112,54 +2112,54 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
 def  main():
 
   printt("DEMUD version " + __VERSION__ + "\n")
-  
+
   log.opts = parse_args()
   log.opts['start_sol'] = None
   log.opts['end_sol']   = None
-  
+
   ##############################################################################
   ## Check to ensure a valid set of arguments was given.
-  
+
   datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
                'pancam', 'apf', 'gbt', 'gbtfil', 'mastcam',
                'images', 'ucis', 'testdata')
-  
+
   data_choice = check_opts(datatypes)
-  
+
   (config, fft) = (log.opts['config'], log.opts['fft'])
-  (lookup, report) = (log.opts['lookup'], log.opts['report'])   
-  (q, sm, mm) = (log.opts['svdmethod'], 
+  (lookup, report) = (log.opts['lookup'], log.opts['report'])
+  (q, sm, mm) = (log.opts['svdmethod'],
       log.opts['scoremethod'], log.opts['missingdatamethod'])
-  
+
   ##############################################################################
   ## Check for config file and read it in
 
   # Read in config file
   config = 'demud.config' if log.opts['config'] == None else log.opts['config']
-  
+
   if check_if_files_exist([config], 'config') == False:
     sys.exit(1)
-  
+
   with open(config) as config_file:
     content        = config_file.readlines()
     data_files,etc = parse_config(content, data_choice)
 
   printt("Elapsed time after parsing args and reading config file:", time.clock())
-  
+
   ##############################################################################
   ## Now we are moving on to the cases which handle each data set.
   ##############################################################################
-  
+
   init_default_k_values()
-  
+
   global ds
 
   if check_if_files_exist(data_files) == False:
     sys.exit(1)
 
-  if data_choice == 'navcam':  
+  if data_choice == 'navcam':
     sol_number, initsols, scaleInvariant = etc
     ds = load_data(data_choice, data_files, sol_number, initsols, scaleInvariant)
   else:
@@ -2209,31 +2209,31 @@ def  main():
                            '%s-n=%d-segmentation.pkl' % (ds.name, len(sels))), 'w') as f:
       pickle.dump((sels, seg, img), f)
 
-    Image.fromarray(img).save(os.path.join('results', 
+    Image.fromarray(img).save(os.path.join('results',
                                            '%s-n=%d-segmentation.png' % (ds.name, len(sels))), 'PNG')
 
-      
+
   if data_choice == 'kepler' and lookup:
     # Output a list of selections, and then lookup their labels
     found = [int(ds.labels[x].split('-')[0].split(':')[0]) for x in sels]
-      
+
     printt(found)
-      
+
     flags = kepler_lookup.lookup(found)
-    
+
     for i in range(len(found)):
       printt("%3d) %d: %s" % (i, found[i], flags[str(found[i])]))
-      
+
   if data_choice == 'navcam':
     # Saves the scores to the output folder
     outdir  = os.path.join('results', ds.name)
     if not os.path.exists(outdir):
       os.mkdir(outdir)
     ds.plot_score(outdir)
-      
+
   ##############################################################################
 
-  printt("Total elapsed processor time:", time.clock()) 
+  printt("Total elapsed processor time:", time.clock())
 
   log.logfile.close()
   print "Wrote log to %s\n" % log.logfilename
@@ -2245,14 +2245,14 @@ def  main():
 #___________________________________________________________________________________________________________________________________________________________
 #_____________________________________if_name_=_main________________________________________________________________________________________________________
 #
-   
+
 if __name__ == "__main__":
   main()
-  
+
 
 #####
 # CHANGELOG
-#  
+#
 #  1.2: Interactive feedback and class of interest
 #  1.3: First element chosen is data[:,0] unless static SVD
 #  1.4: Incremental SVD fully functional; choice of first element
@@ -2274,6 +2274,3 @@ if __name__ == "__main__":
 #  - add required files to make-config
 #
 #####
-
-
-
