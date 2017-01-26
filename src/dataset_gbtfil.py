@@ -19,7 +19,8 @@
 import os, fnmatch, sys, pickle
 import numpy as np
 import pylab
-from scipy.stats import nanmean
+from numpy import nanmean
+#from scipy.stats import nanmean
 from dataset import Dataset
 import matplotlib
 import datetime
