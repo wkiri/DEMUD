@@ -21,7 +21,6 @@ import sys, os
 import numpy as np
 from numpy import linalg
 from numpy import nanmean
-#from scipy.stats import nanmean
 import math
 import copy, base64, time
 import csv

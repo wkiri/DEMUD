@@ -19,8 +19,6 @@
 import os, fnmatch, sys, pickle
 import numpy as np
 import pylab
-from numpy import nanmean
-#from scipy.stats import nanmean
 from dataset import Dataset
 import matplotlib
 import datetime
@@ -144,11 +142,6 @@ class GBTFilterbankData(Dataset):
       labelleft='off')   # labels along the left edge are off?
     pylab.xlabel('Original Data')
 
-    # Voodoo required to get colorbar to be the right height.
-    #from mpl_toolkits.axes_grid1 import make_axes_locatable
-    #div = make_axes_locatable(pylab.gca())
-    #cax = div.append_axes('right','5%',pad='3%')
-    #pylab.colorbar(im, cax=cax)
     pylab.colorbar(im)
 
     # SECOND SUBPLOT: reconstructed data
@@ -167,18 +160,12 @@ class GBTFilterbankData(Dataset):
       labelbottom='off', # labels along the bottom edge are off
       labelleft='off')   # labels along the left edge are off?
     pylab.xlabel('Reconstructed Data')
-  #  div = make_axes_locatable(pylab.gca())
-  #  cax = div.append_axes('right','5%',pad='3%')
-  #  pylab.colorbar(im, cax=cax)
     pylab.colorbar(im)
     
     # THIRD SUBPLOT: residual data
     
     pylab.subplot(2,2,3)
     resid = x - r
-    #print "Residual Min: %5.3f, Avg: %5.3f, Max: %5.3f" % (np.nanmin(resid),
-    #                                                       nanmean(resid),
-    #                                                       np.nanmax(resid))
     
     im = pylab.imshow(resid.reshape((self.nfreq,
                                      self.ntime)),
@@ -195,11 +182,6 @@ class GBTFilterbankData(Dataset):
     pylab.xlabel('Residual')
 
     cbar = pylab.colorbar(im)
-    '''
-    tickvals = np.arange(-1,1.1,0.5)
-    cbar.set_ticks(tickvals)
-    cbar.set_ticklabels(tickvals)
-    '''
 
     pylab.suptitle('DEMUD selection %d (%s), item %d, using K=%d' % \
                    (m, label, ind, k))
