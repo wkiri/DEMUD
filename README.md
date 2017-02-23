@@ -17,16 +17,26 @@ by the current model (i.e., contains the most unexpected information)
 and (2) updates its SVD model to "learn" about that item and avoid
 selecting similar items in the future.
 
+Installation
+------------
+
+You should be able to install demud by simply doing
+
+   `$ python setup.py install`
+
+That will make the `demud` console script available.
+
+
 To get started
 --------------
 
 1. DEMUD has an extensive help message.  Start by running (from `src/`)
 
-   `$ python demud.py -h`
+   `$ demud -h`
 
 2. Create an empty `demud.config` file by running
 
-   `$ python demud.py --make-config`
+   `$ demud --make-config`
 
 3. DEMUD supports a variety of different input data types.  See the
    "Datatype Options:" section of the help message and select the
@@ -38,9 +48,9 @@ To get started
    files in `demud.config` (see the `glassdatafile` and
    `ecolidatafile` variables), then running
 
-   `$ python demud.py -g`
+   `$ demud -g`
 
-   `$ python demud.py -e`
+   `$ demud -e`
 
    The results, along with a `demud.log` file, will appear in the
    `results/` directory under `src/`.
@@ -85,23 +95,23 @@ Selection and output options:
 
 By default, DEMUD starts by selecting the first item in the data set.  You may get more interesting results by using an initial SVD to select the "most anomalous" item from the data set as a starting point, e.g.:
 
-`$ python demud.py -g --init-item=-1`
+`$ demud -g --init-item=-1`
 
 By default, DEMUD recomputes a full SVD (of the previously selected
 items) at each iteration.  If you will be selecting a lot of items,
 you may get faster results using an incremental SVD.  See: 
 
-`$ python demud.py --svdmethods`
+`$ demud --svdmethods`
 
 By default, DEMUD sets any missing values to 0.  You can try different
 methods; see: 
 
-`$ python demud.py --missingdatamethods`
+`$ demud --missingdatamethods`
 
 By default, DEMUD treats all features equally.  You can specify
 different feature weighting methods; see: 
 
-`$ python demud.py --featureweightmethods`
+`$ demud --featureweightmethods`
 
 References
 ----------
