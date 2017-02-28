@@ -167,9 +167,11 @@ class GBTFilterbankData(Dataset):
     pylab.subplot(2,2,3)
     resid = x - r
     
+    # Tweak vmin and vmax so 0 is always in the middle
+    absmax = max(abs(vmin), abs(vmax))
     im = pylab.imshow(resid.reshape((self.nfreq,
                                      self.ntime)),
-                      cmap=cmap) #, vmin=-1, vmax=1) 
+                      cmap=cmap, vmin=-absmax, vmax=absmax) 
     pylab.tick_params(\
       axis='both',          # changes apply to the x-axis
       which='both',      # both major and minor ticks are affected
