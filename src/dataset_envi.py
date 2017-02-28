@@ -233,9 +233,9 @@ class ENVIData(Dataset):
       for s in range(info['samples']):
         self.labels += ['%d,%d' % (l,s)]
 
-    """
     # Data pre-processing (UCIS specific)
-    if 'UCIS' in envi_file or 'ucis' in envi_file:
+    #if 'UCIS' in envi_file or 'ucis' in envi_file:
+    if 'mars_yard' in envi_file:
       printt('Filtering out water absorption and known noisy bands,')
       printt(' from %d' % len(self.xvals))
       # Water: 1.38 and 1.87 nm
@@ -248,7 +248,6 @@ class ENVIData(Dataset):
       self.data  = self.data[bands_use, :]
       self.xvals = self.xvals[bands_use]
       printt(' to %d bands.' % len(self.xvals))
-    """
 
     # Filter out shot noise (median filter)
     # warning: this is slow... (should be optimized?)
@@ -498,7 +497,10 @@ class ENVIData(Dataset):
         # I used 0.10 for the Mars yard UCIS cube from Diana.
         # I used different values for the micro-UCIS cubes from Bethany
         # (see Evernote notes).
-        if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.13:
+        # UCIS
+        if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.10:
+        # micro-UCIS
+        #if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.13:
           self.pr_map[l_ind,s_ind] = m+1
 
 
@@ -520,9 +522,9 @@ class ENVIData(Dataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+    pylab.close()
 
     # Write the priority map to an image file
-    prmapfig = os.path.join(outdir, 'prmap-k-%d.pdf' % k)
     pylab.figure()
     # Start with colormap jet_r so smallest value is red and largest is blue
     # Max_c must be at least 2 and no greater than 255.
@@ -530,17 +532,25 @@ class ENVIData(Dataset):
     # (Imposed because we're then saving this out as an ENVI classification map with bytes.
     #  May want to be more flexible in the future, but I can't imagine really wanting to see
     #  more than 255 distinct colors?)
-    max_c    = 255 if m > 255   else m+1
+    max_c    = 255 if m > 254   else m+2
     max_c    = 2   if max_c < 2 else max_c
     cmap     = matplotlib.cm.get_cmap('jet_r', max_c)
     # Tweak so 0 is white; red starts at 1
     jet_map_v    = cmap(np.arange(max_c))
-    jet_map_v[0] = [1,1,1,1]  # white
+    #jet_map_v[0] = [1,1,1,1]  # white
     cmap         = matplotlib.colors.LinearSegmentedColormap.from_list("jet_map_white", jet_map_v)
-    #pylab.imshow(self.pr_map, interpolation='none', cmap=cmap, vmin=1, vmax=m+1)
-    pylab.imshow(self.pr_map, interpolation='none', cmap=cmap)
+    pr_map_plot = np.copy(self.pr_map)
+    # Set unprioritized items to one shade darker than most recent
+    pr_map_plot[pr_map_plot == 0] = m+2
+    #pylab.imshow(pr_map_plot, interpolation='none', cmap=cmap, vmin=1, vmax=m+1)
+    pylab.imshow(pr_map_plot, interpolation='none', cmap=cmap)
+    prmapfig = os.path.join(outdir, 'prmap-k-%d.pdf' % k)
     pylab.savefig(prmapfig)
-    print 'Wrote priority map figure to %s' % prmapfig
+    if (m % 10) == 0:
+      prmapfig = os.path.join(outdir, 'prmap-k-%d-m-%d.pdf' % (k, m))
+      pylab.savefig(prmapfig)
+    print 'Wrote priority map figure to %s (max_c %d)' % (prmapfig, max_c)
+    pylab.close()
 
     # Write the priority map contents to a file as a 64-bit float map 
     # (retained for backward compatibility for Hua,
