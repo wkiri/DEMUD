@@ -519,7 +519,6 @@ def  update_model(X, U, S, k, n, mu,
 #______________________________________demud________________________________________________________________________________________________________________
 #
 
-#@profile
 def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='none', 
            feature_weights=[], start_sol=None, end_sol=None, flush_parameters=False):
   """demud(ds, k, nsel, scoremethod, svdmethod, missingmethod, feature_weights):
@@ -721,8 +720,6 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     U[0] = 1
     S    = np.array([0])
 
-    # print "DID SVD of mu"
-    # print "S:", S
     pcts = [1.0]
     log.opts['iitem'] = -2
 
@@ -730,11 +727,6 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
   
   printt('')
   
-  # print "Shape of U: ", U.shape
-  # print "Length of S: ", len(S)
-  # print "Shape of mu: ", mu.shape
-  # print "n: ", n
-    
   ###############################################
   # Initialize all of the counters, sums, etc for demud
   n_items  = X.shape[1]
@@ -755,7 +747,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
            time.clock())
 
     ###############################################
-    # If we just found a COI in the previous round and the coi-action is 'seek',
+    # If we just found a COI (class of interest) in the previous round,
+    # and the coi-action is 'seek',
     #   then don't use the model to select the next item.
     # Instead, do a nearest-neighbor search through X based on sels[-1].
     
@@ -778,18 +771,6 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     ###############################################
     # Get the selection, according to model U
     else:
-      '''
-      print "IN DEMUD, ITER %d, ABOUT TO ENTER SELECT NEXT" % i
-      print " Percent of X that is nan: %5.2f%%" % \
-          (100*np.isnan(X).sum() / float(X.shape[0]*X.shape[1]))
-      if len(U) > 0:
-        print " Percent of U that is nan: %5.2f%%" % \
-            (100*np.isnan(U).sum() / float(U.shape[0]*U.shape[1]))
-        print " Percent of S that is nan: %5.2f%%" % \
-            (100*np.isnan(S).sum() / len(S))
-        print " Percent of mu that is nan: %5.2f%%" % \
-            (100*np.isnan(mu).sum() / float(mu.shape[0]*mu.shape[1]))
-      '''
       ind, r, score, scores = select_next(X, U, S, mu, scoremethod,
                                           missingmethod, feature_weights)
     
@@ -827,7 +808,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     
     ###############################################
     # Report on how many nans are in this selection.
-    if len(np.where(np.isnan(X))[0]) > 0 or len(np.where(np.isnan(seen))[0]) > 0:
+    if (len(np.where(np.isnan(X))[0]) > 0 or 
+        len(np.where(np.isnan(seen))[0]) > 0):
       goodinds = np.where(~np.isnan(x))[0]
       print '  Sel. %d: %d (%.2f%%) good indices (not NaN)' % \
           (i, len(goodinds), 100*len(goodinds) / float(len(x)))
@@ -851,8 +833,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     
     ###############################################
     # Plot the top 4 principal components of the current model
-    if U != [] and log.opts['plot']:
-      ds.plot_pcs(i, U, mu, k, S)
+    #if U != [] and log.opts['plot']:
+    #  ds.plot_pcs(i, U, mu, k, S)
     # if log.opts['misr']:
     #   pylab.clf()
     #   pylab.imshow(U.reshape([ds.along_track, -1]))
@@ -861,28 +843,6 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     ###############################################
     # Setup for checking if to update or not.
     do_update = True
-
-    # This code is relevant only to one specific study which was part of James' 2014 results and 
-    #   can be deleted at will if desired.  It used a amsk image to identify a COI in one Mastcam
-    #   segmentation image.
-
-    # if log.opts['mastcam'] and log.opts['coi'] == 'drillholes':
-    #   mask = np.equal(np.asarray(Image.open('./results/mask.png'))[:,:,0], 0)
-    #   # print mask.shape
-    #   # pylab.imshow(mask)
-    #   # pylab.colorbar()
-    #   # pylab.show()
-    #   isseg = np.equal([ds.segmentation[q] for q in ds.segmentation][0], ind+1)
-    #   # pylab.imshow(isseg)
-    #   # pylab.show()
-    #   if np.logical_and(mask, isseg).any():
-    #     print "Selected segment %d is interesting." % (ind+1)
-    #     do_update = False
-    #     ncois = ncois + 1
-    #     whencoiswerefound += [i]
-    #   else:
-    #     print "Selected segment %d is NOT interesting." % (ind+1)
-    #     pass
 
     ###############################################
     # Don't update if class of interest is found in item label
