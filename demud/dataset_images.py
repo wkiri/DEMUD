@@ -191,6 +191,25 @@ class ImageData(Dataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d.pdf' % (m, k))
     plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
     #print 'Wrote plot to %s' % figfile
+
+    # Write a list of the selections in ASCII format
+    selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
+    # If this is the first selection, open for write
+    # to clear out previous run.
+    if m == 0:
+      fid = open(selfile, 'w')
+      # Output a header
+      fid.write('# Selection, Filename, Score\n')
+
+      # If scores is empty, the (first) selection was pre-specified,
+      # so there are no scores.  Output 0 for this item.
+      if scores == []:
+        fid.write('%d,%s,0.0\n' % (m, label))
+    else:
+      fid = open(selfile, 'a')
+      fid.write('%d,%s,%f\n' % (m, label, scores[m]))
+
+    fid.close()
     
 
   def plot_pcs(self, m, U, mu, k, S):
