@@ -23,7 +23,18 @@ import numpy as np
 from dataset import *
 import matplotlib
 import matplotlib.pyplot as plt
+import glob
 from log import printt
+
+def progbar(current, to, width=40, show=True):
+    percent = float(current)/float(to)
+    length = int( width * percent)
+    if show:
+        count = " (%d/%d)    " % (current, to)
+    else:
+        count = ""
+    sys.stdout.write(("\r[" + ("#" * length) + " "*(width-length) + "] %0d" % (percent*100)) + "%" + count)
+    sys.stdout.flush()
 
 ################### Image data ##############
 class ImageData(Dataset):
@@ -195,7 +206,7 @@ class ImageData(Dataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d.pdf' % (m, k))
     plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
     #print 'Wrote plot to %s' % figfile
-
+    
 
   def plot_pcs(self, m, U, mu, k, S):
     """plot_pcs(m, U, mu, k, S)
@@ -262,7 +273,8 @@ class ImageData(Dataset):
 
     # Read in the image data
     files = sorted(os.listdir(dirname))
-    for f in files:
+    printt("Loading files:")
+    for idx,f in enumerate(files):
       # Unix-style wildcards. 
       if (fnmatch.fnmatch(f, '*.jpg') or
           fnmatch.fnmatch(f, '*.png')):
@@ -281,6 +293,7 @@ class ImageData(Dataset):
         data = np.vstack([data, im.reshape(1,np.prod(im.shape))])
 
         labels.append(f)
+        progbar(idx, len(files))
 
     return (data, labels, imshape)
 
