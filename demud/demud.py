@@ -29,6 +29,7 @@ import pylab
 from dataset_uci_classes import GlassData, EcoliData, AbaloneData, IsoletData
 from dataset_float import FloatDataset
 from dataset_float_classes import *
+from dataset_decals import DECaLSData
 from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
@@ -816,19 +817,20 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     
     ###############################################
     # Plot item using dataset's plotting method.
+    label = ds.labels[orig_ind[ind]]
     if log.opts['kepler']:
       dc = log.opts['static'] or (U != [] and U.shape[1] > 1)
       dsvd = (log.opts['static'] and i is 0) or (U != [] and U.shape[1] > 1)
       if log.opts['plot']:
-        ds.plot_item(i, orig_ind[ind], x, r, k, ds.labels[orig_ind[ind]],
+        ds.plot_item(i, orig_ind[ind], x, r, k, label,
                      U, mu, S, X, pcts, scores, drawsvd=dsvd, drawcloud=dc)
     elif log.opts['navcam']:
       if log.opts['plot']:
         ds.save_rec(r, orig_ind[ind], X[:,ind], k)
-        ds.plot_item(i, orig_ind[ind], x, r, k, ds.labels[orig_ind[ind]])
+        ds.plot_item(i, orig_ind[ind], x, r, k, label)
     else:
       if log.opts['plot']:
-        ds.plot_item(i, orig_ind[ind], x, r, k, ds.labels[orig_ind[ind]],
+        ds.plot_item(i, orig_ind[ind], x, r, k, label,
                      U, scores, feature_weights)
     
     ###############################################
@@ -839,6 +841,29 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     #   pylab.clf()
     #   pylab.imshow(U.reshape([ds.along_track, -1]))
     #   pylab.show()
+
+    # Write a list of the selections in CSV format
+    selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
+    # If this is the first selection, open for write
+    # to clear out previous run.
+    if i == 0:
+      fid = open(selfile, 'w')
+      # Output a header.  For some data sets, the label is a class;
+      # for others it is an object identifier.  To be generic,
+      # here we call this 'Name'.
+      fid.write('# Selection, Name, Score\n')
+
+      # If scores is empty, the (first) selection was pre-specified,
+      # so there are no scores.  Output 0 for this item.
+      if scores == []:
+        fid.write('%d,%s,0.0\n' % (i, label))
+    else:
+      fid = open(selfile, 'a')
+      fid.write('%d,%s,%f\n' % (i, label, scores[i]))
+
+    fid.close()
+    
+
 
     ###############################################
     # Setup for checking if to update or not.
@@ -1264,6 +1289,9 @@ def  clean():
                    " --gbtfil\n"
                    "gbtdirname  = \n\n"
                    "catalogfile = \n\n"
+                   "----- DECaLS FITS data set: decalsfilename\n"
+                   " --decals\n"
+                   "decalsfilename  = \n\n"
                    "---- ChemCam: libsdatafile libsinitdatafile\n"
                    " -c --chemcam\n"
                    "libsdatafile = \n"
@@ -1348,6 +1376,8 @@ def  parse_args():
                       default=False, action='store_true', dest='gbt')
   dtypes.add_option('--gbtfil', help='GBT filterbank',
                       default=False, action='store_true', dest='gbtfil')
+  dtypes.add_option('--decals', help='DECaLS FITS file',
+                      default=False, action='store_true', dest='decals')
   dtypes.add_option('-x', '--testdata', help='Test data', 
                       default=False, action='store_true', dest='testdata')
   dtypes.add_option('-c', '--chemcam', help='ChemCam data', default=False, 
@@ -1700,6 +1730,9 @@ def  parse_config(config, data_choice):
   gbtdirname      = parse_config_term(config, 'gbtdirname')
   catalogfile     = parse_config_term(config, 'catalogfile')
 
+  # DECaLS
+  decalsfilename  = parse_config_term(config, 'decalsfilename')
+
   # ChemCam
   libsdatafile     = parse_config_term(config, 'libsdatafile')
   libsinitdatafile = parse_config_term(config, 'libsinitdatafile')
@@ -1761,6 +1794,8 @@ def  parse_config(config, data_choice):
     return ([floatdatafile],'')
   elif data_choice == 'gbtfil':
     return ([gbtdirname, catalogfile],'')
+  elif data_choice == 'decals':
+    return ([decalsfilename],'')
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     return ([libsdatafile, libsinitdatafile],'')
   elif data_choice == 'finesse':
@@ -1896,6 +1931,7 @@ def  init_default_k_values():
     'apf'         :  2,
     'gbt'         : 10,
     'gbtfil'      : 10,
+    'decals'      : 10,
     'testdata'    :  2,
     'chemcam'     : 10,
     'finesse'     : 10,
@@ -1953,6 +1989,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## GBT FILTERBANK DATA SET
   elif data_choice == 'gbtfil':
     ds = GBTFilterbankData(data_files[0], data_files[1])
+  ## DECALS FITS DATA SET
+  elif data_choice == 'decals':
+    ds = DECaLSData(data_files[0])
   ## TEST DATA SET
   elif data_choice == 'testdata':
     ds = FloatDataset(data_files[0])
@@ -2083,8 +2122,8 @@ def  main():
   datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
-               'pancam', 'apf', 'gbt', 'gbtfil', 'mastcam',
-               'images', 'ucis', 'testdata')
+               'pancam', 'apf', 'gbt', 'gbtfil', 'decals',
+               'mastcam', 'images', 'ucis', 'testdata')
   
   data_choice = check_opts(datatypes)
   
