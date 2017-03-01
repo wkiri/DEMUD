@@ -24,7 +24,13 @@ You should be able to install demud by simply doing
 
    `$ python setup.py install`
 
-That will make the `demud` console script available.
+That will make the `demud` console script available system-wide.
+
+If this doesn't work, use 
+
+   `$ python demud.py [options]` 
+
+in all of the examples below.
 
 
 To get started
@@ -42,6 +48,23 @@ To get started
    "Datatype Options:" section of the help message and select the
    appropriate option for your data.  
 
+   **Please do not check your demud.config file back in to this 
+   repository.  It is a local configuration file for your system.**
+
+   **Example 1: Images.**
+
+   To run DEMUD on a collection of images, specify the directory
+   containing the images on the `imagedatafolder` line in `demud.config`.
+   Then run
+
+   `$ demud -I`
+
+   The results will appear in the `results/` directory under your 
+   current directory.  You will also find a log file (`demud.log`)
+   and a list of the selections (`selections.csv`).
+
+   **Example 2: UCI data sets (included test cases).** 
+
    Several UCI data sets are already supported, and the `glass` and
    `ecoli` data sets are provided in the `data/` directory.  You can
    try them out by specifying the appropriate pathname for the data
@@ -52,18 +75,16 @@ To get started
 
    `$ demud -e`
 
-   The results, along with a `demud.log` file, will appear in the
-   `results/` directory under `src/`.
-
-   **Please do not check your demud.config file back in to this 
-   repository.  It is a local configuration file for your system.**
-
    Note: UCI data sets were obtained from
 
    Lichman, M. (2013). UCI Machine Learning Repository
    [http://archive.ics.uci.edu/ml](http://archive.ics.uci.edu/ml). 
    Irvine, CA: University of California, 
    School of Information and Computer Science.
+
+4. Other data types.
+
+   
 
    If your data type is not yet supported, consider adding it by 
    (1) adding a new command-line option
