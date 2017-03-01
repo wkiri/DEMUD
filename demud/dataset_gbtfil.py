@@ -167,7 +167,7 @@ class GBTFilterbankData(Dataset):
     pylab.subplot(2,2,3)
     resid = x - r
     
-    # Tweak vmin and vmax so 0 is always in the middle
+    # Tweak vmin and vmax so 0 is always in the middle (white)
     absmax = max(abs(vmin), abs(vmax))
     im = pylab.imshow(resid.reshape((self.nfreq,
                                      self.ntime)),

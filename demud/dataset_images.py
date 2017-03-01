@@ -17,7 +17,8 @@
 # countries or providing access to foreign persons.
 
 import os, sys, fnmatch
-from PIL import Image
+#from PIL import Image
+from scipy.misc import imread
 import numpy as np
 from dataset import *
 import matplotlib
@@ -54,26 +55,29 @@ class ImageData(Dataset):
     # This variable is called 'initfilename', but it's a directory here.
     if self.initfilename != '':
       printt('Reading initialization data set from %s' % self.initfilename)
-      (self.initdata, unused_labels, width, height) = ImageData.read_image_dir(self.initfilename)
+      (self.initdata, unused_labels, imshape) = \
+          ImageData.read_image_dir(self.initfilename)
       self.initdata = np.asarray(self.initdata)
       self.initdata = self.initdata.T
+      print 'Initializing with %d images (%s).' % \
+          (self.initdata.shape[1], str(imshape))
       print self.initdata.shape
 
     ########## Read in the data to analyze
     # Labels are individual filenames
-    (self.data, self.labels, self.width, self.height) = \
+    (self.data, self.labels, self.imshape) = \
         ImageData.read_image_dir(self.filename)
       
     self.data = np.asarray(self.data)
+    print self.data.shape
+
     if len(self.data) == 0: 
       print 'Error: no image files found.'
       sys.exit(1)
 
-    print 'Read %d image files with %d pixels each.' % self.data.shape
     self.data = self.data.T
-    print self.data.shape
-        
-    print ' Dimensions: %d width, %d height.' % (self.width, self.height)
+    print 'Read %d images (%s).' % \
+        (self.data.shape[1], str(self.imshape))
 
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights):
@@ -112,9 +116,8 @@ class ImageData(Dataset):
     # FIRST SUBPLOT: original image
     pylab.subplot(2,2,1)
     
-    im = pylab.imshow(x.reshape((self.width,
-                                 self.height)),
-                      cmap='gray')
+    im = pylab.imshow(np.uint8(x.reshape(self.imshape)))
+#                      cmap='gray' if len(self.imshape) == 2 else 'rgb')
     pylab.tick_params(\
       axis='both',          # changes apply to the x-axis
       which='both',      # both major and minor ticks are affected
@@ -129,9 +132,11 @@ class ImageData(Dataset):
     # SECOND SUBPLOT: reconstructed data
 
     pylab.subplot(2,2,2)
-    im = pylab.imshow(r.reshape((self.width,
-                                 self.height)),
-                      cmap='gray')
+    # Clip reconstruction
+    r[r>255] = 255
+    r[r<0]   = 0
+    im = pylab.imshow(np.uint8(r.reshape(self.imshape)))
+#                      cmap='gray' if len(self.imshape) == 2 else 'rgb')
     pylab.tick_params(\
       axis='both',          # changes apply to the x-axis
       which='both',      # both major and minor ticks are affected
@@ -142,41 +147,38 @@ class ImageData(Dataset):
       labelbottom='off', # labels along the bottom edge are off
       labelleft='off')   # labels along the left edge are off?
     pylab.xlabel('Reconstructed Data')
-  #  div = make_axes_locatable(pylab.gca())
-  #  cax = div.append_axes('right','5%',pad='3%')
-  #  pylab.colorbar(im, cax=cax)
-    pylab.colorbar(im)
     
-    # THIRD SUBPLOT: residual data
+    if m > 0:
+      # THIRD SUBPLOT: residual data
     
-    pylab.subplot(2,2,3)
-    resid = x - r
-    #print "Residual Min: %5.3f, Avg: %5.3f, Max: %5.3f" % (np.nanmin(resid),
-    #                                                       nanmean(resid),
-    #                                                       np.nanmax(resid))
+      pylab.subplot(2,2,3)
+      resid = x - r
     
-    im = pylab.imshow(resid.reshape((self.width,
-                                     self.height)),
-                                     cmap=cmap) #, vmin=-1, vmax=1) 
-    pylab.tick_params(\
-      axis='both',          # changes apply to the x-axis
-      which='both',      # both major and minor ticks are affected
-      bottom='off',      # ticks along the bottom edge are off
-      left='off',      # ticks along the left edge are off
-      right='off',      # ticks along the right edge are off
-      top='off',         # ticks along the top edge are off
-      labelbottom='off', # labels along the bottom edge are off
-      labelleft='off')   # labels along the left edge are off?
-    pylab.xlabel('Residual')
+      if len(self.imshape) == 2:
+        # Grayscale: plot so high values are red and low are blue.
+        # Tweak vmin and vmax so 0 is always in the middle (white)
+        absmax = max(abs(vmin), abs(vmax))
+        im = pylab.imshow(resid.reshape(self.imshape),
+                          cmap=cmap, vmin=-absmax, vmax=absmax) 
+      else: 
+        # Color: plot actual differences.
+        # Scale to fill the range -127 to +127
+        # Shift so 0 is at 127,127,127.
+        minres = np.min(resid)
+        maxres = np.max(resid)
+        range  = max(abs(minres), maxres)
+        im = pylab.imshow(np.uint8(resid*127./range+127).reshape(self.imshape))
 
-    # Voodoo required to get colorbar to be the right height.
-#    div = make_axes_locatable(pylab.gca())
-#    cax = div.append_axes('right','5%',pad='3%')
-#    cbar = pylab.colorbar(im, cax=cax)
-    cbar = pylab.colorbar(im)
-    #tickvals = np.arange(-1,1.1,0.5)
-    #cbar.set_ticks(tickvals)
-    #cbar.set_ticklabels(tickvals)
+      pylab.tick_params(\
+        axis='both',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom='off',      # ticks along the bottom edge are off
+        left='off',      # ticks along the left edge are off
+        right='off',      # ticks along the right edge are off
+        top='off',         # ticks along the top edge are off
+        labelbottom='off', # labels along the bottom edge are off
+        labelleft='off')   # labels along the left edge are off?
+      pylab.xlabel('Residual')
 
     pylab.suptitle('DEMUD selection %d (%s), item %d, using K=%d' % \
                    (m, label, ind, k))
@@ -212,10 +214,8 @@ class ImageData(Dataset):
       pylab.subplot(3,3,i+1)
 
       #im = pylab.imshow((U[:,i] + mu[:,0]).reshape((self.width,
-      im = pylab.imshow((U[:,i]).reshape((self.width,
-                                                    self.height)),
-                        cmap='gray')
-
+      im = pylab.imshow(np.uint8(U[:,i].reshape(self.imshape)))
+#                        cmap='gray' if len(self.imshape) == 2 else 'rgb')
       pylab.tick_params(\
         axis='both',          # changes apply to the x-axis
         which='both',      # both major and minor ticks are affected
@@ -248,14 +248,13 @@ class ImageData(Dataset):
     Read in all of the images in dirname and return
     - a list of data
     - a list of labels
-    - image width
-    - image height
+    - imshape: (width, height) or (width, height, depth) tuple
     """
 
     data   = []
     labels = []  # Save the individual file names
 
-    (width, height) = (-1, -1)
+    imshape = (-1, -1, -1)
 
     # Read in the image data
     files = sorted(os.listdir(dirname))
@@ -265,24 +264,21 @@ class ImageData(Dataset):
           fnmatch.fnmatch(f, '*.png')):
         # Read in the image
         filename = dirname + '/' + f
-        im = Image.open(filename)
+        im = imread(filename)
 
-        if width == -1:
-          (width, height) = im.size
+        if imshape[0] == -1:
+          data = np.array([], dtype=np.float32).reshape(0,np.prod(im.shape))
+          imshape = im.shape
         else:
           # Ensure that all images are the same dimensions
-          (w, h) = im.size
-          if w != width or h != height:
+          if imshape != im.shape:
             raise ValueError('Images must all have the same dimensions.')
-        
-        data.append(list(im.getdata()))
+
+        data = np.vstack([data, im.reshape(1,np.prod(im.shape))])
 
         labels.append(f)
 
-        # Close the file
-        im.close()
-
-    return (data, labels, width, height)
+    return (data, labels, imshape)
 
 
 
