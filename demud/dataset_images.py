@@ -116,8 +116,10 @@ class ImageData(Dataset):
     # FIRST SUBPLOT: original image
     pylab.subplot(2,2,1)
     
-    im = pylab.imshow(np.uint8(x.reshape(self.imshape)))
-#                      cmap='gray' if len(self.imshape) == 2 else 'rgb')
+    if len(self.imshape) == 2:
+      im = pylab.imshow(np.uint8(x.reshape(self.imshape)), cmap='gray')
+    else:
+      im = pylab.imshow(np.uint8(x.reshape(self.imshape)))
     pylab.tick_params(\
       axis='both',          # changes apply to the x-axis
       which='both',      # both major and minor ticks are affected
@@ -135,8 +137,10 @@ class ImageData(Dataset):
     # Clip reconstruction
     r[r>255] = 255
     r[r<0]   = 0
-    im = pylab.imshow(np.uint8(r.reshape(self.imshape)))
-#                      cmap='gray' if len(self.imshape) == 2 else 'rgb')
+    if len(self.imshape) == 2:
+      im = pylab.imshow(np.uint8(r.reshape(self.imshape)), cmap='gray')
+    else:
+      im = pylab.imshow(np.uint8(r.reshape(self.imshape)))
     pylab.tick_params(\
       axis='both',          # changes apply to the x-axis
       which='both',      # both major and minor ticks are affected
