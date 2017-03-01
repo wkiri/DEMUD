@@ -764,8 +764,6 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       # Warning: this may be confusing, since this item
       # was picked to be SIMILAR to r, not different from it.
       r = ds.data[:,sels[-1]]
-      # 'score' is never used below, so just set it to -1.
-      score = -1
       # We update scores simply by removing this item.
       scores = np.delete(scores, ind)
       
@@ -851,15 +849,17 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       # Output a header.  For some data sets, the label is a class;
       # for others it is an object identifier.  To be generic,
       # here we call this 'Name'.
-      fid.write('# Selection, Name, Score\n')
+      fid.write('# Selection, Index, Name, Score\n')
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
       if scores == []:
-        fid.write('%d,%s,0.0\n' % (i, label))
+        fid.write('%d,%d,%s,0.0\n' % (i, ind, label))
+      else:
+        fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
     else:
       fid = open(selfile, 'a')
-      fid.write('%d,%s,%f\n' % (i, label, scores[i]))
+      fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
 
     fid.close()
     
