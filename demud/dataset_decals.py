@@ -19,9 +19,8 @@
 # countries or providing access to foreign persons.
 
 import os, sys, re
-import pyfits
 import numpy as np
-import pylab
+import pyfits, pylab
 from dataset import Dataset
 
 class DECaLSData(Dataset):
@@ -37,6 +36,31 @@ class DECaLSData(Dataset):
     self.readin()
 
 
+  @classmethod
+  def  flux_to_magnitude(cls, flux):
+    """flux_to_magnitude(cls, flux)
+
+    Convert flux(es) into magnitude(s).
+
+    Examples:
+
+    >>> DECaLSData.flux_to_magnitude(20)
+    19.247425010840047
+
+    >>> DECaLSData.flux_to_magnitude(-20)
+    -19.247425010840047
+
+    >>> DECaLSData.flux_to_magnitude([20, -20])
+    array([ 19.24742501, -19.24742501])
+    """
+
+    s = np.sign(flux)
+
+    magnitude = s * (-2.5 * np.log10(np.abs(flux)) + 22.5)
+
+    return magnitude
+    
+
   def  readin(self):
     """readin()
 
@@ -46,6 +70,7 @@ class DECaLSData(Dataset):
     datafile = pyfits.open(self.filename)
 
     # Read in the desired columns.
+    '''
     # First the easy ones: we'll index them with [1,2,4] to get G,R,Z bands
     columns = ['DECAM_FLUX',
                'DECAM_ANYMASK',
@@ -53,6 +78,7 @@ class DECaLSData(Dataset):
                'DECAM_FRACMASKED',
                'DECAM_RCHI2']
 
+    # Use the G,R,Z bands for several features
     self.data     = datafile[1].data[:].field(columns[0])[:,[1,2,4]]
     self.features = ['%s %s' % (columns[0], b) for b in ['G','R','Z']]
 
@@ -60,10 +86,47 @@ class DECaLSData(Dataset):
       self.data      = np.hstack([self.data,
                                datafile[1].data[:].field(c)[:,[1,2,4]]])
       self.features += ['%s %s' % (c, b) for b in ['G','R','Z']]
-    self.data   = self.data.T  # features x samples
-    self.labels = ['%s_%d' % (b,id) for (b,id) in \
-                     zip(datafile[1].data[:].field('BRICKNAME'),
-                         datafile[1].data[:].field('OBJID'))]
+    '''
+
+    # Compute the color ratios
+    model_type = datafile[1].data[:].field('TYPE')
+    #model_type_to_use = 'PSF'
+    #model_type_to_use = 'SIMP'
+    #model_type_to_use = 'EXP'
+    model_type_to_use = 'DEV'
+    use_data   = datafile[1].data[model_type == model_type_to_use]
+    G = use_data.field('DECAM_FLUX')[:,1]
+    R = use_data.field('DECAM_FLUX')[:,2]
+    Z = use_data.field('DECAM_FLUX')[:,4]
+    # ratio G/R
+    self.data = DECaLSData.flux_to_magnitude(G) / DECaLSData.flux_to_magnitude(R)
+    self.features = ['G/R']
+    # ratio R/Z
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude(R) / 
+                           DECaLSData.flux_to_magnitude(Z)])
+    self.features += ['R/Z']
+
+    G = use_data.field('DECAM_APFLUX')[:,1,2]
+    R = use_data.field('DECAM_APFLUX')[:,2,2]
+    Z = use_data.field('DECAM_APFLUX')[:,4,2]
+    # aperture ratio G/R
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude(G) / 
+                           DECaLSData.flux_to_magnitude(R)])
+    self.features += ['AP G/R']
+    # aperture ratio R/Z
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude(R) / 
+                           DECaLSData.flux_to_magnitude(Z)])
+    self.features += ['AP R/Z']
+
+    #self.data   = self.data.T  # features x samples
+    self.labels = ['%s_%d_%.6f_%.6f' % (b,id,ra,dec) for (b,id,ra,dec) in \
+                     zip(use_data.field('BRICKNAME'),
+                         use_data.field('OBJID'),
+                         use_data.field('RA'),
+                         use_data.field('DEC'))]
 
     datafile.close()
 
@@ -110,9 +173,12 @@ class DECaLSData(Dataset):
     x = [x[z] for z in range(x.shape[0])]
     
     bars1 = ax.bar([xvals[i] + offset for i in goodfeat], 
-                      x, width, color='b', label='Observations')
+                   x, width, color='b', label='Observations')
     bars2 = ax.bar([xvals[i] + width + offset for i in goodfeat], 
-                      r, width, color='r', label='Expected')
+                   r, width, color='r', label='Expected')
+
+    # dashed line to show 0
+    pylab.plot([0, len(self.features)], [0, 0], '--')
   
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
@@ -121,8 +187,8 @@ class DECaLSData(Dataset):
     pylab.legend(fontsize=10)
     
     padding = 1.19
-    pylab.ylim([float(min(min(x), min(r))), max(float(max(max(x), max(r)))
-                 * padding, float(max(max(x), max(r))))])
+    pylab.ylim([min(0, float(min(min(x), min(r))) * padding),
+                max(0, float(max(max(x), max(r))) * padding)])
     
     if len(self.features) == 0:
         pylab.xticks(pylab.arange(len(x)) + width + offset, range(len(x)))
@@ -141,3 +207,14 @@ class DECaLSData(Dataset):
     print 'Wrote plot to %s' % figfile
   
 
+if __name__ == "__main__":
+  # Run inline tests    
+  import doctest                                                              
+
+  (num_failed, num_tests) = doctest.testmod()
+  filename                = os.path.basename(__file__)
+
+  if num_failed == 0:
+    print "%-20s All %3d tests passed!" % (filename, num_tests)
+  else:
+    sys.exit(1)
