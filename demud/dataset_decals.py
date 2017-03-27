@@ -98,28 +98,28 @@ class DECaLSData(Dataset):
     G = use_data.field('DECAM_FLUX')[:,1]
     R = use_data.field('DECAM_FLUX')[:,2]
     Z = use_data.field('DECAM_FLUX')[:,4]
-    # ratio G/R
-    self.data = DECaLSData.flux_to_magnitude(G) / DECaLSData.flux_to_magnitude(R)
-    self.features = ['G/R']
-    # ratio R/Z
+    # difference G-R
+    self.data = DECaLSData.flux_to_magnitude(G) - DECaLSData.flux_to_magnitude(R)
+    self.features = ['G-R']
+    # difference R-Z
     self.data = np.vstack([self.data,
-                           DECaLSData.flux_to_magnitude(R) / 
+                           DECaLSData.flux_to_magnitude(R) - 
                            DECaLSData.flux_to_magnitude(Z)])
-    self.features += ['R/Z']
+    self.features += ['R-Z']
 
     G = use_data.field('DECAM_APFLUX')[:,1,2]
     R = use_data.field('DECAM_APFLUX')[:,2,2]
     Z = use_data.field('DECAM_APFLUX')[:,4,2]
-    # aperture ratio G/R
+    # aperture difference G-R
     self.data = np.vstack([self.data,
-                           DECaLSData.flux_to_magnitude(G) / 
+                           DECaLSData.flux_to_magnitude(G) - 
                            DECaLSData.flux_to_magnitude(R)])
-    self.features += ['AP G/R']
-    # aperture ratio R/Z
+    self.features += ['AP G-R']
+    # aperture difference R/Z
     self.data = np.vstack([self.data,
-                           DECaLSData.flux_to_magnitude(R) / 
+                           DECaLSData.flux_to_magnitude(R) - 
                            DECaLSData.flux_to_magnitude(Z)])
-    self.features += ['AP R/Z']
+    self.features += ['AP R-Z']
 
     #self.data   = self.data.T  # features x samples
     self.labels = ['%s_%d_%.6f_%.6f' % (b,id,ra,dec) for (b,id,ra,dec) in \
