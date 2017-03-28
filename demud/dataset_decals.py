@@ -37,28 +37,43 @@ class DECaLSData(Dataset):
 
 
   @classmethod
-  def  flux_to_magnitude(cls, flux):
+  def  flux_to_magnitude(cls, flux, ivar):
     """flux_to_magnitude(cls, flux)
 
     Convert flux(es) into magnitude(s).
 
     Examples:
 
-    >>> DECaLSData.flux_to_magnitude(20)
+    >>> DECaLSData.flux_to_magnitude(20, 0.1)
     19.247425010840047
 
-    >>> DECaLSData.flux_to_magnitude(-20)
-    -19.247425010840047
+    >>> DECaLSData.flux_to_magnitude(-20, 0.1)
+    21.25
 
-    >>> DECaLSData.flux_to_magnitude([20, -20])
-    array([ 19.24742501, -19.24742501])
+    >>> DECaLSData.flux_to_magnitude([20, -20], [0.1, 0.1])
+    array([ 19.24742501,  21.25      ])
     """
 
-    s = np.sign(flux)
+    # Version 1: convert abs(flux) to magnitude, 
+    # and flip the sign of anything negative.
+    #s = np.sign(flux)
+    #magnitude = s * (-2.5 * np.log10(np.abs(flux)) + 22.5)
 
-    magnitude = s * (-2.5 * np.log10(np.abs(flux)) + 22.5)
+    # Version 2: convert abs(flux) to magnitude,
+    # and replace any fluxes that are < 1 sigma with the 1-sigma upper limit.
+    rms       = np.atleast_1d(1 / np.sqrt(ivar))
+    # Convert flux to an np.array so this works whether input
+    # is scalar or array
+    flux              = np.atleast_1d(flux)
+    flux2             = np.atleast_1d(rms) # initialize with rms
+    flux2[flux > rms] = flux[flux > rms]   # override if flux is valid
+    magnitude = (-2.5 * np.log10(flux2)) + 22.5
 
-    return magnitude
+    # Return an array if more than one result; else return a scalar
+    if len(magnitude) > 1:
+      return magnitude
+    else:
+      return magnitude[0]
     
 
   def  readin(self):
@@ -90,36 +105,77 @@ class DECaLSData(Dataset):
 
     # Compute the color ratios
     model_type = datafile[1].data[:].field('TYPE')
-    #model_type_to_use = 'PSF'
+    model_type_to_use = 'PSF'
     #model_type_to_use = 'SIMP'
     #model_type_to_use = 'EXP'
-    model_type_to_use = 'DEV'
+    #model_type_to_use = 'DEV'
     use_data   = datafile[1].data[model_type == model_type_to_use]
     G = use_data.field('DECAM_FLUX')[:,1]
     R = use_data.field('DECAM_FLUX')[:,2]
     Z = use_data.field('DECAM_FLUX')[:,4]
+    G_ivar = use_data.field('DECAM_FLUX_IVAR')[:,1]
+    R_ivar = use_data.field('DECAM_FLUX_IVAR')[:,2]
+    Z_ivar = use_data.field('DECAM_FLUX_IVAR')[:,4]
+    # Z magnitude
+    self.data = DECaLSData.flux_to_magnitude(Z, Z_ivar) 
+    self.features = ['Z']
     # difference G-R
-    self.data = DECaLSData.flux_to_magnitude(G) - DECaLSData.flux_to_magnitude(R)
-    self.features = ['G-R']
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude(G, G_ivar) - 
+                           DECaLSData.flux_to_magnitude(R, R_ivar)])
+    self.features += ['G-R']
+    '''
+    # difference G-Z
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude(G, G_ivar) - 
+                           DECaLSData.flux_to_magnitude(Z, Z_ivar)])
+    self.features += ['G-Z']
+    '''
     # difference R-Z
     self.data = np.vstack([self.data,
-                           DECaLSData.flux_to_magnitude(R) - 
-                           DECaLSData.flux_to_magnitude(Z)])
+                           DECaLSData.flux_to_magnitude(R, R_ivar) - 
+                           DECaLSData.flux_to_magnitude(Z, Z_ivar)])
     self.features += ['R-Z']
 
+    # WISE features
+    W1 = use_data.field('WISE_FLUX')[:,0]
+    W2 = use_data.field('WISE_FLUX')[:,1]
+    W1_ivar = use_data.field('WISE_FLUX_IVAR')[:,0]
+    W2_ivar = use_data.field('WISE_FLUX_IVAR')[:,1]
+    # WISE difference Z - W1
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude( Z,  Z_ivar) - 
+                           DECaLSData.flux_to_magnitude(W1, W1_ivar)])
+    self.features += ['Z - W1']
+    # WISE difference W1 - W2
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude(W1, W1_ivar) - 
+                           DECaLSData.flux_to_magnitude(W2, W2_ivar)])
+    self.features += ['W1 - W2']
+
+    '''
     G = use_data.field('DECAM_APFLUX')[:,1,2]
     R = use_data.field('DECAM_APFLUX')[:,2,2]
     Z = use_data.field('DECAM_APFLUX')[:,4,2]
+    G_ivar = use_data.field('DECAM_APFLUX_IVAR')[:,1,2]
+    R_ivar = use_data.field('DECAM_APFLUX_IVAR')[:,2,2]
+    Z_ivar = use_data.field('DECAM_APFLUX_IVAR')[:,4,2]
     # aperture difference G-R
     self.data = np.vstack([self.data,
-                           DECaLSData.flux_to_magnitude(G) - 
-                           DECaLSData.flux_to_magnitude(R)])
+                           DECaLSData.flux_to_magnitude(G, G_ivar) - 
+                           DECaLSData.flux_to_magnitude(R, R_ivar)])
     self.features += ['AP G-R']
-    # aperture difference R/Z
+    # aperture difference G-Z
     self.data = np.vstack([self.data,
-                           DECaLSData.flux_to_magnitude(R) - 
-                           DECaLSData.flux_to_magnitude(Z)])
+                           DECaLSData.flux_to_magnitude(G, G_ivar) - 
+                           DECaLSData.flux_to_magnitude(Z, Z_ivar)])
+    self.features += ['AP G-Z']
+    # aperture difference R-Z
+    self.data = np.vstack([self.data,
+                           DECaLSData.flux_to_magnitude(R, R_ivar) - 
+                           DECaLSData.flux_to_magnitude(Z, Z_ivar)])
     self.features += ['AP R-Z']
+    '''
 
     #self.data   = self.data.T  # features x samples
     self.labels = ['%s_%d_%.6f_%.6f' % (b,id,ra,dec) for (b,id,ra,dec) in \
@@ -213,7 +269,7 @@ class DECaLSData(Dataset):
     selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
     # If this is the first selection, open for write
     # to clear out previous run.
-    (name1, name2, RA, DEC) = label.split('_')
+    (brickname, objid, RA, DEC) = label.split('_')
     if i == 0:
       fid = open(selfile, 'w')
       # Output a header.  For some data sets, the label is a class;
@@ -224,14 +280,14 @@ class DECaLSData(Dataset):
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
       if scores == []:
-        fid.write('%d,%d,%s_%s,%s,%s,0.0\n' % (i, ind, name1, name2,
+        fid.write('%d,%d,%s_%s,%s,%s,0.0\n' % (i, ind, brickname, objid,
                                                RA, DEC))
       else:
-        fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, name1, name2,
+        fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, brickname, objid,
                                               RA, DEC, scores[ind]))
     else:
       fid = open(selfile, 'a')
-      fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, name1, name2,
+      fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, brickname, objid,
                                             RA, DEC, scores[ind]))
 
     fid.close()
