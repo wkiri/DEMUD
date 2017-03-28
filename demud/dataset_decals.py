@@ -207,6 +207,36 @@ class DECaLSData(Dataset):
     print 'Wrote plot to %s' % figfile
   
 
+  # Write a list of the selections in CSV format
+  def write_selections(self, i, k, ind, label, scores):
+    outdir = os.path.join('results', self.name)
+    selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
+    # If this is the first selection, open for write
+    # to clear out previous run.
+    (name1, name2, RA, DEC) = label.split('_')
+    if i == 0:
+      fid = open(selfile, 'w')
+      # Output a header.  For some data sets, the label is a class;
+      # for others it is an object identifier.  To be generic,
+      # here we call this 'Name'.
+      fid.write('# Selection, Index, Name, RA, DEC, Score\n')
+
+      # If scores is empty, the (first) selection was pre-specified,
+      # so there are no scores.  Output 0 for this item.
+      if scores == []:
+        fid.write('%d,%d,%s_%s,%s,%s,0.0\n' % (i, ind, name1, name2,
+                                               RA, DEC))
+      else:
+        fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, name1, name2,
+                                              RA, DEC, scores[ind]))
+    else:
+      fid = open(selfile, 'a')
+      fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, name1, name2,
+                                            RA, DEC, scores[ind]))
+
+    fid.close()
+
+
 if __name__ == "__main__":
   # Run inline tests    
   import doctest                                                              

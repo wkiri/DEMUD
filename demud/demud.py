@@ -740,6 +740,10 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
   sels = []
   sels_idx = []
     
+  # Create the 'results' directory, if needed
+  if not os.path.exists('results'):
+    os.mkdir('results')
+
   ##############################################################################
   ## MAIN ITERATIVE DISCOVERY LOOP
   
@@ -840,30 +844,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     #   pylab.imshow(U.reshape([ds.along_track, -1]))
     #   pylab.show()
 
-    # Write a list of the selections in CSV format
-    selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
-    # If this is the first selection, open for write
-    # to clear out previous run.
-    if i == 0:
-      fid = open(selfile, 'w')
-      # Output a header.  For some data sets, the label is a class;
-      # for others it is an object identifier.  To be generic,
-      # here we call this 'Name'.
-      fid.write('# Selection, Index, Name, Score\n')
-
-      # If scores is empty, the (first) selection was pre-specified,
-      # so there are no scores.  Output 0 for this item.
-      if scores == []:
-        fid.write('%d,%d,%s,0.0\n' % (i, ind, label))
-      else:
-        fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
-    else:
-      fid = open(selfile, 'a')
-      fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
-
-    fid.close()
-    
-
+    ds.write_selections(i, k, ind, label, scores)
 
     ###############################################
     # Setup for checking if to update or not.

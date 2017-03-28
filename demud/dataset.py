@@ -122,14 +122,37 @@ class Dataset(object):
     pylab.legend()
     
     outdir = os.path.join('results', self.name)
-    if not os.path.exists('results'):
-      os.mkdir('results')
     if not os.path.exists(outdir):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote SVD to %s' % figfile
-    
+
+  # Write a list of the selections in CSV format
+  def write_selections(self, i, k, ind, label, scores):
+    outdir = os.path.join('results', self.name)
+    selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
+    # If this is the first selection, open for write
+    # to clear out previous run.
+    if i == 0:
+      fid = open(selfile, 'w')
+      # Output a header.  For some data sets, the label is a class;
+      # for others it is an object identifier.  To be generic,
+      # here we call this 'Name'.
+      fid.write('# Selection, Index, Name, Score\n')
+
+      # If scores is empty, the (first) selection was pre-specified,
+      # so there are no scores.  Output 0 for this item.
+      if scores == []:
+        fid.write('%d,%d,%s,0.0\n' % (i, ind, label))
+      else:
+        fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
+    else:
+      fid = open(selfile, 'a')
+      fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
+
+    fid.close()
+
 
 if __name__ == "__main__":
   import doctest
