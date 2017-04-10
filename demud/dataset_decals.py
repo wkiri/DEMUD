@@ -238,7 +238,7 @@ class DECaLSData(Dataset):
   
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
-    pylab.title('DEMUD selection %d (%s), item %d, using K=%d' % \
+    pylab.title('DEMUD selection %d (%s),\n item %d, using K=%d' % \
                 (m, label, ind, k))
     pylab.legend(fontsize=10)
     
@@ -258,18 +258,20 @@ class DECaLSData(Dataset):
     outdir = os.path.join('results', self.name)
     if not os.path.exists(outdir):
       os.mkdir(outdir)
-    figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
+    figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
   
 
   # Write a list of the selections in CSV format
-  def write_selections(self, i, k, ind, label, scores):
+  def write_selections_csv(self, i, k, ind, label, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
+
+    (brickname, objid, RA, DEC) = label.split('_')
+
     # If this is the first selection, open for write
     # to clear out previous run.
-    (brickname, objid, RA, DEC) = label.split('_')
     if i == 0:
       fid = open(selfile, 'w')
       # Output a header.  For some data sets, the label is a class;
@@ -281,15 +283,66 @@ class DECaLSData(Dataset):
       # so there are no scores.  Output 0 for this item.
       if scores == []:
         fid.write('%d,%d,%s_%s,%s,%s,0.0\n' % (i, ind, brickname, objid,
-                                               RA, DEC))
+                                                  RA, DEC))
       else:
         fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, brickname, objid,
-                                              RA, DEC, scores[ind]))
+                                                 RA, DEC, scores[ind]))
     else:
+      # Append to the CSV file
       fid = open(selfile, 'a')
       fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, brickname, objid,
                                             RA, DEC, scores[ind]))
 
+    # Close the file
+    fid.close()
+
+    # Also, append selections to a growing .html file
+    self.write_selections_html(i, k, ind, label, scores)
+
+
+  # Write selections to an HTML file
+  def write_selections_html(self, i, k, ind, label, scores):
+    outdir = os.path.join('results', self.name)
+    selfile = os.path.join(outdir, 'selections-k%d.html' % k)
+
+    (brickname, objid, RA, DEC) = label.split('_')
+
+    # If this is the first selection, open for write
+    # to clear out previous run.
+    if i == 0:
+      # Start up the HTML file
+      fid = open(selfile, 'w')
+      fid.write('<html><head><title>DEMUD: %s, k=%d</title></head>\n' % (self.name, k))
+      fid.write('<body>\n')
+      fid.write('<h1>DEMUD experiments on %s with k=%d</h1>\n' % (self.name, k))
+      fid.write('<ul>\n')
+      fid.write('<li>Selections are presented in decreasing order of novelty.</li>\n')
+      fid.write('<li>The bar plot shows the <font color="blue">observed</font> values compared to the <font color="red">expected (modeled)</font> values.  Discrepancies explain why the chosen object is considered novel.  Click to enlarge.</li>\n')
+      fid.write('<li>Clicking "Viewer" will take you to DECaLS sky survey.</li>\n')
+      fid.write('<li>Scores close to 0 (for items other than the first one) indicate an arbitrary choice; novelty has been exhausted.</li>\n')
+      fid.write('</ul>\n\n')
+
+      # If scores is empty, the (first) selection was pre-specified,
+      # so there are no scores.  Output -1 for this item.
+      if scores == []:
+        score = 'N/A'
+      else:
+        score = '%f' % scores[ind]
+    else:
+      # Append to the HTML file
+      fid = open(selfile, 'a')
+      score = scores[ind]
+
+    fid.write('<h2>Selection %d: RA %s, DEC %s, score %s</h2>\n' % (i, RA, DEC, score))
+    fid.write('<a href="http://legacysurvey.org/viewer?ra=%s&dec=%s&zoom=13&layer=decals-dr3" id="[%d] %s %s">\n<img title="[%d] %s %s" src="http://legacysurvey.org/viewer/jpeg-cutout/?ra=%s&dec=%s&pixscale=0.27&size=256"></a>\n' %
+                  (RA, DEC, 
+                   i, brickname, objid,
+                   i, brickname, objid, RA, DEC))
+    figfile = 'sel-%d-k-%d-(%s).png' % (i, k, label)
+    fid.write('<a href="%s"><img height=270 src="%s"></a>\n\n' % 
+              (figfile, figfile))
+
+    # Close the file
     fid.close()
 
 

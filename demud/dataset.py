@@ -129,7 +129,7 @@ class Dataset(object):
     print 'Wrote SVD to %s' % figfile
 
   # Write a list of the selections in CSV format
-  def write_selections(self, i, k, ind, label, scores):
+  def write_selections_csv(self, i, k, ind, label, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
     # If this is the first selection, open for write

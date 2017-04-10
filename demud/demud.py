@@ -844,7 +844,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     #   pylab.imshow(U.reshape([ds.along_track, -1]))
     #   pylab.show()
 
-    ds.write_selections(i, k, ind, label, scores)
+    ds.write_selections_csv(i, k, ind, label, scores)
 
     ###############################################
     # Setup for checking if to update or not.
@@ -2166,6 +2166,14 @@ def  main():
   # Report the results
   if report:
     report_classes(ds, n, sels, sels_idx, data_choice)
+
+  if data_choice == 'decals':
+    # Perform final cleanup of HTML selections file
+    outdir = os.path.join('results', ds.name)
+    htmlselfile = os.path.join(outdir, 'selections-k%d.html' % k)
+    htmlfid = open(htmlselfile, 'a')
+    htmlfid.write('</body>\n</html>\n')
+    htmlfid.close()
 
   if data_choice == 'mastcam':
     for i in ds.segmentation:
