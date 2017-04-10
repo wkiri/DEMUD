@@ -59,10 +59,7 @@ default_k_values = {}
 default_n_value = 10
 use_max_n = False
 
-#___________________________________________________________________________________________________________________________________________________________
-#_________________________________select_next_______________________________________________________________________________________________________________
-#
-
+#______________________________select_next_________________________________
 def  select_next(X, U, S, mu,
                  scoremethod='lowhigh',
                  missingmethod='none',
@@ -92,7 +89,7 @@ def  select_next(X, U, S, mu,
   print "------------ SELECTING --------------"
   if U == []:
     printt("Empty DEMUD model: selecting item number %d from data set" % \
-                                                                (log.opts['iitem']))
+             (log.opts['iitem']))
     return log.opts['iitem'], X[:,log.opts['iitem']], 0.0, []
   if X == [] or U == [] or mu == []:
     printt("Error: No data in X and/or U and/or mu.")
@@ -170,10 +167,7 @@ def  select_next(X, U, S, mu,
   m = scores.argmax()
   return m, reproj[:,m], scores[m], scores
 
-#___________________________________________________________________________________________________________________________________________________________
-#________________________________select_next_NN_____________________________________________________________________________________________________________
-#
-
+#______________________________select_next_NN______________________________
 def  select_next_NN(X, x):
   """select_next_NN(X, x)
 
@@ -182,7 +176,6 @@ def  select_next_NN(X, x):
   Return the index of the selected item.
   """
 
-  # print "------------ SELECTING NEAREST NEIGHBOR --------------"
   if X == [] or x == []:
     printt("Error: No data in X and/or x.")
     return None
@@ -198,10 +191,7 @@ def  select_next_NN(X, x):
 
   return m
 
-#___________________________________________________________________________________________________________________________________________________________
-#__________________________________update_model_____________________________________________________________________________________________________________
-#
-
+#______________________________update_model________________________________
 def  update_model(X, U, S, k, n, mu,
                   svdmethod='full',
                   missingmethod='zero'):
@@ -235,7 +225,6 @@ def  update_model(X, U, S, k, n, mu,
   # then create a U the same size, first value 1 (rest 0),
   # and return it with mu.
   if U == [] and X.shape[1] == 1:
-    print "We are in update_model and got one item to add to an empty U."
     mu   = X
     # Do this no matter what.  Let mu get NaNs in it as needed.
     U    = np.zeros_like(mu)
@@ -245,7 +234,7 @@ def  update_model(X, U, S, k, n, mu,
     pcts = [1.0]
     return U, S, mu, n, pcts
 
-  #############################################################################
+  ###########################################################################
   # Do full SVD of X if this is requested, regardless of what is in U 
   # Also, if n = 0 or U is empty, start from scratch
   output_k = False
@@ -281,7 +270,7 @@ def  update_model(X, U, S, k, n, mu,
     # Update n to number of new items in X
     n = X.shape[1]
     
-  #############################################################################
+  ###########################################################################
   # Incremental SVD from Ross
   elif svdmethod == 'increm-ross':
     # Incremental SVD from Ross et al. 2008
@@ -352,7 +341,7 @@ def  update_model(X, U, S, k, n, mu,
     S_full = S
     S = S[0:min([n,k])]
 
-  #############################################################################
+  ###########################################################################
   # Incremental SVD from Brand
   elif svdmethod == 'increm-brand':
     # Pulled out James's attempt to handle NaNs into
@@ -486,7 +475,7 @@ def  update_model(X, U, S, k, n, mu,
     # print 'Should be:', (len(mu) - len(wheremuisgood))
 
 
-  #############################################################################
+  ###########################################################################
   # We have a bad svdmethod, but somehow didn't catch it earlier.
   else:
     printt("504: Bad Gateway in protocol <Skynet_authentication.exe>")
@@ -516,12 +505,10 @@ def  update_model(X, U, S, k, n, mu,
 
   return U, S, mu, n, indivpcts
 
-#___________________________________________________________________________________________________________________________________________________________
-#______________________________________demud________________________________________________________________________________________________________________
-#
-
-def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='none', 
-           feature_weights=[], start_sol=None, end_sol=None, flush_parameters=False):
+#______________________________demud_______________________________________
+def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', 
+           missingmethod='none', feature_weights=[], 
+           start_sol=None, end_sol=None, flush_parameters=False):
   """demud(ds, k, nsel, scoremethod, svdmethod, missingmethod, feature_weights):
 
   Iteratively select nsel items from data set ds,
@@ -548,7 +535,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
   printt("Running DEMUD version %s for %d iterations using k=%d" %
          (__VERSION__, nsel, k))
 
-  ###############################################
+  ###########################################################################
   # Check to ensure that parameters are valid
   if ds.data == []:
     printt("Error: No data in ds.data.")
@@ -697,7 +684,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     log.opts['iitem'] = -1
     printt('Doing initial SVD to get started.')
     U, S, mu, n, pcts = update_model(X, U, S, k, n=0, mu=[],
-                               svdmethod=svdmethod, missingmethod=missingmethod)
+                                     svdmethod=svdmethod, 
+                                     missingmethod=missingmethod)
     
   # Select random item
   elif log.opts['iitem'] in ('r','R','random','RANDOM'):
@@ -744,7 +732,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
   if not os.path.exists('results'):
     os.mkdir('results')
 
-  ##############################################################################
+  ###########################################################################
   ## MAIN ITERATIVE DISCOVERY LOOP
   
   for i in range(nsel):
@@ -777,12 +765,13 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       ind, r, score, scores = select_next(X, U, S, mu, scoremethod,
                                           missingmethod, feature_weights)
     
+    # Update selections
     sels += [orig_ind[ind]]
     sels_idx += [ind]
 
     printt("%d) Selected item %d (%s), score %g." % \
         (i, orig_ind[ind], ds.labels[orig_ind[ind]], score))
-        
+
     ###############################################
     # Report the fractional change in sum of reconstruction scores
     scoresum = sum(scores)
@@ -845,6 +834,14 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
     #   pylab.show()
 
     ds.write_selections_csv(i, k, ind, label, scores)
+
+    #####################################################
+    # Write a list of selections that are similar to the
+    # PREVIOUS selection - since we need to know scores
+    # AFTER that item was integrated into the updated model.
+    #if i >= 1:
+    #  ds.write_similar_html(k, i-1, sels[-1], scores)
+        
 
     ###############################################
     # Setup for checking if to update or not.
@@ -940,7 +937,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
       # print "S after update:", S
     else:
       printt("Skipped updating model U because data was interesting.")
-    
+
     ###############################################
     # Remove this item from X
     keep     = range(X.shape[1])
@@ -970,10 +967,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full', missingmethod='
   # Return
   return (sels, sels_idx)
     
-#___________________________________________________________________________________________________________________________________________________________
-#______________________________generate_feature_weights_____________________________________________________________________________________________________
-#
-
+#______________________________generate_feature_weights____________________
 def  generate_feature_weights(d, xvals):
   """generate_feature_weights(d, xvals):
   
@@ -1049,10 +1043,7 @@ def  read_feature_weights(fwfile, xvals):
     
   return wolf
 
-#___________________________________________________________________________________________________________________________________________________________
-#__________________________________finish_initialization____________________________________________________________________________________________________
-#
-
+#______________________________finish_initialization_______________________
 # Print out data shape, and check to set N to max.
 def  finish_initialization(ds, action='reading in dataset'):
   global use_max_n, default_n_value
@@ -1067,10 +1058,7 @@ def  finish_initialization(ds, action='reading in dataset'):
   
   return fw
   
-#___________________________________________________________________________________________________________________________________________________________
-#__________________________________check_if_files_exist_____________________________________________________________________________________________________
-#
-
+#______________________________check_if_files_exist________________________
 # Takes a list of files and determines if any of them do not exist.
 # If so, exits in disgrace.
 def  check_if_files_exist(files, ftype='input'):
@@ -1088,10 +1076,7 @@ def  check_if_files_exist(files, ftype='input'):
       return False
   return True
      
-#___________________________________________________________________________________________________________________________________________________________
-#_____________________________________report_classes________________________________________________________________________________________________________
-#
-      
+#______________________________report_classes______________________________
 # Reports upon classes found.  Suppressed with --no-report option.
 def report_classes(ds, n, sels, sels_idx, data_choice):
   # print a list of all classes found in first nsel selections
@@ -1121,10 +1106,7 @@ def report_classes(ds, n, sels, sels_idx, data_choice):
           printt('Class found on selection %d: %s' % (i,ds.labels[csels]))
 
       
-#___________________________________________________________________________________________________________________________________________________________
-#_______________________________________svd_print___________________________________________________________________________________________________________
-#
-
+#______________________________svd_print___________________________________
 # print out SVD options and exit.
 def  svd_print():
   printt("'svdmethod' indicates type of update to do:")
@@ -1137,11 +1119,8 @@ def  svd_print():
   printt("--increm is a shortcut for --svdmethod=increm-ross.")
   printt("")
   exit()
-  
-#___________________________________________________________________________________________________________________________________________________________
-#______________________________________score_print__________________________________________________________________________________________________________
-#
 
+#______________________________score_print_________________________________
 # Print out scoring options and exit.
 def  score_print():
   printt("'scoremethod' indicates how to score sources by reconstruction error:")
@@ -1150,10 +1129,7 @@ def  score_print():
   printt("- 'lowhigh': both (Default)")
   exit()
   
-#___________________________________________________________________________________________________________________________________________________________
-#________________________________________md_print___________________________________________________________________________________________________________
-#
-
+#______________________________md_print____________________________________
 # Print out missing data options and exit.
 def  md_print():
   printt("'missingdatamethod' indicates how to handle missing (NaN) values:")
@@ -1162,10 +1138,7 @@ def  md_print():
   printt("- 'none': assert nothing is missing (NaN).  Die horribly if not true.")
   exit()
   
-#___________________________________________________________________________________________________________________________________________________________
-#________________________________________fw_print___________________________________________________________________________________________________________
-#
-
+#______________________________fw_print____________________________________
 # Print out feature weight options and exit.
 def  fw_print():
   printt("'featureweightmethod' indicates how to weight features given:")
@@ -1188,11 +1161,8 @@ def  fw_print():
   printt("  This will weight the most important feature at 1.0")
   printt("    and the least important at 0.5, with an exponential curve between.")
   exit()
-  
-#___________________________________________________________________________________________________________________________________________________________
-#_______________________________________make_config_________________________________________________________________________________________________________
-#
 
+#______________________________make_config_________________________________
 # Remake demud.config. 
 def  clean():
 
@@ -1325,13 +1295,10 @@ def  clean():
     
   exit()
   
-#___________________________________________________________________________________________________________________________________________________________
-#______________________________________parse_args___________________________________________________________________________________________________________
-#
-
+#______________________________parse_args__________________________________
 # Set up option parser and parse command-line args
 def  parse_args():
-  ##############################################################################
+  ###########################################################################
   # Add command-line options.  Store their values.
   #
   global __VERSION__
@@ -1488,10 +1455,7 @@ def  parse_args():
 
   return vars(options)
   
-#___________________________________________________________________________________________________________________________________________________________
-#______________________________________check_opts___________________________________________________________________________________________________________
-#
-
+#______________________________check_opts__________________________________
 # Ensure that the arguments supplied make sense
 def  check_opts(datatypes):
 
@@ -1542,7 +1506,8 @@ def  check_opts(datatypes):
   mdmethods = ('none', 'ignore', 'zero')
   if (log.opts['missingdatamethod'] != None):
     if (log.opts['missingdatamethod'] not in mdmethods):
-      printt("Error: missing data method %s not supported." % log.opts['missingdatamethod'])
+      printt("Error: missing data method %s not supported." % 
+             log.opts['missingdatamethod'])
       printt("Choose between 'zero', 'ignore', and 'none'.")
       printt("Use --missingdatamethods for more info.")
       exit()
@@ -1664,10 +1629,7 @@ def  check_opts(datatypes):
 
   return selected
   
-#___________________________________________________________________________________________________________________________________________________________
-#____________________________________parse_config_term______________________________________________________________________________________________________
-#
-
+#______________________________parse_config_term___________________________
 def  parse_config_term(config, term):
   """parse_config_term(config, term)
   Search for term in config content and return its value (after = sign).
@@ -1686,10 +1648,7 @@ def  parse_config_term(config, term):
   # If the term is used multiple times, it uses the last one
   return lines[-1].split('=')[-1].strip().replace("'", "").replace('"', '')
   
-#___________________________________________________________________________________________________________________________________________________________
-#____________________________________parse_config___________________________________________________________________________________________________________
-#
-
+#______________________________parse_config________________________________
 def  parse_config(config, data_choice):
   """parse_config(config, data_choice):
   Parse out the filenames needed for the data set of choice.
@@ -1827,10 +1786,7 @@ def  parse_config(config, data_choice):
   printt('Error: unrecognized data set %s.' % data_choice)
   return ()
 
-#___________________________________________________________________________________________________________________________________________________________
-#______________________________________optimize_k___________________________________________________________________________________________________________
-#
-
+#______________________________optimize_k__________________________________
 def  optimize_k(ds, v):
   """optimize_k(ds, v):
   choose k intelligently to capture v% of the data variance.
@@ -1881,10 +1837,7 @@ def  optimize_k(ds, v):
   
   return minind + 1
   
-#___________________________________________________________________________________________________________________________________________________________
-#____________________________________plot_variance__________________________________________________________________________________________________________
-#
-
+#______________________________plot_variance_______________________________
 def plot_variance(ds):
   X = ds.data
   U, S, V = linalg.svd(X, full_matrices=False)
@@ -1898,10 +1851,7 @@ def plot_variance(ds):
     os.mkdir(outdir)
   pylab.savefig(os.path.join(outdir, '__variance.pdf'))
   
-#___________________________________________________________________________________________________________________________________________________________
-#__________________________________init_default_k_values____________________________________________________________________________________________________
-#
-
+#______________________________init_default_k_values_______________________
 def  init_default_k_values():
   global default_k_values
 
@@ -1929,23 +1879,17 @@ def  init_default_k_values():
     'ucis'        : 10,
   }
   
-#___________________________________________________________________________________________________________________________________________________________
-#_________________________________print_default_k_values____________________________________________________________________________________________________
-#
-
+#______________________________print_default_k_values______________________
 def  print_default_k_values():
   init_default_k_values()
   global default_k_values
   printt(default_k_values)
   exit()
   
-#___________________________________________________________________________________________________________________________________________________________
-#_________________________________load_data_________________________________________________________________________________________________________________
-#
-
+#______________________________load_data___________________________________
 def load_data(data_choice, data_files, sol_number = None, initsols = None, scaleInvariant = None):
 
-  ##############################################################################
+  ###########################################################################
   ## GLASS DATA SET (classification)
   if data_choice == 'glass': 
     ds = GlassData(data_files[0])
@@ -2084,10 +2028,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
 
   return ds
   
-#___________________________________________________________________________________________________________________________________________________________
-#__________________________________________main_____________________________________________________________________________________________________________
-#
-
+#______________________________main________________________________________
 # Main execution
 def  main():
 
@@ -2097,7 +2038,7 @@ def  main():
   log.opts['start_sol'] = None
   log.opts['end_sol']   = None
   
-  ##############################################################################
+  ###########################################################################
   ## Check to ensure a valid set of arguments was given.
   
   datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
@@ -2113,7 +2054,7 @@ def  main():
   (q, sm, mm) = (log.opts['svdmethod'], 
       log.opts['scoremethod'], log.opts['missingdatamethod'])
   
-  ##############################################################################
+  ###########################################################################
   ## Check for config file and read it in
 
   # Read in config file
@@ -2128,9 +2069,9 @@ def  main():
 
   printt("Elapsed time after parsing args and reading config file:", time.clock())
   
-  ##############################################################################
+  ###########################################################################
   ## Now we are moving on to the cases which handle each data set.
-  ##############################################################################
+  ###########################################################################
   
   init_default_k_values()
   
@@ -2187,18 +2128,21 @@ def  main():
     pylab.imshow(image)
     pylab.colorbar()
     pylab.savefig(os.path.join('results',
-                               '%s-n=%d-segmentation.pdf' % (ds.name, len(sels))))
+                               '%s-n=%d-segmentation.pdf' % 
+                               (ds.name, len(sels))))
 
     for l in ds.labels:
       img = ds.fullimages[l.split('_')[0]]
       break
 
     with open(os.path.join('results',
-                           '%s-n=%d-segmentation.pkl' % (ds.name, len(sels))), 'w') as f:
+                           '%s-n=%d-segmentation.pkl' % 
+                           (ds.name, len(sels))), 'w') as f:
       pickle.dump((sels, seg, img), f)
 
     Image.fromarray(img).save(os.path.join('results', 
-                                           '%s-n=%d-segmentation.png' % (ds.name, len(sels))), 'PNG')
+                                           '%s-n=%d-segmentation.png' % 
+                                           (ds.name, len(sels))), 'PNG')
 
       
   if data_choice == 'kepler' and lookup:
@@ -2219,7 +2163,7 @@ def  main():
       os.mkdir(outdir)
     ds.plot_score(outdir)
       
-  ##############################################################################
+  ###########################################################################
 
   printt("Total elapsed processor time:", time.clock()) 
 
@@ -2230,10 +2174,7 @@ def  main():
     print base64.b64decode('VGhhbmsgeW91LCBjb21lIGFnYWlu')
     print
 
-#___________________________________________________________________________________________________________________________________________________________
-#_____________________________________if_name_=_main________________________________________________________________________________________________________
-#
-   
+
 if __name__ == "__main__":
   main()
   
