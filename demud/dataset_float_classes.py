@@ -58,6 +58,62 @@ class PancamSpectra(FloatDataset):
     self.xlabel = 'Wavelength (um)'
     self.ylabel = 'Reflectance'
 
+###############################################################################
+#
+#                 CNN FEATURE VECTORS (EXPERIMENTAL)
+#
+###############################################################################
+class CNNFeat(FloatDataset):
+  # Contains code needed to load, plot, and interpret APF spectra (CSV) data.
+  # Initially copied from APF spectra (CSV) data implementation.
+
+  def  __init__(self, filename=None):
+    """CNNFeat(filename="")
+
+    Read in CNN feature vectors in CSV format from filename.
+    """
+
+    FloatDataset.__init__(self, filename, "cnn")
+
+    # readin(1) means that the first entry on each line is an item name.  
+    # readin(0) means that the first entry on each line is the first feature.
+    self.readin(1)
+
+    # Feature names (wavelengths in Angstroms) are in the data file
+    # on the first line (starts with #).
+    # This is read in by the FloatDataset class.
+
+    self.xlabel = 'x'
+    self.ylabel = 'y'
+
+   # want to see default behavior before I override
+  def  plot_item(self, m, ind, x, r, k, label, U,
+                 rerr, feature_weights):
+#
+#    # Select which residuals to highlight
+#    frac_annotate = 0.004  # top 0.4%, modify to change how many display
+#    band_ind = self.select_bands(x, r, frac_annotate)
+#
+#    # Call the plot_item_triangles() method from dataset_float.py
+#    self.plot_item_triangles(m, ind, x, r, k, label, U,
+#                             rerr, feature_weights, band_ind)
+#
+    # Save out top hits file
+    outdir   = os.path.join('results', self.name)
+    hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
+    # First item gets to create (and clear) the file
+    if m == 0:
+      with open(hitsfile, 'w') as f:
+        f.close()
+
+    # Write out a line for this selection
+    with open(hitsfile, 'a') as f:
+      # Write out the name/label of the selected item
+      f.write(label)
+      # Write out a comma-separated list of selected wavelengths
+      for band in band_ind:
+        f.write(',%f' % float(self.xvals[band]))
+#      f.write('\n')
 
 ###############################################################################
 #

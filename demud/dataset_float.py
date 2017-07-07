@@ -43,7 +43,7 @@ class FloatDataset(Dataset):
   def  readin(self, nskip):
     """readin()
     """
-
+    
     with open(self.filename, 'r') as csvfile:
       lines = csvfile.readlines()
 
@@ -54,7 +54,7 @@ class FloatDataset(Dataset):
         header = lines[0][1:].strip()
         self.xvals = numpy.array(map(float,header.split(',')))
       else:
-        self.xvals = numpy.arange(self.data.shape[0]).reshape(-1,1)
+        self.xvals = numpy.arange(numpy.array(self.data).shape[0]).reshape(-1,1)
 
       for line in lines:
         # Skip over empty or commented lines
@@ -71,6 +71,8 @@ class FloatDataset(Dataset):
     self.data = numpy.array(self.data)
 
     self.data   = self.data.T  # features x samples
+
+
     
 
   def  plot_item_triangles(self, m, ind, x, r, k, label, U,

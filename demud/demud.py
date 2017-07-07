@@ -1233,6 +1233,9 @@ def  clean():
                    "----- APF spectra data set: floatdatafile\n"
                    " -b --apf\n"
                    "floatdatafile = \n\n"
+                   "----- CNN feature data set: floatdatafile\n"
+                   " -n --cnn\n"
+                   "floatdatafile = \n\n"
                    "----- GBT spectra data set: floatdatafile\n"
                    " --gbt\n"
                    "floatdatafile = \n\n"
@@ -1320,6 +1323,8 @@ def  parse_args():
                       default=False, action='store_true', dest='pancam')
   dtypes.add_option('-b', '--apf', help='APF spectra',
                       default=False, action='store_true', dest='apf')
+  dtypes.add_option('-n', '--cnn', help='CNN feature vectors', 
+                      default=False, action='store_true', dest='cnn')
   dtypes.add_option('--gbt', help='GBT spectra',
                       default=False, action='store_true', dest='gbt')
   dtypes.add_option('--gbtfil', help='GBT filterbank',
@@ -1663,7 +1668,7 @@ def  parse_config(config, data_choice):
   ecolidatafile   = parse_config_term(config, 'ecolidatafile')
   isoletdatafile  = parse_config_term(config, 'isoletdatafile')
 
-  # Floating point data (or Pancam or APF or GBT)
+  # Floating point data (or Pancam or APF or GBT or CNN)
   floatdatafile   = parse_config_term(config, 'floatdatafile')
 
   # GBT filterbank
@@ -1730,7 +1735,7 @@ def  parse_config(config, data_choice):
     return ([isoletdatafile],'')
   elif data_choice == 'ecoli':
     return ([ecolidatafile],'')
-  elif data_choice in ['pancam', 'testdata', 'apf', 'gbt']:
+  elif data_choice in ['pancam', 'testdata', 'apf', 'gbt', 'cnn']:
     return ([floatdatafile],'')
   elif data_choice == 'gbtfil':
     return ([gbtdirname, catalogfile],'')
@@ -1860,6 +1865,7 @@ def  init_default_k_values():
     'ecoli'       :  6,
     'pancam'      :  2,
     'apf'         :  2,
+    'cnn'         : 10,
     'gbt'         : 10,
     'gbtfil'      : 10,
     'decals'      : 10,
@@ -1908,6 +1914,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## APF SPECTRA DATA SET
   elif data_choice == 'apf':
     ds = APFSpectra(data_files[0])
+  ## CNN FEATURE DATA SET
+  elif data_choice == 'cnn':
+    ds = CNNFeat(data_files[0])
   ## GBT SPECTRA DATA SET
   elif data_choice == 'gbt':
     ds = GBTSpectra(data_files[0])
@@ -2021,6 +2030,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     printt("Invalid data set choice.")
     exit()
 
+  #throwing an error here for floatcsv, AttributeError: 'list' object has no attribute 'shape'
+  printt("datatype ", type(ds.data))  # why is this a list and not an array?
+  
   if ds.data.shape[1] != len(ds.labels):
     printt("Error: %d items but %d labels!" % (ds.data.shape[1],
                                                len(ds.labels)))
@@ -2045,7 +2057,7 @@ def  main():
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
                'pancam', 'apf', 'gbt', 'gbtfil', 'decals',
-               'mastcam', 'images', 'ucis', 'testdata')
+               'mastcam', 'images', 'ucis', 'testdata', 'cnn')
   
   data_choice = check_opts(datatypes)
   
@@ -2187,6 +2199,7 @@ if __name__ == "__main__":
 #  1.4: Incremental SVD fully functional; choice of first element
 #  1.5: Feature weighting included; full SVD option for init-item=-1 back in
 #  1.6: Start of summer 2014, added to include Mastcam support
+#  1.7: [inprogress] implementing image processing w/ CNN
 #
 #####
 
