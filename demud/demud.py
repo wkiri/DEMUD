@@ -1234,7 +1234,7 @@ def  clean():
                    " -b --apf\n"
                    "floatdatafile = \n\n"
                    "----- CNN feature data set: floatdatafile\n"
-                   " -n --cnn\n"
+                   " -v --cnn\n"
                    "floatdatafile = \n\n"
                    "----- GBT spectra data set: floatdatafile\n"
                    " --gbt\n"
@@ -1323,7 +1323,7 @@ def  parse_args():
                       default=False, action='store_true', dest='pancam')
   dtypes.add_option('-b', '--apf', help='APF spectra',
                       default=False, action='store_true', dest='apf')
-  dtypes.add_option('-n', '--cnn', help='CNN feature vectors', 
+  dtypes.add_option('-v', '--cnn', help='CNN feature vectors', 
                       default=False, action='store_true', dest='cnn')
   dtypes.add_option('--gbt', help='GBT spectra',
                       default=False, action='store_true', dest='gbt')
@@ -2030,9 +2030,8 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     printt("Invalid data set choice.")
     exit()
 
-  #throwing an error here for floatcsv, AttributeError: 'list' object has no attribute 'shape'
-  printt("datatype ", type(ds.data))  # why is this a list and not an array?
-  
+  printt("datatype ", type(ds.data))
+
   if ds.data.shape[1] != len(ds.labels):
     printt("Error: %d items but %d labels!" % (ds.data.shape[1],
                                                len(ds.labels)))
