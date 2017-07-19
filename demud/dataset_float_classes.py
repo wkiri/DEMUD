@@ -86,34 +86,56 @@ class CNNFeat(FloatDataset):
     self.xlabel = 'x'
     self.ylabel = 'y'
 
-   # want to see default behavior before I override
+   # Plotting doesn't make sense for this dataset, so export original, 
+   # reconstructed, and residual feature vectors to a csv for interpretation.
   def  plot_item(self, m, ind, x, r, k, label, U,
                  rerr, feature_weights):
-#
-#    # Select which residuals to highlight
-#    frac_annotate = 0.004  # top 0.4%, modify to change how many display
-#    band_ind = self.select_bands(x, r, frac_annotate)
-#
-#    # Call the plot_item_triangles() method from dataset_float.py
-#    self.plot_item_triangles(m, ind, x, r, k, label, U,
-#                             rerr, feature_weights, band_ind)
-#
+                 rerr, feature_weights, band_ind)
+
     # Save out top hits file
     outdir   = os.path.join('results', self.name)
-    hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
-    # First item gets to create (and clear) the file
-    if m == 0:
-      with open(hitsfile, 'w') as f:
-        f.close()
+    #hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
+    selectfile = os.path.join(outdir, 'select-%s.csv' % self.name)
+    reconfile = os.path.join(outdir, 'recon-%s.csv' % self.name)
+    residfile = os.path.join(outdir, 'resid-%s.csv' % self.name)
 
-    # Write out a line for this selection
-    with open(hitsfile, 'a') as f:
-      # Write out the name/label of the selected item
-      f.write(label)
-      # Write out a comma-separated list of selected wavelengths
-      for band in band_ind:
-        f.write(',%f' % float(self.xvals[band]))
-#      f.write('\n')
+    # Check validity
+    if x == [] or r == []:
+      print "Error: No data in x and/or r."
+      return
+
+    # First item gets to create (and clear) the file 
+    if m == 0:
+      f = open(selectfile, 'w')
+      f.write('')
+      f.close()
+      f2 = open(reconfile, 'w')
+      f2.write('')
+      f2.close()
+      f3 = open(residfile, 'w')
+      f3.write('')
+      f3.close()
+
+    # Had ndarrays converting to lists before, not necessary
+    selectfile = x
+    recon = r
+    # Residual calculation - element-wise subtraction. Values are clipped to a
+    # minimum of zero, as there are no negative values in the input vector.
+    resid = numpy.subtract(x, r).clip(min=0)
+
+    # Write original, reconstructed, and residual vectors of selections 
+    # into a csv
+    with open(selectfile, 'a') as f:
+      csvwriter = csv.writer(f, dialect='excel')
+      csvwriter.writerow(inecho)
+
+    with open(reconfile, 'a') as f:
+      csvwriter = csv.writer(f, dialect='excel')
+      csvwriter.writerow(recon)
+
+    with open(residfile, 'a') as f:
+      csvwriter = csv.writer(f, dialect='excel')
+      csvwriter.writerow(resid)
 
 ###############################################################################
 #
