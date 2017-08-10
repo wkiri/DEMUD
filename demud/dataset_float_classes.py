@@ -90,7 +90,6 @@ class CNNFeat(FloatDataset):
    # reconstructed, and residual feature vectors to a csv for interpretation.
   def  plot_item(self, m, ind, x, r, k, label, U,
                  rerr, feature_weights):
-                 rerr, feature_weights, band_ind)
 
     # Save out top hits file
     outdir   = os.path.join('results', self.name)
