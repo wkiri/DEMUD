@@ -91,6 +91,10 @@ class CNNFeat(FloatDataset):
   def  plot_item(self, m, ind, x, r, k, label, U,
                  rerr, feature_weights):
 
+    # This should probably be somewhere else in the code but
+    reload(sys)
+    sys.setdefaultencoding("UTF-8")
+
     # Save out top hits file
     outdir   = os.path.join('results', self.name)
     #hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
@@ -116,11 +120,20 @@ class CNNFeat(FloatDataset):
       f3.close()
 
     # Had ndarrays converting to lists before, not necessary
-    selectfile = x
+    inecho = x
     recon = r
     # Residual calculation - element-wise subtraction. Values are clipped to a
     # minimum of zero, as there are no negative values in the input vector.
-    resid = numpy.subtract(x, r).clip(min=0)
+    resid = (x - r)#.clip(min=0)
+
+    # turns out, we need to maintain the euclidean norm for subtraction.
+    # we'll leave the reconstruction alone for now.
+    # also, clipping to a 0 minimum is a bad idea.
+
+    inecho_l2_norm = numpy.linalg.norm(inecho, 2)
+    resid_l2_norm = numpy.linalg.norm(resid, 2)
+    normalized_resid = (resid / resid_l2_norm) * inecho_l2_norm
+
 
     # Write original, reconstructed, and residual vectors of selections 
     # into a csv
@@ -134,7 +147,7 @@ class CNNFeat(FloatDataset):
 
     with open(residfile, 'a') as f:
       csvwriter = csv.writer(f, dialect='excel')
-      csvwriter.writerow(resid)
+      csvwriter.writerow(normalized_resid)
 
 ###############################################################################
 #
