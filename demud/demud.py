@@ -30,6 +30,7 @@ from dataset_uci_classes import GlassData, EcoliData, AbaloneData, IsoletData
 from dataset_float import FloatDataset
 from dataset_float_classes import *
 from dataset_decals import DECaLSData
+from dataset_des import DESData
 from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
@@ -59,17 +60,66 @@ default_k_values = {}
 default_n_value = 10
 use_max_n = False
 
-#______________________________select_next_________________________________
-def  select_next(X, U, S, mu,
+
+#______________________________score_items_missing__________________________
+def  compute_error_with_missing(X, U, mu):
+  """compute_error_with_missing(X, U, mu, missingmethod):
+
+  Calculate the score (reconstruction error) for every item in X,
+  with respect to the SVD model in U and mean mu for uninteresting items,
+  when there could be missing values in X (indicated with NaN).
+
+  If an item contains entirely NaNs (no good values),
+  its error will be 0.  Maybe should be NaN instead?
+
+  Return an array of item reconstruction errors and their reprojections.
+  """
+
+  # We want to ignore (work around) NaNs, without imputing.
+  # This is less efficient than with no NaNs:
+  # we have to process each item individually
+  # since they might have different missing values.
+  #diagS  = np.diag(S).reshape(len(S), len(S))
+  reproj = np.zeros(X.shape) * np.nan
+  err    = np.zeros(X.shape) 
+  
+  for i in range(X.shape[1]):
+    x        = X[:,i].reshape(-1, 1)
+    # Usable features are not NaN in x nor in mu
+    isgood   = ~np.logical_or(np.isnan(x), np.isnan(mu))
+    goodinds = np.where(isgood)[0]
+    numgood  = len(goodinds)
+
+    if numgood == 0:  # No good data!  Do nothing (err for this item is 0)
+      pass
+
+    elif numgood == x.shape[0]:  # All good -- normal processing.
+      proj        = np.dot(U.T, x - mu)
+      reproj[:,i] = (np.dot(U, proj) + mu).squeeze()
+      err[:,i]    = x.squeeze() - reproj[:,i]
+
+    else:
+      # Imputation/modeling method from Brand 2002
+      # X = U*(S*(((U*S)+)*X)) (eqn 11)
+      # Should we be using S?  We aren't at the moment.
+      # Selectively use/fill only goodinds:
+      proj = np.dot(U[goodinds,:].T,
+                    x[goodinds,0] - mu[goodinds,0])
+      reproj[goodinds,i] = np.dot(U[goodinds,:], proj) + mu[goodinds,0]
+      err[goodinds,i]    = x[goodinds,0] - reproj[goodinds,i]
+
+  return (err, reproj)
+
+
+#______________________________score_items_________________________________
+def  score_items(X, U, mu,
                  scoremethod='lowhigh',
                  missingmethod='none',
                  feature_weights=[]):
-  """select_next(X, U, S, mu, scoremethod)
+  """score_items(X, U, scoremethod, missingmethod, feature_weights)
 
-  Select the next most-interesting item in X,
-  given model U, singular values S, and mean mu for uninteresting items.
-
-  Note: S is currently unused here.  Should it be?
+  Calculate the score (reconstruction error) for every item in X,
+  with respect to the SVD model in U and mean mu for uninteresting items.
 
   'scoremethod' indicates which residual values count towards
   the interestingness score of each item:
@@ -82,26 +132,17 @@ def  select_next(X, U, S, mu,
   - 'ignore': ignore missing values following Brand (2002)
   - 'none': assert nothing is missing (NaN).  Die horribly if not true.
 
-  Return the index of the selected item, its reconstruction,
-    its reconstruction score, and all items' reconstruction scores.
-  """
+  'feature_weights' influence how much each feature contributes to the score.
 
-  print "------------ SELECTING --------------"
-  if U == []:
-    printt("Empty DEMUD model: selecting item number %d from data set" % \
-             (log.opts['iitem']))
-    return log.opts['iitem'], X[:,log.opts['iitem']], 0.0, []
-  if X == [] or U == [] or mu == []:
-    printt("Error: No data in X and/or U and/or mu.")
-    return None, None, -1, []
-  if X.shape[0] != U.shape[0] or X.shape[0] != mu.shape[0]:
-    printt("Mismatch in dimensions; must have X mxn, U mxk, mu mx1.")
-    return None, None, -1, []
+  Return an array of item reconstruction scores and their reprojections.
+  """
 
   # Use U to model and then reconstruct the data in X.
   # 1. Project all data in X into space defined by U,
   #    then reconstruct it.
-  if missingmethod != 'ignore':
+  if missingmethod.lower() != 'ignore':
+    # All missing values should have been replaced with 0,
+    # or non-existent.
     # 1a. Subtract the mean and project onto U
     proj   = np.dot(U.T, (X - mu))
     # 1b. Reconstruct by projecting back up and adding mean
@@ -110,36 +151,8 @@ def  select_next(X, U, S, mu,
     err    = X - reproj
     
   else:
-    # We want to ignore (work around) NaNs, without imputing.
-    # This is less efficient than with no NaNs:
-    # we have to process each item individually
-    # since they might have different missing values.
-    diagS  = np.diag(S).reshape(len(S), len(S))
-    reproj = np.zeros(X.shape) * np.nan
-    err    = np.zeros(X.shape) 
-    for i in range(X.shape[1]):
-      x        = X[:,i].reshape(-1, 1)
-      # Usable features are not NaN in x nor in mu
-      isgood   = ~np.logical_or(np.isnan(x), np.isnan(mu))
-      goodinds = np.where(isgood)[0]
-      numgood  = len(goodinds)
-      # print "Found %d/%d (%5.2f%%) good indices within observation %d." % \
-      #      (numgood, x.shape[0], 100*numgood/float(len(x)), i)
-      if numgood == 0:  # No good data!  Do nothing.
-        pass
-      elif numgood == x.shape[0]:  # All good -- normal processing.
-        proj        = np.dot(U.T, x - mu)
-        reproj[:,i] = (np.dot(U, proj) + mu).squeeze()
-        err[:,i]    = x.squeeze() - reproj[:,i]
-      else:
-        # Imputation/modeling method from Brand 2002
-        # X = U*(S*(((U*S)+)*X)) (eqn 11)
-        # Should we be using S?  We aren't at the moment.
-        # Selectively use/fill only goodinds:
-        proj = np.dot(U[goodinds,:].T,
-                      x[goodinds,0] - mu[goodinds,0])
-        reproj[goodinds,i] = np.dot(U[goodinds,:], proj) + mu[goodinds,0]
-        err[goodinds,i]    = x[goodinds,0] - reproj[goodinds,i]
+    # Missing method must be 'ignore' (Brand 2002)
+    (err, reproj) = compute_error_with_missing(X, U, mu)
 
   # 2. Compute reconstruction error
   if scoremethod == 'low':    # Blank out all errors > 0
@@ -161,11 +174,58 @@ def  select_next(X, U, S, mu,
     scores = np.nansum(np.array(np.power(err, 2)), axis=0)
   else:
     scores = np.sum(np.array(np.power(err, 2)), axis=0)
+
+  return (scores, reproj)
   
-  # Select and return item with max reconstruction error
-  # and its index
+
+#______________________________select_next_________________________________
+def  select_next(X, U, mu,
+                 scoremethod='lowhigh',
+                 missingmethod='none',
+                 feature_weights=[]):
+  """select_next(X, U, mu, scoremethod, missingmethod, feature_weights)
+
+  Select the next most-interesting item in X,
+  given model U, singular values S, and mean mu for uninteresting items.
+
+  'scoremethod' indicates which residual values count towards
+  the interestingness score of each item:
+  - 'low': negative residuals
+  - 'high': positive residuals
+  - 'lowhigh': both
+
+  'missingmethod' indicates how to handle missing (NaN) values:
+  - 'zero': set missing values to zero
+  - 'ignore': ignore missing values following Brand (2002)
+  - 'none': assert nothing is missing (NaN).  Die horribly if not true.
+
+  'feature_weights' influence how much each feature contributes to the score.
+
+  Return the index of the selected item, its reconstruction,
+    its reconstruction score, and all items' reconstruction scores.
+  """
+
+  print "------------ SELECTING --------------"
+  if U == []:
+    printt("Empty DEMUD model: selecting item number %d from data set" % \
+             (log.opts['iitem']))
+    return log.opts['iitem'], X[:,log.opts['iitem']], 0.0, []
+
+  if X == [] or U == [] or mu == []:
+    printt("Error: No data in X and/or U and/or mu.")
+    return None, None, -1, []
+
+  if X.shape[0] != U.shape[0] or X.shape[0] != mu.shape[0]:
+    printt("Mismatch in dimensions; must have X mxn, U mxk, mu mx1.")
+    return None, None, -1, []
+
+  # Compute the score for each item
+  (scores, reproj) = score_items(X, U, mu, scoremethod, missingmethod)
+
+  # Select and return item with max reconstruction error and its index
   m = scores.argmax()
   return m, reproj[:,m], scores[m], scores
+
 
 #______________________________select_next_NN______________________________
 def  select_next_NN(X, x):
@@ -183,13 +243,14 @@ def  select_next_NN(X, x):
     printt("Mismatch in dimensions; must have X mxn, x mx1.")
     return None
 
-  # Compute the distance from x to all items in X
+  # Compute the (Euclidean) distance from x to all items in X
   scores = np.apply_along_axis(linalg.norm, 0, X - x[:,np.newaxis])
 
   # Select and return item with min distance to x
   m = scores.argmin()
 
   return m
+
 
 #______________________________update_model________________________________
 def  update_model(X, U, S, k, n, mu,
@@ -244,7 +305,7 @@ def  update_model(X, U, S, k, n, mu,
         printt("----- initial SVD -----")
         output_k = True
       else:
-        # Not sure why this reshape is here. U models 0 items but isn't empty?
+        # Reshape so we don't have an empty dimension (yay python)
         U = U.reshape(-1, 1)
     elif U == []:
       printt("WARNING: N (number of items modeled by U) is %d, not zero, but U is empty!" % n)
@@ -427,17 +488,12 @@ def  update_model(X, U, S, k, n, mu,
       
       ############# end ###########
       
-      #print "Amount of new U which is NaN:", \
-      # 100 * np.isnan(U).sum() / float(U.size)
-
     else: # No missing values (or not 'ignore')
       # 1. Update mu
       mu_old = mu
       mu_new = X
       # New mu is a weighted sum of old and new mus
       mu     = (n * mu_old + n_new * mu_new) / (n + n_new)
-      # printt("Now tracking mean for %d -> %d items; mu.min %f, mu.max %f " % \
-      #     (n, n+n_new, min(mu), max(mu)))
       n      = n + n_new
 
       # 2. Subtract off the mean
@@ -471,8 +527,6 @@ def  update_model(X, U, S, k, n, mu,
     S = S[0:min([n,k])]
 
     Usum = U.sum(1)
-    # print 'NaN features in U:', len([i for i in Usum if np.isnan(i)])
-    # print 'Should be:', (len(mu) - len(wheremuisgood))
 
 
   ###########################################################################
@@ -762,7 +816,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     ###############################################
     # Get the selection, according to model U
     else:
-      ind, r, score, scores = select_next(X, U, S, mu, scoremethod,
+      ind, r, score, scores = select_next(X, U, mu, scoremethod,
                                           missingmethod, feature_weights)
     
     # Update selections
@@ -835,13 +889,22 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
     ds.write_selections_csv(i, k, ind, label, scores)
 
-    #####################################################
-    # Write a list of selections that are similar to the
-    # PREVIOUS selection - since we need to know scores
-    # AFTER that item was integrated into the updated model.
-    #if i >= 1:
-    #  ds.write_similar_html(k, i-1, sels[-1], scores)
-        
+
+    if log.opts['decals']:
+      #####################################################
+      # Write a list of selections that are similar to this selection (x).
+      # First, score all items with respect to a single-item model of x.
+      # Create a U the same size as x, first value 1 (rest 0),
+      # and set mu to be x.
+      this_U    = np.zeros_like(x)
+      this_U[0] = 1
+      this_U    = this_U.reshape(-1, 1)
+      this_mu   = x
+      this_mu   = this_mu.reshape(-1, 1)
+      (this_item_scores, reproj) = score_items(X, this_U, this_mu,
+                                               scoremethod, missingmethod, 
+                                               feature_weights)
+      ds.write_similar_html(10, i, k, ind, this_item_scores)
 
     ###############################################
     # Setup for checking if to update or not.
@@ -928,13 +991,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
         if (i == 0 and ds.initdata == []): 
           U = []
 
-      # print "S before update:", S
       U, S, mu, n, pcts = update_model(seen, U, S, k, n, mu,
                                        svdmethod=svdmethod,
                                        missingmethod=missingmethod)
-        #print U
-        #print np.histogram(U)
-      # print "S after update:", S
     else:
       printt("Skipped updating model U because data was interesting.")
 
@@ -1243,6 +1302,9 @@ def  clean():
                    "----- DECaLS FITS data set: decalsfilename\n"
                    " --decals\n"
                    "decalsfilename  = \n\n"
+                   "----- DES FITS data set: desfilename\n"
+                   " --des\n"
+                   "desfilename  = \n\n"
                    "---- ChemCam: libsdatafile libsinitdatafile\n"
                    " -c --chemcam\n"
                    "libsdatafile = \n"
@@ -1326,6 +1388,8 @@ def  parse_args():
                       default=False, action='store_true', dest='gbtfil')
   dtypes.add_option('--decals', help='DECaLS FITS file',
                       default=False, action='store_true', dest='decals')
+  dtypes.add_option('--des', help='DES FITS file',
+                      default=False, action='store_true', dest='des')
   dtypes.add_option('-x', '--testdata', help='Test data', 
                       default=False, action='store_true', dest='testdata')
   dtypes.add_option('-c', '--chemcam', help='ChemCam data', default=False, 
@@ -1673,6 +1737,9 @@ def  parse_config(config, data_choice):
   # DECaLS
   decalsfilename  = parse_config_term(config, 'decalsfilename')
 
+  # DES
+  desfilename     = parse_config_term(config, 'desfilename')
+
   # ChemCam
   libsdatafile     = parse_config_term(config, 'libsdatafile')
   libsinitdatafile = parse_config_term(config, 'libsinitdatafile')
@@ -1736,6 +1803,8 @@ def  parse_config(config, data_choice):
     return ([gbtdirname, catalogfile],'')
   elif data_choice == 'decals':
     return ([decalsfilename],'')
+  elif data_choice == 'des':
+    return ([desfilename],'')
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     return ([libsdatafile, libsinitdatafile],'')
   elif data_choice == 'finesse':
@@ -1863,6 +1932,7 @@ def  init_default_k_values():
     'gbt'         : 10,
     'gbtfil'      : 10,
     'decals'      : 10,
+    'des'         : 10,
     'testdata'    :  2,
     'chemcam'     : 10,
     'finesse'     : 10,
@@ -1917,6 +1987,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## DECALS FITS DATA SET
   elif data_choice == 'decals':
     ds = DECaLSData(data_files[0])
+  ## DES FITS DATA SET
+  elif data_choice == 'des':
+    ds = DESData(data_files[0])
   ## TEST DATA SET
   elif data_choice == 'testdata':
     ds = FloatDataset(data_files[0])
@@ -2044,7 +2117,7 @@ def  main():
   datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
-               'pancam', 'apf', 'gbt', 'gbtfil', 'decals',
+               'pancam', 'apf', 'gbt', 'gbtfil', 'decals', 'des',
                'mastcam', 'images', 'ucis', 'testdata')
   
   data_choice = check_opts(datatypes)
@@ -2108,7 +2181,8 @@ def  main():
   if report:
     report_classes(ds, n, sels, sels_idx, data_choice)
 
-  if data_choice == 'decals':
+  if (data_choice == 'decals' or 
+      data_choice == 'des'):
     # Perform final cleanup of HTML selections file
     outdir = os.path.join('results', ds.name)
     htmlselfile = os.path.join(outdir, 'selections-k%d.html' % k)
