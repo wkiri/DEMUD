@@ -26,7 +26,7 @@ import copy, base64, time
 import csv
 import pylab
 
-from dataset_uci_classes import GlassData, EcoliData, AbaloneData, IsoletData
+from dataset_uci_classes import GlassData, IrisData, EcoliData, AbaloneData, IsoletData
 from dataset_float import FloatDataset
 from dataset_float_classes import *
 from dataset_decals import DECaLSData
@@ -211,7 +211,7 @@ def  select_next(X, U, mu,
              (log.opts['iitem']))
     return log.opts['iitem'], X[:,log.opts['iitem']], 0.0, []
 
-  if X == [] or U == [] or mu == []:
+  if X.shape[1] < 1 or U == [] or mu == []:
     printt("Error: No data in X and/or U and/or mu.")
     return None, None, -1, []
 
@@ -586,6 +586,10 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   - 'none': assert nothing is missing (NaN).  Die horribly if not true. (Default)
   """
 
+  # Sanity-check/fix nsel
+  if nsel > ds.data.shape[1]:
+    nsel = ds.data.shape[1]
+
   printt("Running DEMUD version %s for %d iterations using k=%d" %
          (__VERSION__, nsel, k))
 
@@ -887,7 +891,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     #   pylab.imshow(U.reshape([ds.along_track, -1]))
     #   pylab.show()
 
-    ds.write_selections_csv(i, k, ind, label, scores)
+    ds.write_selections_csv(i, k, orig_ind[ind], label, ind, scores)
 
 
     if log.opts['decals']:
@@ -1137,15 +1141,15 @@ def  check_if_files_exist(files, ftype='input'):
      
 #______________________________report_classes______________________________
 # Reports upon classes found.  Suppressed with --no-report option.
-def report_classes(ds, n, sels, sels_idx, data_choice):
+def report_classes(ds, sels, sels_idx, data_choice):
   # print a list of all classes found in first nsel selections
   if not (data_choice is 'navcam'):
     found = []
     printt("CLASSES FOUND:\n")
-    for i in range(n):
-      if not ds.labels[sels[i]] in found:
-        printt('Class found on selection %d: %s' % (i, ds.labels[sels[i]]))
-        found.append(ds.labels[sels[i]])
+    for (i, s) in enumerate(sels):
+      if not ds.labels[s] in found:
+        printt('Class found on selection %d: %s' % (i, ds.labels[s]))
+        found.append(ds.labels[s])
     printt("\nNumber of classes found: %d\n" % len(found))
   else:
     file_sels = {};
@@ -1272,17 +1276,21 @@ def  clean():
   # lurking silently
 
   outputfile.write("############ DATASETS #################\n\n"
-                   "----- Glass classification data set: glassdatafile\n"
+                   "----- Glass classification data set: ucidatafile\n"
                    " -g --glass\n"
-                   "glassdatafile = \n\n"
-                   "----- E. Coli classification data set: ecolidatafile\n"
+                   "ucidatafile = \n\n"
+                   "----- Iris classification data set: ucidatafile\n"
+                   " -i --iris\n"
+                   "ucidatafile = \n\n"
+                   "----- E. Coli classification data set: ucidatafile\n"
                    " -e --ecoli\n"
-                   "ecolidatafile = \n\n"
-                   "----- Abalone classification data set: abalonedatafile\n"
-                   " -o --abalone\nabalonedatafile = \n\n"
-                   "----- ISOLET letter classification: isoletdatafile\n"
+                   "ucidatafile = \n\n"
+                   "----- Abalone classification data set: ucidatafile\n"
+                   " -o --abalone\n"
+                   "ucidatafile = \n\n"
+                   "----- ISOLET letter classification: ucidatafile\n"
                    " -z --isolet\n"
-                   "isoletdatafile = \n\n"
+                   "ucidatafile = \n\n"
                    "----- Test data set: floatdatafile\n"
                    " -x --testdata\n"
                    "floatdatafile = \n\n"
@@ -1374,6 +1382,8 @@ def  parse_args():
   
   dtypes.add_option('-g', '--glass', help='Glass classification', 
                       default=False, action='store_true', dest='glass')
+  dtypes.add_option('--iris', help='Iris classification', 
+                      default=False, action='store_true', dest='iris')
   dtypes.add_option('-e', '--ecoli', help='E. coli classification', 
                       default=False, action='store_true', dest='ecoli')
   dtypes.add_option('-o', '--abalone', help='Abalone classification', 
@@ -1628,11 +1638,11 @@ def  check_opts(datatypes):
       
   # Check to make sure that --no-report was only supplied with a valid argument
   if not (log.opts['report']):
-    if not (log.opts['glass'] or log.opts['ecoli'] or log.opts['abalone'] or
-            log.opts['isolet']):
+    if not (log.opts['glass'] or log.opts['iris'] or log.opts['ecoli'] or 
+            log.opts['abalone'] or log.opts['isolet']):
       printt("Error: --no-report supplied with invalid datatype.  Use -h for help.")
       exit()
-  if selected not in ['glass', 'ecoli', 'abalone', 'isolet']:
+  if selected not in ['glass', 'iris', 'ecoli', 'abalone', 'isolet']:
     log.opts['report'] = False
       
   # Check to make sure that a valid value of k or k_var and n were given
@@ -1703,6 +1713,7 @@ def  parse_config_term(config, term):
 
   # Matching lines
   lines = [line for line in config if term in line 
+           and '=' in line
            and line.strip()[0] != '#']
 
   # This term may not be defined in the config file
@@ -1722,10 +1733,7 @@ def  parse_config(config, data_choice):
   """
 
   # UCI data
-  glassdatafile   = parse_config_term(config, 'glassdatafile')
-  abalonedatafile = parse_config_term(config, 'abalonedatafile')
-  ecolidatafile   = parse_config_term(config, 'ecolidatafile')
-  isoletdatafile  = parse_config_term(config, 'isoletdatafile')
+  ucidatafile     = parse_config_term(config, 'ucidatafile')
 
   # Floating point data (or Pancam or APF or GBT)
   floatdatafile   = parse_config_term(config, 'floatdatafile')
@@ -1789,14 +1797,12 @@ def  parse_config(config, data_choice):
   # UCIS
   ucisrawfile    = parse_config_term(config, 'ucisrawfile')
   
-  if data_choice == 'glass':
-    return ([glassdatafile],'')
-  elif data_choice == 'abalone':
-    return ([abalonedatafile],'')
-  elif data_choice == 'isolet':
-    return ([isoletdatafile],'')
-  elif data_choice == 'ecoli':
-    return ([ecolidatafile],'')
+  if (data_choice == 'glass' or
+      data_choice == 'iris' or
+      data_choice == 'abalone' or
+      data_choice == 'isolet' or
+      data_choice == 'ecoli'):
+    return ([ucidatafile],'')
   elif data_choice in ['pancam', 'testdata', 'apf', 'gbt']:
     return ([floatdatafile],'')
   elif data_choice == 'gbtfil':
@@ -1926,6 +1932,7 @@ def  init_default_k_values():
 
   default_k_values = {
     'glass'       :  5,
+    'iris'        :  3,
     'ecoli'       :  6,
     'pancam'      :  2,
     'apf'         :  2,
@@ -1963,6 +1970,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## GLASS DATA SET (classification)
   if data_choice == 'glass': 
     ds = GlassData(data_files[0])
+  ## IRIS DATA SET (classification)
+  elif data_choice == 'iris': 
+    ds = IrisData(data_files[0])
   ## ABALONE DATA SET (classification)
   elif data_choice == 'abalone': 
     ds = AbaloneData(data_files[0])
@@ -2114,7 +2124,7 @@ def  main():
   ###########################################################################
   ## Check to ensure a valid set of arguments was given.
   
-  datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
+  datatypes = ('glass', 'iris', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
                'pancam', 'apf', 'gbt', 'gbtfil', 'decals', 'des',
@@ -2179,7 +2189,7 @@ def  main():
 
   # Report the results
   if report:
-    report_classes(ds, n, sels, sels_idx, data_choice)
+    report_classes(ds, sels, sels_idx, data_choice)
 
   if (data_choice == 'decals' or 
       data_choice == 'des'):
