@@ -20,7 +20,9 @@
 
 import os, sys, re
 import numpy as np
-import pyfits, pylab
+#import pyfits, 
+import fitsio
+import pylab
 from dataset import Dataset
 
 class DESData(Dataset):
@@ -28,7 +30,7 @@ class DESData(Dataset):
   def __init__(self, desfilename=None):
     """DESData(decalsfilename=None)
 
-    Read in DES catalog data from FITS file.
+    Read in DES catalog data.
     """
 
     Dataset.__init__(self, desfilename, "DESData", '')
@@ -42,23 +44,79 @@ class DESData(Dataset):
     Read in DES catalog data from FITS file.
     """
 
-    datafile = pyfits.open(self.filename)
+    #datafile = pyfits.open(self.filename)
+    #data   = datafile[1].data[0:1000000] # start small
+    data = fitsio.read(self.filename)
+
+    # Mask out the bad objects
+    SVA1_FLAG_mask   = (data['SVA1_FLAG'] == 0)
+    NGMIX_FLAG_mask  = (data['NGMIX_FLAG'] == 0)
+    PHOTOZ_FLAG_mask = (data['PHOTOZ_BIN'] > -1)
+    data = data[SVA1_FLAG_mask & 
+                NGMIX_FLAG_mask &
+                PHOTOZ_FLAG_mask]
 
     # Read in the desired columns.
-    data   = datafile[1].data[0:1000] # start small
+
+    # from SVA_GOLD
+    self.features = ['MAG_AUTO_G',
+                     'MAG_AUTO_R',
+                     'MAG_AUTO_I',
+                     'MAG_AUTO_Z',
+                     'MAGERR_AUTO_G',
+                     'MAGERR_AUTO_R',
+                     'MAGERR_AUTO_I',
+                     'MAGERR_AUTO_Z',
+#                     'FLUX_RADIUS_G',  # values are negative?
+#                     'FLUX_RADIUS_R',
+#                     'FLUX_RADIUS_I',
+#                     'FLUX_RADIUS_Z',
+#                     'MODEST_CLASS',
+                     'SPREAD_MODEL_G',
+                     'SPREAD_MODEL_R',
+                     'SPREAD_MODEL_I',
+                     'SPREAD_MODEL_Z',
+                     'CLASS_STAR_G',
+                     'CLASS_STAR_R',
+                     'CLASS_STAR_I',
+                     'CLASS_STAR_Z']
+#                     'BADFLAG']
+
+    # WLINFO filtered by Umaa to omit objects with
+    # SVA1_FLAG != 0
+    # NGMIX_FLAG != 0
+    # PHOTOZ_BIN != -1
 
     self.features = ['MAG_AUTO_G',
                      'MAG_AUTO_R',
                      'MAG_AUTO_I',
-                     'MAG_AUTO_Z',]
-    self.data = np.vstack([data.field(f) for f in self.features])
-#
-    self.labels = ['%d_%.6f_%.6f' % (id,ra,dec) for (id,ra,dec) in \
-                     zip(data.field('COADD_OBJECTS_ID'),
-                         data.field('RA'),
-                         data.field('DEC'))]
+                     'MAG_AUTO_Z',
+                     'PHOTOZ_BIN',
+                     'MEAN_PHOTOZ']
 
-    datafile.close()
+    #self.data = np.vstack([data.field(f) for f in self.features])
+    self.data = np.vstack([data[f] for f in self.features])
+
+    # Data is d x n
+    print self.data.shape
+    # Scale some features as needed
+    for f in self.features:
+      if 'CLASS_STAR' in f: # 0 to 1.0
+        self.data[self.features.index(f),:] *= 100
+      if 'SPREAD_MODEL' in f:  # -1.0 to 1.0
+        self.data[self.features.index(f),:] += 1.0
+        self.data[self.features.index(f),:] /= 2.0
+        self.data[self.features.index(f),:] *= 100.0
+      print '%s range: ' % f,
+      print self.data[self.features.index(f),:].min(),
+      print self.data[self.features.index(f),:].max()
+
+    self.labels = ['%d_%.6f_%.6f' % (id,ra,dec) for (id,ra,dec) in \
+                     zip(data['COADD_OBJECTS_ID'],
+                         data['RA'],
+                         data['DEC'])]
+
+    #datafile.close()
 
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.features = np.array(self.features)
@@ -138,7 +196,7 @@ class DESData(Dataset):
 
 
   # Write a list of the selections in CSV format
-  def write_selections_csv(self, i, k, ind, label, scores):
+  def write_selections_csv(self, i, k, orig_ind, label, ind, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
 
@@ -156,15 +214,15 @@ class DESData(Dataset):
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
       if scores == []:
-        fid.write('%d,%d,%s,%s,%s,0.0\n' % (i, ind, objid,
+        fid.write('%d,%d,%s,%s,%s,0.0\n' % (i, orig_ind, objid,
                                             RA, DEC))
       else:
-        fid.write('%d,%d,%s,%s,%s,%g\n' % (i, ind, objid,
+        fid.write('%d,%d,%s,%s,%s,%g\n' % (i, orig_ind, objid,
                                            RA, DEC, scores[ind]))
     else:
       # Append to the CSV file
       fid = open(selfile, 'a')
-      fid.write('%d,%d,%s,%s,%s,%g\n' % (i, ind, objid,
+      fid.write('%d,%d,%s,%s,%s,%g\n' % (i, orig_ind, objid,
                                          RA, DEC, scores[ind]))
 
     # Close the file
@@ -190,6 +248,8 @@ class DESData(Dataset):
       fid.write('<html><head><title>DEMUD: %s, k=%d</title></head>\n' % (self.name, k))
       fid.write('<body>\n')
       fid.write('<h1>DEMUD experiments on %s with k=%d</h1>\n' % (self.name, k))
+      fid.write('%d (%g) items analyzed.<br>\n' % 
+                (self.data.shape[1], self.data.shape[1]))
       fid.write('<ul>\n')
       fid.write('<li>Selections are presented in decreasing order of novelty.</li>\n')
       fid.write('<li>The bar plot shows the <font color="blue">observed</font> values compared to the <font color="red">expected (modeled)</font> values.  Discrepancies explain why the chosen object is considered novel.  Click to enlarge.</li>\n')
@@ -208,7 +268,8 @@ class DESData(Dataset):
       fid = open(selfile, 'a')
       score = scores[ind]
 
-    fid.write('<h2>Selection %d: RA %s, DEC %s, score %s</h2>\n' % (i, RA, DEC, score))
+    fid.write('<h2>Selection %d: %s, RA %s, DEC %s, score %s</h2>\n' % 
+              (i, objid, RA, DEC, score))
     fid.write('<a href="http://legacysurvey.org/viewer?ra=%s&dec=%s&zoom=13&layer=decals-dr3" id="[%d] %s">\n<img title="[%d] %s" src="http://legacysurvey.org/viewer/jpeg-cutout/?ra=%s&dec=%s&pixscale=0.27&size=256"></a>\n' %
                   (RA, DEC, 
                    i, objid,
