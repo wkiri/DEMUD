@@ -27,27 +27,26 @@ import csv
 import pylab
 
 from dataset_uci_classes import GlassData, EcoliData, AbaloneData, IsoletData
-from dataset_float import FloatDataset
 from dataset_float_classes import *
-from dataset_decals import DECaLSData
-from dataset_gbtfil import GBTFilterbankData
+#from dataset_decals import DECaLSData
+#from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
-from dataset_envi import ENVIData
+#from dataset_envi import ENVIData
 #from dataset_envi import SegENVIData
 #from dataset_irs  import IRSData
 #from dataset_kepler import KeplerData
 #from dataset_mastcam import MastcamData
 #from dataset_tc import TCData
 #from dataset_navcam import NavcamData
-from dataset_images import ImageData
+#from dataset_images import ImageData
 #from exoplanet_lookup import ExoplanetLookup
 #import kepler_lookup
 import log
 from log import printt
 
-from PIL import Image
+#from PIL import Image
 import pickle
 
 import optparse
@@ -1638,8 +1637,7 @@ def  parse_config_term(config, term):
   """
 
   # Matching lines
-  lines = [line for line in config if term in line 
-           and line.strip()[0] != '#']
+  lines = [line for line in config if line.startswith(term)]
 
   # This term may not be defined in the config file
   if lines == []:
@@ -1919,7 +1917,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = DECaLSData(data_files[0])
   ## TEST DATA SET
   elif data_choice == 'testdata':
-    ds = FloatDataset(data_files[0])
+    ds = Floats(data_files[0])
   ## CHEMCAM DATA SET
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     ds = LIBSData(data_files[0], data_files[1],

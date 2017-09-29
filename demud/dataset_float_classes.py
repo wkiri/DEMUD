@@ -22,6 +22,26 @@ from dataset_float import FloatDataset
 
 ###############################################################################
 #
+#                                FLOAT VALUES
+#
+###############################################################################
+class Floats(FloatDataset):
+  # Contains code needed to load, plot, and interpret float data (CSV)
+
+  def  __init__(self, filename=None):
+    """Floats(filename="")
+
+    Read in floating point data in CSV format from filename.
+    """
+
+    FloatDataset.__init__(self, filename, "floats")
+    
+    self.readin(0)
+
+
+
+###############################################################################
+#
 #                                PANCAM SPECTRA
 #
 ###############################################################################
