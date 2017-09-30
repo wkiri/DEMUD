@@ -1232,6 +1232,9 @@ def  clean():
                    "----- APF spectra data set: floatdatafile\n"
                    " -b --apf\n"
                    "floatdatafile = \n\n"
+                   "----- DAN spectra data set: floatdatafile\n"
+                   " --dan\n"
+                   "floatdatafile = \n\n"
                    "----- GBT spectra data set: floatdatafile\n"
                    " --gbt\n"
                    "floatdatafile = \n\n"
@@ -1319,6 +1322,8 @@ def  parse_args():
                       default=False, action='store_true', dest='pancam')
   dtypes.add_option('-b', '--apf', help='APF spectra',
                       default=False, action='store_true', dest='apf')
+  dtypes.add_option('--dan', help='DAN spectra',
+                      default=False, action='store_true', dest='dan')
   dtypes.add_option('--gbt', help='GBT spectra',
                       default=False, action='store_true', dest='gbt')
   dtypes.add_option('--gbtfil', help='GBT filterbank',
@@ -1661,7 +1666,7 @@ def  parse_config(config, data_choice):
   ecolidatafile   = parse_config_term(config, 'ecolidatafile')
   isoletdatafile  = parse_config_term(config, 'isoletdatafile')
 
-  # Floating point data (or Pancam or APF or GBT)
+  # Floating point data (or Pancam, APF, GBT, or DAN)
   floatdatafile   = parse_config_term(config, 'floatdatafile')
 
   # GBT filterbank
@@ -1728,7 +1733,7 @@ def  parse_config(config, data_choice):
     return ([isoletdatafile],'')
   elif data_choice == 'ecoli':
     return ([ecolidatafile],'')
-  elif data_choice in ['pancam', 'testdata', 'apf', 'gbt']:
+  elif data_choice in ['pancam', 'testdata', 'apf', 'dan', 'gbt']:
     return ([floatdatafile],'')
   elif data_choice == 'gbtfil':
     return ([gbtdirname, catalogfile],'')
@@ -1858,6 +1863,7 @@ def  init_default_k_values():
     'ecoli'       :  6,
     'pancam'      :  2,
     'apf'         :  2,
+    'dan'         :  2,
     'gbt'         : 10,
     'gbtfil'      : 10,
     'decals'      : 10,
@@ -1906,6 +1912,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## APF SPECTRA DATA SET
   elif data_choice == 'apf':
     ds = APFSpectra(data_files[0])
+  ## DAN SPECTRA DATA SET
+  elif data_choice == 'dan':
+    ds = DANSpectra(data_files[0])
   ## GBT SPECTRA DATA SET
   elif data_choice == 'gbt':
     ds = GBTSpectra(data_files[0])
@@ -2042,7 +2051,7 @@ def  main():
   datatypes = ('glass', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
-               'pancam', 'apf', 'gbt', 'gbtfil', 'decals',
+               'pancam', 'apf', 'dan', 'gbt', 'gbtfil', 'decals',
                'mastcam', 'images', 'ucis', 'testdata')
   
   data_choice = check_opts(datatypes)
