@@ -37,7 +37,12 @@ class Floats(FloatDataset):
 
     FloatDataset.__init__(self, filename, "floats")
     
-    self.readin(0)
+    try:
+      self.readin(0)
+    except:
+      print
+      print 'This class assumes no identifiers in the data, i.e., just numeric values.'
+      sys.exit(1)
 
 
 
