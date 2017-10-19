@@ -33,9 +33,30 @@ class DESData(Dataset):
     Read in DES catalog data.
     """
 
-    Dataset.__init__(self, desfilename, "DESData", '')
+    # Subset to a single photo-z bin
+    photoz_bin = 2
+
+    #Dataset.__init__(self, desfilename, "DESData", '')
+    Dataset.__init__(self, desfilename, "DESData_colordiff_bin" + 
+                     str(photoz_bin), '')
 
     self.readin()
+
+    # Subset to a single photo-z bin
+#    keep = np.where(self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
+    keep = (self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
+              photoz_bin)
+    self.data   = self.data[:,keep]
+    # Still annoys me that you can't index a list with a list
+    self.labels = [self.labels[k] for k in np.where(keep)[0]]
+
+    # Remove the PHOTOZ_BIN feature
+    features_keep = (self.features != 'PHOTOZ_BIN')
+    self.data     = self.data[features_keep,:]
+    self.features = self.features[features_keep]
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    print self.data.shape
+    print self.features
 
 
   def  readin(self):
@@ -87,6 +108,7 @@ class DESData(Dataset):
     # NGMIX_FLAG != 0
     # PHOTOZ_BIN != -1
 
+    '''
     self.features = ['MAG_AUTO_G',
                      'MAG_AUTO_R',
                      'MAG_AUTO_I',
@@ -96,6 +118,36 @@ class DESData(Dataset):
 
     #self.data = np.vstack([data.field(f) for f in self.features])
     self.data = np.vstack([data[f] for f in self.features])
+    '''
+
+    # Ok, now we want R, G-R, I-Z
+    self.data = data['MAG_AUTO_R']
+    self.features = ['MAG_AUTO_R']
+
+    # G-R
+    self.data = np.vstack([self.data,
+                           data['MAG_AUTO_G'] - data['MAG_AUTO_R']])
+    self.features += ['G-R']
+
+    # R-I
+    self.data = np.vstack([self.data,
+                           data['MAG_AUTO_R'] - data['MAG_AUTO_I']])
+    self.features += ['R-I']
+
+    # I-Z
+    self.data = np.vstack([self.data,
+                           data['MAG_AUTO_I'] - data['MAG_AUTO_Z']])
+    self.features += ['I-Z']
+
+    # MEAN_PHOTOZ
+    self.data = np.vstack([self.data,
+                           data['MEAN_PHOTOZ']])
+    self.features += ['MEAN_PHOTOZ']
+
+    # PHOTOZ_BIN
+    self.data = np.vstack([self.data,
+                           data['PHOTOZ_BIN']])
+    self.features += ['PHOTOZ_BIN']
 
     # Data is d x n
     print self.data.shape
@@ -107,6 +159,10 @@ class DESData(Dataset):
         self.data[self.features.index(f),:] += 1.0
         self.data[self.features.index(f),:] /= 2.0
         self.data[self.features.index(f),:] *= 100.0
+      if 'MAG_AUTO' in f: # subtract the min
+        minval = np.min(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= minval
+        print 'Subtracting %d from %s.' % (minval, f)
       print '%s range: ' % f,
       print self.data[self.features.index(f),:].min(),
       print self.data[self.features.index(f),:].max()
@@ -115,8 +171,6 @@ class DESData(Dataset):
                      zip(data['COADD_OBJECTS_ID'],
                          data['RA'],
                          data['DEC'])]
-
-    #datafile.close()
 
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.features = np.array(self.features)

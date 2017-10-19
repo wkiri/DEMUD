@@ -34,10 +34,21 @@ class GlassData(UCIDataset):
     Read in glass (UCI) data in CSV format from filename.
     """
 
-    UCIDataset.__init__(self, filename, "glass")
+    # Subset to a single class
+    cl = 'headlamp'
+
+    #UCIDataset.__init__(self, filename, "glass")
+    UCIDataset.__init__(self, filename, "glass_" + cl)
     
     self.readin(1)
     self.update_labels()
+
+    # Subset to a single class
+    keep = [i for (i,l) in enumerate(self.labels) if l == cl]
+    self.data   = self.data[:,keep]
+    # Still annoys me that you can't index a list with a list
+    self.labels = [self.labels[k] for k in keep]   
+
 
   def  update_labels(self):
     
@@ -63,6 +74,36 @@ class GlassData(UCIDataset):
     
     self.xlabel = 'Element attributes of glass samples'
     self.ylabel = 'Attribute values: Refraction index or oxide prevalence'
+
+
+################################################################################
+#
+#                                    IRIS
+#
+################################################################################
+class IrisData(UCIDataset):
+  # Contains code needed to load, plot, and interpret iris (CSV) data.
+
+  def  __init__(self, filename=None):
+    """IrisData(filename="")
+
+    Read in iris (UCI) data in CSV format from filename.
+    """
+
+    UCIDataset.__init__(self, filename, "iris")
+    
+    self.readin(0)
+    self.update_labels()
+
+  def  update_labels(self):
+    
+    self.features = numpy.array(['sepal length',
+                                 'sepal width',
+                                 'petal length',
+                                 'petal width'])
+    
+    self.xlabel = 'Element attributes of iris samples'
+    self.ylabel = 'Attribute values: cm'
 
 
 ################################################################################

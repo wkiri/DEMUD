@@ -35,20 +35,20 @@ from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
-from dataset_envi import ENVIData
+#from dataset_envi import ENVIData
 #from dataset_envi import SegENVIData
 #from dataset_irs  import IRSData
 #from dataset_kepler import KeplerData
 #from dataset_mastcam import MastcamData
 #from dataset_tc import TCData
 #from dataset_navcam import NavcamData
-from dataset_images import ImageData
+#from dataset_images import ImageData
 #from exoplanet_lookup import ExoplanetLookup
 #import kepler_lookup
 import log
 from log import printt
 
-from PIL import Image
+#from PIL import Image
 import pickle
 
 import optparse
@@ -1300,6 +1300,9 @@ def  clean():
                    "----- APF spectra data set: floatdatafile\n"
                    " -b --apf\n"
                    "floatdatafile = \n\n"
+                   "----- DAN spectra data set: floatdatafile\n"
+                   " --dan\n"
+                   "floatdatafile = \n\n"
                    "----- GBT spectra data set: floatdatafile\n"
                    " --gbt\n"
                    "floatdatafile = \n\n"
@@ -1392,6 +1395,8 @@ def  parse_args():
                       default=False, action='store_true', dest='pancam')
   dtypes.add_option('-b', '--apf', help='APF spectra',
                       default=False, action='store_true', dest='apf')
+  dtypes.add_option('--dan', help='DAN spectra',
+                      default=False, action='store_true', dest='dan')
   dtypes.add_option('--gbt', help='GBT spectra',
                       default=False, action='store_true', dest='gbt')
   dtypes.add_option('--gbtfil', help='GBT filterbank',
@@ -1712,9 +1717,7 @@ def  parse_config_term(config, term):
   """
 
   # Matching lines
-  lines = [line for line in config if term in line 
-           and '=' in line
-           and line.strip()[0] != '#']
+  lines = [line for line in config if line.startswith(term)]
 
   # This term may not be defined in the config file
   if lines == []:
@@ -1735,7 +1738,7 @@ def  parse_config(config, data_choice):
   # UCI data
   ucidatafile     = parse_config_term(config, 'ucidatafile')
 
-  # Floating point data (or Pancam or APF or GBT)
+  # Floating point data (or Pancam, APF, GBT, or DAN)
   floatdatafile   = parse_config_term(config, 'floatdatafile')
 
   # GBT filterbank
@@ -1803,7 +1806,7 @@ def  parse_config(config, data_choice):
       data_choice == 'isolet' or
       data_choice == 'ecoli'):
     return ([ucidatafile],'')
-  elif data_choice in ['pancam', 'testdata', 'apf', 'gbt']:
+  elif data_choice in ['pancam', 'testdata', 'apf', 'dan', 'gbt']:
     return ([floatdatafile],'')
   elif data_choice == 'gbtfil':
     return ([gbtdirname, catalogfile],'')
@@ -1936,6 +1939,7 @@ def  init_default_k_values():
     'ecoli'       :  6,
     'pancam'      :  2,
     'apf'         :  2,
+    'dan'         :  2,
     'gbt'         : 10,
     'gbtfil'      : 10,
     'decals'      : 10,
@@ -1988,6 +1992,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## APF SPECTRA DATA SET
   elif data_choice == 'apf':
     ds = APFSpectra(data_files[0])
+  ## DAN SPECTRA DATA SET
+  elif data_choice == 'dan':
+    ds = DANSpectra(data_files[0])
   ## GBT SPECTRA DATA SET
   elif data_choice == 'gbt':
     ds = GBTSpectra(data_files[0])
@@ -2002,7 +2009,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = DESData(data_files[0])
   ## TEST DATA SET
   elif data_choice == 'testdata':
-    ds = FloatDataset(data_files[0])
+    ds = Floats(data_files[0])
   ## CHEMCAM DATA SET
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     ds = LIBSData(data_files[0], data_files[1],
@@ -2127,7 +2134,7 @@ def  main():
   datatypes = ('glass', 'iris', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
-               'pancam', 'apf', 'gbt', 'gbtfil', 'decals', 'des',
+               'pancam', 'apf', 'dan', 'gbt', 'gbtfil', 'decals', 'des',
                'mastcam', 'images', 'ucis', 'testdata')
   
   data_choice = check_opts(datatypes)
