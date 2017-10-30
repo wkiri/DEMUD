@@ -884,8 +884,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     
     ###############################################
     # Plot the top 4 principal components of the current model
-    #if U != [] and log.opts['plot']:
-    #  ds.plot_pcs(i, U, mu, k, S)
+    if U != [] and log.opts['plot'] and log.opts['dan']:
+      ds.plot_pcs(i, U, mu, k, S)
     # if log.opts['misr']:
     #   pylab.clf()
     #   pylab.imshow(U.reshape([ds.along_track, -1]))

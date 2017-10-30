@@ -270,7 +270,6 @@ class DANSpectra(FloatDataset):
     pylab.subplot(2,1,2)
     pylab.semilogx(self.xvals, r[128:], 'r-', label='Expected')
     pylab.semilogx(self.xvals, x[128:], 'b.-', label='Observations')
-
     pylab.xlabel('CETN: ' + self.xlabel)
     pylab.ylabel(self.ylabel)
     pylab.legend(loc='upper left', fontsize=10)
@@ -284,6 +283,64 @@ class DANSpectra(FloatDataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+
+
+  def plot_pcs(self, m, U, mu, k, S):
+    """plot_pcs(m, U, mu, k, S)
+    Plot the principal components in U, after DEMUD iteration m, 
+        by adding back in the mean in mu.
+    Ensure that there are k of them, 
+        and list the corresponding singular values from S.
+    """
+
+    #assert (k == U.shape[1])
+  
+    colors = ['b','g','r','c','m','y','k','#666666','DarkGreen', 'Orange']
+    while len(colors) < k: colors.extend(colors)
+  
+    pylab.clf()
+
+    if m == 0:
+      max_num_pcs = k
+    else:
+      cur_pcs = U.shape[1]
+      max_num_pcs = min(min(cur_pcs,k), 4)
+  
+    umu = np.zeros_like(U)
+    for i in range(max_num_pcs):
+      umu[:,i] = U[:,i] + mu[:,0] #[i]
+      
+    for i in range(max_num_pcs):
+      vector = umu[:,i]
+      if i == 0 and m == 1:
+        vector[0] -= 1
+      vector = np.repeat(vector, 2, axis=0)
+      label = 'PC %d, SV %.2e' % (i, S[i])
+
+      pylab.subplot(2,1,1)
+      pylab.semilogx(self.xvals, vector[0:128], color=colors[i], label=label)
+      pylab.subplot(2,1,2)
+      pylab.semilogx(self.xvals, vector[128:], color=colors[i], label=label)
+
+    pylab.subplot(2,1,1)
+    pylab.xlabel('CTN: ' + self.xlabel)
+    pylab.ylabel(self.ylabel)
+    pylab.legend(loc='upper left', fontsize=10)
+
+    pylab.subplot(2,1,2)
+    pylab.xlabel('CETN: ' + self.xlabel)
+    pylab.ylabel(self.ylabel)
+    pylab.legend(loc='upper left', fontsize=10)
+      
+    pylab.suptitle('SVD of dataset ' + self.name + ' after selection ' + str(m))
+    
+    outdir = os.path.join('results', self.name)
+    if not os.path.exists(outdir):
+      os.mkdir(outdir)
+    figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
+    pylab.savefig(figfile)
+    print 'Wrote SVD to %s' % figfile
+
 
 
 ################################################################################
