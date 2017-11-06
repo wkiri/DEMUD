@@ -882,15 +882,6 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
         ds.plot_item(i, orig_ind[ind], x, r, k, label,
                      U, scores, feature_weights)
     
-    ###############################################
-    # Plot the top 4 principal components of the current model
-    if U != [] and log.opts['plot'] and log.opts['dan']:
-      ds.plot_pcs(i, U, mu, k, S)
-    # if log.opts['misr']:
-    #   pylab.clf()
-    #   pylab.imshow(U.reshape([ds.along_track, -1]))
-    #   pylab.show()
-
     ds.write_selections_csv(i, k, orig_ind[ind], label, ind, scores)
 
 
@@ -1009,6 +1000,15 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     orig_ind = orig_ind[keep]
 
     printt()   # spacing
+
+    ###############################################
+    # Plot the top 4 principal components of the new model
+    if U != [] and log.opts['plot'] and log.opts['dan']:
+      ds.plot_pcs(i, U, mu, k, S)
+    # if log.opts['misr']:
+    #   pylab.clf()
+    #   pylab.imshow(U.reshape([ds.along_track, -1]))
+    #   pylab.show()
 
   ###############################################
   # Report on when observations from the class of interest were found (if any)
