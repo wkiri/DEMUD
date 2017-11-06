@@ -34,20 +34,10 @@ class GlassData(UCIDataset):
     Read in glass (UCI) data in CSV format from filename.
     """
 
-    # Subset to a single class
-    cl = 'headlamp'
-
-    #UCIDataset.__init__(self, filename, "glass")
-    UCIDataset.__init__(self, filename, "glass_" + cl)
+    UCIDataset.__init__(self, filename, "glass")
     
     self.readin(1)
     self.update_labels()
-
-    # Subset to a single class
-    keep = [i for (i,l) in enumerate(self.labels) if l == cl]
-    self.data   = self.data[:,keep]
-    # Still annoys me that you can't index a list with a list
-    self.labels = [self.labels[k] for k in keep]   
 
 
   def  update_labels(self):
