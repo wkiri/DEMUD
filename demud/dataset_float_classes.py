@@ -84,6 +84,96 @@ class PancamSpectra(FloatDataset):
     self.xlabel = 'Wavelength (um)'
     self.ylabel = 'Reflectance'
 
+###############################################################################
+#
+#                 CNN FEATURE VECTORS (EXPERIMENTAL)
+#
+###############################################################################
+class CNNFeat(FloatDataset):
+  # Contains code needed to load, plot, and interpret APF spectra (CSV) data.
+  # Initially copied from APF spectra (CSV) data implementation.
+
+  def  __init__(self, filename=None):
+    """CNNFeat(filename="")
+
+    Read in CNN feature vectors in CSV format from filename.
+    """
+
+    FloatDataset.__init__(self, filename, "cnn")
+
+    # readin(1) means that the first entry on each line is an item name.  
+    # readin(0) means that the first entry on each line is the first feature.
+    self.readin(1)
+
+    # Feature names (wavelengths in Angstroms) are in the data file
+    # on the first line (starts with #).
+    # This is read in by the FloatDataset class.
+
+    self.xlabel = 'x'
+    self.ylabel = 'y'
+
+   # Plotting doesn't make sense for this dataset, so export original, 
+   # reconstructed, and residual feature vectors to a csv for interpretation.
+  def  plot_item(self, m, ind, x, r, k, label, U,
+                 rerr, feature_weights):
+
+    # This should probably be somewhere else in the code but
+    reload(sys)
+    sys.setdefaultencoding("UTF-8")
+
+    # Save out top hits file
+    outdir   = os.path.join('results', self.name)
+    #hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
+    selectfile = os.path.join(outdir, 'select-%s.csv' % self.name)
+    reconfile = os.path.join(outdir, 'recon-%s.csv' % self.name)
+    residfile = os.path.join(outdir, 'resid-%s.csv' % self.name)
+
+    # Check validity
+    if x == [] or r == []:
+      print "Error: No data in x and/or r."
+      return
+
+    # First item gets to create (and clear) the file 
+    if m == 0:
+      f = open(selectfile, 'w')
+      f.write('')
+      f.close()
+      f2 = open(reconfile, 'w')
+      f2.write('')
+      f2.close()
+      f3 = open(residfile, 'w')
+      f3.write('')
+      f3.close()
+
+    # Had ndarrays converting to lists before, not necessary
+    inecho = x
+    recon = r
+    # Residual calculation - element-wise subtraction. Values are clipped to a
+    # minimum of zero, as there are no negative values in the input vector.
+    resid = (x - r)#.clip(min=0)
+
+    # turns out, we need to maintain the euclidean norm for subtraction.
+    # we'll leave the reconstruction alone for now.
+    # also, clipping to a 0 minimum is a bad idea.
+
+    inecho_l2_norm = numpy.linalg.norm(inecho, 2)
+    resid_l2_norm = numpy.linalg.norm(resid, 2)
+    normalized_resid = (resid / resid_l2_norm) * inecho_l2_norm
+
+
+    # Write original, reconstructed, and residual vectors of selections 
+    # into a csv
+    with open(selectfile, 'a') as f:
+      csvwriter = csv.writer(f, dialect='excel')
+      csvwriter.writerow(inecho)
+
+    with open(reconfile, 'a') as f:
+      csvwriter = csv.writer(f, dialect='excel')
+      csvwriter.writerow(recon)
+
+    with open(residfile, 'a') as f:
+      csvwriter = csv.writer(f, dialect='excel')
+      csvwriter.writerow(normalized_resid)
 
 ###############################################################################
 #

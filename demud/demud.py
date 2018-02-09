@@ -1293,18 +1293,14 @@ def  clean():
                    "ucidatafile = \n\n"
                    "----- Test data set: floatdatafile\n"
                    " -x --testdata\n"
-                   "floatdatafile = \n\n"
                    "----- Pancam spectra data set: floatdatafile\n"
                    " -p --pancam\n"
-                   "floatdatafile = \n\n"
                    "----- APF spectra data set: floatdatafile\n"
                    " -b --apf\n"
-                   "floatdatafile = \n\n"
+                   "----- CNN feature data set: floatdatafile\n"
+                   " -v --cnn\n"
                    "----- DAN spectra data set: floatdatafile\n"
                    " --dan\n"
-                   "floatdatafile = \n\n"
-                   "----- GBT spectra data set: floatdatafile\n"
-                   " --gbt\n"
                    "floatdatafile = \n\n"
                    "----- GBT filterbank data set: gbtdirname, catalogfile\n"
                    " --gbtfil\n"
@@ -1395,6 +1391,8 @@ def  parse_args():
                       default=False, action='store_true', dest='pancam')
   dtypes.add_option('-b', '--apf', help='APF spectra',
                       default=False, action='store_true', dest='apf')
+  dtypes.add_option('-v', '--cnn', help='CNN feature vectors', 
+                      default=False, action='store_true', dest='cnn')
   dtypes.add_option('--dan', help='DAN spectra',
                       default=False, action='store_true', dest='dan')
   dtypes.add_option('--gbt', help='GBT spectra',
@@ -1738,7 +1736,7 @@ def  parse_config(config, data_choice):
   # UCI data
   ucidatafile     = parse_config_term(config, 'ucidatafile')
 
-  # Floating point data (or Pancam, APF, GBT, or DAN)
+  # Floating point data (or Pancam, APF, GBT, CNN, or DAN)
   floatdatafile   = parse_config_term(config, 'floatdatafile')
 
   # GBT filterbank
@@ -1939,6 +1937,7 @@ def  init_default_k_values():
     'ecoli'       :  6,
     'pancam'      :  2,
     'apf'         :  2,
+    'cnn'         : 50,
     'dan'         :  2,
     'gbt'         : 10,
     'gbtfil'      : 10,
@@ -1992,6 +1991,9 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## APF SPECTRA DATA SET
   elif data_choice == 'apf':
     ds = APFSpectra(data_files[0])
+  ## CNN FEATURE DATA SET
+  elif data_choice == 'cnn':
+    ds = CNNFeat(data_files[0])
   ## DAN SPECTRA DATA SET
   elif data_choice == 'dan':
     ds = DANSpectra(data_files[0])
@@ -2111,6 +2113,8 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     printt("Invalid data set choice.")
     exit()
 
+  printt("datatype ", type(ds.data))
+
   if ds.data.shape[1] != len(ds.labels):
     printt("Error: %d items but %d labels!" % (ds.data.shape[1],
                                                len(ds.labels)))
@@ -2134,8 +2138,8 @@ def  main():
   datatypes = ('glass', 'iris', 'ecoli',  'abalone', 'isolet',
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
-               'pancam', 'apf', 'dan', 'gbt', 'gbtfil', 'decals', 'des',
-               'mastcam', 'images', 'ucis', 'testdata')
+               'pancam', 'apf', 'dan', 'gbt', 'gbtfil', 'decals',
+               'mastcam', 'images', 'ucis', 'testdata', 'cnn')
   
   data_choice = check_opts(datatypes)
   
@@ -2278,6 +2282,7 @@ if __name__ == "__main__":
 #  1.4: Incremental SVD fully functional; choice of first element
 #  1.5: Feature weighting included; full SVD option for init-item=-1 back in
 #  1.6: Start of summer 2014, added to include Mastcam support
+#  1.7: [inprogress] implementing image processing w/ CNN
 #
 #####
 
