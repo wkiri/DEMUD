@@ -53,8 +53,6 @@ class FloatDataset(Dataset):
         print 'Populating xvals from data file header.'
         header = lines[0][1:].strip()
         self.xvals = numpy.array(map(float,header.split(',')))
-      else:
-        self.xvals = numpy.arange(numpy.array(self.data).shape[0]).reshape(-1,1)
 
       for line in lines:
         # Skip over empty or commented lines
@@ -63,16 +61,18 @@ class FloatDataset(Dataset):
         attributes = re.split(',', line.strip())
 
         self.data += [[float(x) for x in attributes[nskip:]]]
-        if nskip > 0:
+        if nskip > 0: # Use the first column as a label
           self.labels.append(attributes[0])
         else:  # fake labels
           self.labels.append('None')
 
     self.data = numpy.array(self.data)
 
-    self.data   = self.data.T  # features x samples
+    self.data = self.data.T  # features x samples
 
-
+    # If there was no header with feature names, just create an empty xvals
+    if self.xvals == []:
+      self.xvals = numpy.arange(self.data.shape[0]).reshape(-1,1)
     
 
   def  plot_item_triangles(self, m, ind, x, r, k, label, U,

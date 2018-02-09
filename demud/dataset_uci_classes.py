@@ -39,6 +39,7 @@ class GlassData(UCIDataset):
     self.readin(1)
     self.update_labels()
 
+
   def  update_labels(self):
     
     label_names = {'1': 'building_float',
@@ -63,6 +64,36 @@ class GlassData(UCIDataset):
     
     self.xlabel = 'Element attributes of glass samples'
     self.ylabel = 'Attribute values: Refraction index or oxide prevalence'
+
+
+################################################################################
+#
+#                                    IRIS
+#
+################################################################################
+class IrisData(UCIDataset):
+  # Contains code needed to load, plot, and interpret iris (CSV) data.
+
+  def  __init__(self, filename=None):
+    """IrisData(filename="")
+
+    Read in iris (UCI) data in CSV format from filename.
+    """
+
+    UCIDataset.__init__(self, filename, "iris")
+    
+    self.readin(0)
+    self.update_labels()
+
+  def  update_labels(self):
+    
+    self.features = numpy.array(['sepal length',
+                                 'sepal width',
+                                 'petal length',
+                                 'petal width'])
+    
+    self.xlabel = 'Element attributes of iris samples'
+    self.ylabel = 'Attribute values: cm'
 
 
 ################################################################################

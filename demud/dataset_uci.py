@@ -105,9 +105,9 @@ class UCIDataset(Dataset):
                 (m, label, ind, k))
     pylab.legend() #fontsize=10)
     
-    padding = 1.19
-    pylab.ylim([float(min(min(x), min(r))), max(float(max(max(x), max(r)))
-                 * padding, float(max(max(x), max(r))))])
+    #padding = 1.19
+    #pylab.ylim([float(min(min(x), min(r))), max(float(max(max(x), max(r)))
+    #             * padding, float(max(max(x), max(r))))])
     
     if len(self.features) == 0:
         pylab.xticks(pylab.arange(len(x)) + width + offset, range(len(x)))

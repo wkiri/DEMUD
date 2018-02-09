@@ -128,8 +128,9 @@ class Dataset(object):
     pylab.savefig(figfile)
     print 'Wrote SVD to %s' % figfile
 
+
   # Write a list of the selections in CSV format
-  def write_selections_csv(self, i, k, ind, label, scores):
+  def write_selections_csv(self, i, k, orig_ind, label, ind, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
     # If this is the first selection, open for write
@@ -144,14 +145,65 @@ class Dataset(object):
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
       if scores == []:
-        fid.write('%d,%d,%s,0.0\n' % (i, ind, label))
+        fid.write('%d,%d,%s,0.0\n' % (i, orig_ind, label))
       else:
-        fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
+        fid.write('%d,%d,%s,%g\n' % (i, orig_ind, label, scores[ind]))
     else:
       fid = open(selfile, 'a')
-      fid.write('%d,%d,%s,%g\n' % (i, ind, label, scores[ind]))
+      fid.write('%d,%d,%s,%g\n' % (i, orig_ind, label, scores[ind]))
 
     fid.close()
+
+  
+  # Write a list of n selections that are similar to selection i (index ind)
+  # using scores (with respect to selection i).
+  def write_similar_html(self, n, i, k, ind, scores):
+    outdir = os.path.join('results', self.name)
+    simfile = os.path.join(outdir, 'similar-k%d-i%d.html' % (k, i))
+
+    print "%d: Scores range from %f to %f." % (i, scores.min(), scores.max())
+
+    # Not clear how to select a threshold for similarity; 
+    # no good histogram-analysis methods so far.
+    # 1. Otsu's method doesn't seem to work well here; 
+    # it assumes a bimodal distribution which isn't necessarily the case.
+    # 2. Looking for a 0-valued bin is too brittle.
+
+    # For now, try 1.0.  But maybe this should be scaled by
+    # the number of features? max possible score for this data set? etc.?
+    best_thresh = 1.0
+
+    # Write out everything that is less than best_thresh
+    fid = open(simfile, 'w')
+    fid.write('<html><head><title>DEMUD: %s, k=%d</title></head>\n' % (self.name, k))
+    fid.write('<body>\n')
+    fid.write('<h1>DEMUD experiments on %s with k=%d:<br> Items similar to selection %d (%s)</h1>\n' % (self.name, k, i, self.labels[ind]))
+    #fid.write('<p>%d similar items (those with reconstruction error at most %f) of %d total:\n' % (numpy.sum(scores <= best_thresh)-1, best_thresh, len(scores)))
+    fid.write('<p>Top %d most similar items:\n' % n)
+    fid.write('<ul>\n')
+
+    # Sort objects by increasing score (difference)
+    sel_sort = sorted(zip(range(len(scores)), scores), key=lambda s: s[1]) 
+    n_printed = 0
+    j_ind = 0
+    while n_printed < n:
+      (j, sc) = sel_sort[j_ind]
+      print j, sc
+      j_ind += 1
+      if j == ind: # skip this item
+        continue
+      fid.write('<li>Item %d (%s): score %f</li>\n' % (j,
+                                                       self.labels[j],
+                                                       sc))
+      n_printed += 1
+  
+    fid.write('</ul>\n')
+    fid.write('</body></html>\n')
+    fid.close()
+
+    print '%d similar items (those with reconstruction error at most %f) of %d total.' % (numpy.sum(scores <= best_thresh), best_thresh, len(scores))
+
+    raw_input()
 
 
 if __name__ == "__main__":

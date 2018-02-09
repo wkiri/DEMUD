@@ -105,10 +105,10 @@ class DECaLSData(Dataset):
 
     # Compute the color ratios
     model_type = datafile[1].data[:].field('TYPE')
-    model_type_to_use = 'PSF'
+    #model_type_to_use = 'PSF'
     #model_type_to_use = 'SIMP'
     #model_type_to_use = 'EXP'
-    #model_type_to_use = 'DEV'
+    model_type_to_use = 'DEV'
     use_data   = datafile[1].data[model_type == model_type_to_use]
     G = use_data.field('DECAM_FLUX')[:,1]
     R = use_data.field('DECAM_FLUX')[:,2]
@@ -264,7 +264,7 @@ class DECaLSData(Dataset):
   
 
   # Write a list of the selections in CSV format
-  def write_selections_csv(self, i, k, ind, label, scores):
+  def write_selections_csv(self, i, k, orig_ind, label, ind, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
 
@@ -282,26 +282,27 @@ class DECaLSData(Dataset):
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
       if scores == []:
-        fid.write('%d,%d,%s_%s,%s,%s,0.0\n' % (i, ind, brickname, objid,
+        fid.write('%d,%d,%s_%s,%s,%s,0.0\n' % (i, orig_ind, brickname, objid,
                                                   RA, DEC))
       else:
-        fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, brickname, objid,
+        fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, orig_ind, brickname, objid,
                                                  RA, DEC, scores[ind]))
     else:
       # Append to the CSV file
       fid = open(selfile, 'a')
-      fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, ind, brickname, objid,
+      fid.write('%d,%d,%s_%s,%s,%s,%g\n' % (i, orig_ind, brickname, objid,
                                             RA, DEC, scores[ind]))
 
     # Close the file
     fid.close()
 
     # Also, append selections to a growing .html file
-    self.write_selections_html(i, k, ind, label, scores)
+    self.write_selections_html(10, i, k, ind, label, scores)
 
 
-  # Write selections to an HTML file
-  def write_selections_html(self, i, k, ind, label, scores):
+  # Write a list of n selections that are similar to selection i (index ind)
+  # using scores (with respect to selection i).
+  def write_selections_html(self, n, i, k, ind, label, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.html' % k)
 
@@ -318,7 +319,7 @@ class DECaLSData(Dataset):
       fid.write('<ul>\n')
       fid.write('<li>Selections are presented in decreasing order of novelty.</li>\n')
       fid.write('<li>The bar plot shows the <font color="blue">observed</font> values compared to the <font color="red">expected (modeled)</font> values.  Discrepancies explain why the chosen object is considered novel.  Click to enlarge.</li>\n')
-      fid.write('<li>Clicking "Viewer" will take you to DECaLS sky survey.</li>\n')
+      fid.write('<li>Clicking the object image will take you to the DECaLS sky survey.</li>\n')
       fid.write('<li>Scores close to 0 (for items other than the first one) indicate an arbitrary choice; novelty has been exhausted.</li>\n')
       fid.write('</ul>\n\n')
 
