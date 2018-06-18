@@ -293,8 +293,6 @@ class DANSpectra(FloatDataset):
         and list the corresponding singular values from S.
     """
 
-    #assert (k == U.shape[1])
-  
     colors = ['b','g','r','c','m','y','k','#666666','DarkGreen', 'Orange']
     while len(colors) < k: colors.extend(colors)
   
