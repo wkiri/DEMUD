@@ -103,7 +103,7 @@ class ImageData(Dataset):
     U, scores, and feature_weights are optional; ignored in this method, 
     used in some classes' submethods.
     """
-    
+    print "Plotting..."
     if x == [] or r == []: 
       print "Error: No data in x and/or r."
       return
@@ -205,6 +205,11 @@ class ImageData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d.pdf' % (m, k))
     plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
+    plt.cla()
+    plt.clf()
+    print "done."
+    plt.close()
+    pylab.close()
     #print 'Wrote plot to %s' % figfile
     
 
@@ -273,7 +278,10 @@ class ImageData(Dataset):
 
     # Read in the image data
     files = sorted(os.listdir(dirname))
+    numimages = len(os.listdir(dirname))
+    print numimages
     printt("Loading files:")
+    counter = 0
     for idx,f in enumerate(files):
       # Unix-style wildcards. 
       if (fnmatch.fnmatch(f, '*.jpg') or
@@ -283,17 +291,25 @@ class ImageData(Dataset):
         im = imread(filename)
 
         if imshape[0] == -1:
-          data = np.array([], dtype=np.float32).reshape(0,np.prod(im.shape))
+          #data = np.zeros([], dtype=np.float32).reshape(numimages, np.prod(im.shape))
+          data = np.zeros([numimages, np.prod(im.shape)], dtype=np.float32)
+          #data = np.array([], dtype=np.float32).reshape(0,np.prod(im.shape))
           imshape = im.shape
         else:
           # Ensure that all images are the same dimensions
           if imshape != im.shape:
-            raise ValueError('Images must all have the same dimensions.')
+            if len(im.shape) == 2:
+              # Convert grayscale to rgb
+              im = np.dstack((im, im, im))
+            else:
+              raise ValueError('Images must all have the same dimensions.')
 
-        data = np.vstack([data, im.reshape(1,np.prod(im.shape))])
+        #data = np.vstack([data, im.reshape(1,np.prod(im.shape))])
+        data[counter] = im.reshape(1, np.prod(im.shape))
 
         labels.append(f)
         progbar(idx, len(files))
+        counter += 1
 
     return (data, labels, imshape)
 

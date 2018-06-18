@@ -3,6 +3,10 @@ demud.config
 README.html
 src/results
 *~
+/results
+
+#OSX
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
