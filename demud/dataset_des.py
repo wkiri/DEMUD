@@ -28,13 +28,13 @@ from dataset import Dataset
 class DESData(Dataset):
 
   def __init__(self, desfilename=None):
-    """DESData(decalsfilename=None)
+    """DESData(desfilename=None)
 
     Read in DES catalog data.
     """
 
     # Subset to a single photo-z bin
-    photoz_bin = 2
+    photoz_bin = 0
 
     #Dataset.__init__(self, desfilename, "DESData", '')
     Dataset.__init__(self, desfilename, "DESData_colordiff_bin" + 
@@ -306,8 +306,8 @@ class DESData(Dataset):
                 (self.data.shape[1], self.data.shape[1]))
       fid.write('<ul>\n')
       fid.write('<li>Selections are presented in decreasing order of novelty.</li>\n')
+      fid.write('<li>Cutouts (left) are RGB images generated from the DES DR1 archive.</li>\n')
       fid.write('<li>The bar plot shows the <font color="blue">observed</font> values compared to the <font color="red">expected (modeled)</font> values.  Discrepancies explain why the chosen object is considered novel.  Click to enlarge.</li>\n')
-      fid.write('<li>Clicking the object image will take you to the DECaLS sky survey.</li>\n')
       fid.write('<li>Scores close to 0 (for items other than the first one) indicate an arbitrary choice; novelty has been exhausted.</li>\n')
       fid.write('</ul>\n\n')
 
@@ -324,10 +324,8 @@ class DESData(Dataset):
 
     fid.write('<h2>Selection %d: %s, RA %s, DEC %s, score %s</h2>\n' % 
               (i, objid, RA, DEC, score))
-    fid.write('<a href="http://legacysurvey.org/viewer?ra=%s&dec=%s&zoom=13&layer=decals-dr3" id="[%d] %s">\n<img title="[%d] %s" src="http://legacysurvey.org/viewer/jpeg-cutout/?ra=%s&dec=%s&pixscale=0.27&size=256"></a>\n' %
-                  (RA, DEC, 
-                   i, objid,
-                   i, objid, RA, DEC))
+    fid.write('<a href="selection-%d-cutout.png"><img title="[%d] %s" src="selection-%d-cutout.png" height=270></a>\n' %
+                  (i, i, objid, i))
     figfile = 'sel-%d-k-%d-(%s).png' % (i, k, label)
     fid.write('<a href="%s"><img height=270 src="%s"></a>\n\n' % 
               (figfile, figfile))
