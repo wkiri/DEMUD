@@ -35,7 +35,7 @@ from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
-#from dataset_envi import ENVIData
+from dataset_envi import ENVIData
 #from dataset_envi import SegENVIData
 #from dataset_irs  import IRSData
 #from dataset_kepler import KeplerData
@@ -81,7 +81,7 @@ def  compute_error_with_missing(X, U, mu):
   # since they might have different missing values.
   #diagS  = np.diag(S).reshape(len(S), len(S))
   reproj = np.zeros(X.shape) * np.nan
-  err    = np.zeros(X.shape) 
+  err    = np.zeros(X.shape)
   
   for i in range(X.shape[1]):
     x        = X[:,i].reshape(-1, 1)
@@ -2139,7 +2139,7 @@ def  main():
                'chemcam', 'finesse', 'misr', 'aviris',
                'irs', 'kepler', 'texturecam', 'navcam',
                'pancam', 'apf', 'dan', 'gbt', 'gbtfil', 'decals',
-               'mastcam', 'images', 'ucis', 'testdata', 'cnn')
+               'mastcam', 'images', 'ucis', 'testdata', 'cnn', 'des')
   
   data_choice = check_opts(datatypes)
   

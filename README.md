@@ -2,7 +2,7 @@ DEMUD: Discovery via Eigenbasis Modeling of Uninteresting Data
 ==============================================================
 Contact author: Kiri Wagstaff, kiri.wagstaff@jpl.nasa.gov
 
-Contributors: James Bedell
+Contributors: James Bedell, Jake Lee
 
 DEMUD is a data analysis algorithm that incrementally selects the most
 interesting or novel item from a data set.  In addition, it provides
