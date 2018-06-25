@@ -162,7 +162,10 @@ class DESData(Dataset):
       if 'MAG_AUTO' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= minval
-        print 'Subtracting %d from %s.' % (minval, f)
+        print 'Subtracting %f from %s.' % (minval, f)
+        newf = f + '-sub%.2f' % minval
+        self.features[self.features.index(f)] = newf
+        f = newf
       print '%s range: ' % f,
       print self.data[self.features.index(f),:].min(),
       print self.data[self.features.index(f),:].max()
