@@ -53,7 +53,7 @@ To get started
 
    **Example 1: Images.**
 
-   To run DEMUD on a collection of images, specify the directory
+   To run DEMUD on a collection of images using the pixel representation, specify the directory
    containing the images on the `imagedatafolder` line in `demud.config`.
    Then run
 
@@ -133,6 +133,13 @@ By default, DEMUD treats all features equally.  You can specify
 different feature weighting methods; see: 
 
 `$ demud --featureweightmethods`
+
+Additional scripts
+------------------
+
+`scripts/` provides additional scripts for preprocessing data for use with DEMUD. Usage instructions are included within each subdirectory.
+
+This includes an image feature extraction script used for experiments presented at WHI 2018.
 
 References
 ----------
