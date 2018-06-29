@@ -1804,7 +1804,7 @@ def  parse_config(config, data_choice):
       data_choice == 'isolet' or
       data_choice == 'ecoli'):
     return ([ucidatafile],'')
-  elif data_choice in ['pancam', 'testdata', 'apf', 'dan', 'gbt']:
+  elif data_choice in ['pancam', 'testdata', 'apf', 'dan', 'gbt', 'cnn']:
     return ([floatdatafile],'')
   elif data_choice == 'gbtfil':
     return ([gbtdirname, catalogfile],'')

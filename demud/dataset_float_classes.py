@@ -156,8 +156,8 @@ class CNNFeat(FloatDataset):
     # we'll leave the reconstruction alone for now.
     # also, clipping to a 0 minimum is a bad idea.
 
-    inecho_l2_norm = numpy.linalg.norm(inecho, 2)
-    resid_l2_norm = numpy.linalg.norm(resid, 2)
+    inecho_l2_norm = np.linalg.norm(inecho, 2)
+    resid_l2_norm = np.linalg.norm(resid, 2)
     normalized_resid = (resid / resid_l2_norm) * inecho_l2_norm
 
 
