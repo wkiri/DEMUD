@@ -147,7 +147,11 @@ def export_csv(model_def, model_weights, mean_image,
 	print "\nthere are ", layercount, " layers"
 	
 	for i in range(len(k_feat_list)):
-		print "exporting %s.csv" % layer_list[i]
+		outfilename = imageset_dir.split('/')[-1]+layer_list[i]+'.csv'
+
+		print "exporting %s.csv as %s" % (layer_list[i], 
+						  os.path.join('feats',
+							       outfilename))
 		temp_array = np.vstack(k_feat_list[i])
 		temp_list = []
 		for j in range(temp_array.shape[0]):
@@ -160,7 +164,8 @@ def export_csv(model_def, model_weights, mean_image,
 		#export list as csv
 		if not os.path.exists('feats'):
 			os.makedirs('feats')
-		with open("feats/"+imageset_dir+layer_list[i]+".csv",'wb') as myfile:
+		with open(os.path.join('feats', outfilename),
+			  'w') as myfile:
 			wr = csv.writer(myfile, quoting=csv.QUOTE_NONE)
 			#print "writing"
 			wr.writerows(temp_list)
