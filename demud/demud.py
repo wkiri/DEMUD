@@ -29,9 +29,9 @@ import pylab
 from dataset_uci_classes import GlassData, IrisData, EcoliData, AbaloneData, IsoletData
 from dataset_float import FloatDataset
 from dataset_float_classes import *
-from dataset_decals import DECaLSData
-from dataset_des import DESData
-from dataset_gbtfil import GBTFilterbankData
+#from dataset_decals import DECaLSData
+#from dataset_des import DESData
+#from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
@@ -1256,13 +1256,14 @@ def  clean():
                    "########### README #################\n\n"
                    "Each dependency line takes the format:\n"
                    "mydatafile = /home/jbedell/research/data/sample.data\n"
-                   "Single and double quotes are okay but not necessary\n\n"
+                   "(either relative or absolute path)\n"
+                   "Single and double quotes are okay but not necessary.\n\n"
                    "Lines which begin with a # like Python comments are "
                    "ignored (leading whitespace okay)\n"
                    "(comments which begin in the middle of "
                    "lines may produce unexpected results)\n\n"
-                   "Only the last (unignored) assignment to any "
-                   "variable is kept\n\n"
+                   "** Only the last (unignored) assignment to any "
+                   "variable is kept. **\n\n"
                    "Below are the data sets and their dependencies.  "
                    "Headers are of the format:\n"
                    "----- Sample data classification set: "
@@ -1278,16 +1279,12 @@ def  clean():
   outputfile.write("############ DATASETS #################\n\n"
                    "----- Glass classification data set: ucidatafile\n"
                    " -g --glass\n"
-                   "ucidatafile = \n\n"
                    "----- Iris classification data set: ucidatafile\n"
                    " -i --iris\n"
-                   "ucidatafile = \n\n"
                    "----- E. Coli classification data set: ucidatafile\n"
                    " -e --ecoli\n"
-                   "ucidatafile = \n\n"
                    "----- Abalone classification data set: ucidatafile\n"
                    " -o --abalone\n"
-                   "ucidatafile = \n\n"
                    "----- ISOLET letter classification: ucidatafile\n"
                    " -z --isolet\n"
                    "ucidatafile = \n\n"
