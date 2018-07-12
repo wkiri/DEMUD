@@ -33,7 +33,7 @@ def usage():
 	sys.exit(1)
 
 # main function for exportcsv
-def export_csv(model_def, model_weights, mean_image, synset_words,
+def export_csv(model_def, model_weights, mean_image, 
 		layer_list, class_list, qty_list, imageset_dir):
 	
 	# check number of classes and number of images
@@ -202,11 +202,6 @@ if __name__ == "__main__":
 		print 'Could not find mean image file %s.' % mean_image
 		usage()
 
-	synset_words = os.path.join(model_dir, config.get('Files', 'synset_words'))
-	if not os.path.exists(synset_words):
-		print 'Could not find synset words file %s.' % synset_words
-		usage()
-
 	# get layers and layer counts
 	layer_list = config.get('Params', 'layer_list')
 	layer_list = layer_list.split(',')
@@ -217,7 +212,7 @@ if __name__ == "__main__":
 	qty_list = config.get('Params', 'qty_list')
 	qty_list = qty_list.split(',')
 	
-	export_csv(model_def, model_weights, mean_image, synset_words, 
+	export_csv(model_def, model_weights, mean_image, 
 		layer_list, class_list, qty_list, imageset_dir)
 
 
