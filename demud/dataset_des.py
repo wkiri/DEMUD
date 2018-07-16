@@ -63,9 +63,77 @@ class DESData(Dataset):
     """readin()
 
     Read in DES catalog data from FITS file.
+    Modified to read in data from a npy, e.g. for DESY3 Gold 
     """
+    
+    if self.filename.endswith('.fits'):
+      self.features = read_SV_fits(self)
+    elif self.filename.endswith('.npy'): 
+      self.features = read_Y3_npy(self) 
+    else: 
+      print('Unrecognized filetype') 
+  
+  def read_Y3_npy(self): 
+    
+    #load data
+    data = np.load(self.filename)
+    #data = np.load('DES_Y3.npy')
+    
+    #No need for masks for this dataset
+    
+    #subset Y3 npy array to desired columns according to: 
+    """
+    0 COADD_OBJECT_ID
+    1 SOF_FLAGS 
+    2 SOF_CM_FLAGS
+    3 SOF_CM_FRACDEV  
+    4 SOF_CM_FRACDEV_ERR  
+    5 FLUX_CM_SOF_G 
+    6 FLUX_CM_SOF_R
+    7 FLUX_CM_SOF_I
+    8 FLUX_CM_SOF_Z
+    9 FLUXERR_CM_SOF_G
+    10 FLUXERR_CM_SOF_R
+    11 FLUXERR_CM_SOF_I
+    12 FLUXERR_CM_SOF_Z 
+    13 FLUX_PSF_SOF_G 
+    14 FLUX_PSF_SOF_R
+    15 FLUX_PSF_SOF_I 
+    16 FLUX_PSF_SOF_Z
+    17 FLUXERR_PSF_SOF_G
+    18 FLUXERR_PSF_SOF_R
+    19 FLUXERR_PSF_SOF_I
+    20 FLUXERR_PSF_SOF_Z
+    """
+    
+    
+    subset = data[:, 5:9]
+    
+    #convert to luptitudes 
+    lups = np.arcsinh(subset)
+    
+    #compute luptitude colors
+    
+    #G-R 
+    GR = lups[:,0] - lups[:,1]
 
-    #datafile = pyfits.open(self.filename)
+    #R - I 
+    RI = lups[:,1] - lups[:,2]
+
+    #I - Z 
+    IZ = lups[:,2] - lups[:,3]
+    
+    #create data vector 
+    self.data = GR
+    self.data = np.vstack([self.data, RI])
+    self.data = np.vstack([self.data, IZ])
+    self.features = ['LUPTITUDE_G_R']
+    self.features += ['LUPTITUDE_R-I']
+    self.features += ['LUPTITUDE_I-Z']
+    
+
+  def read_SV_fits(self):
+        #datafile = pyfits.open(self.filename)
     #data   = datafile[1].data[0:1000000] # start small
     data = fitsio.read(self.filename)
 
