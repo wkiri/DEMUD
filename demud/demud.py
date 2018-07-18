@@ -683,6 +683,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   ###############################################
   # Print dataset info
   printt("Dataset: " + ds.name)
+  printt(" Read from " + ds.filename)
   printt(" Dimensions (features x items): %d x %d" % ds.data.shape)
  
   ###############################################
