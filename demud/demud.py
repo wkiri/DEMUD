@@ -182,7 +182,8 @@ def  score_items(X, U, mu,
 def  select_next(X, U, mu,
                  scoremethod='lowhigh',
                  missingmethod='none',
-                 feature_weights=[]):
+                 feature_weights=[],
+                 oldscores=[], oldreproj=[]):
   """select_next(X, U, mu, scoremethod, missingmethod, feature_weights)
 
   Select the next most-interesting item in X,
@@ -201,6 +202,10 @@ def  select_next(X, U, mu,
 
   'feature_weights' influence how much each feature contributes to the score.
 
+  'oldscores' provides the scores calculated in the previous iteration;
+  if not empty, skip scoring and just return the next best.
+  Likewise, 'oldreproj' is needed if we do this shortcut.
+
   Return the index of the selected item, its reconstruction,
     its reconstruction score, and all items' reconstruction scores.
   """
@@ -209,22 +214,30 @@ def  select_next(X, U, mu,
   if U == []:
     printt("Empty DEMUD model: selecting item number %d from data set" % \
              (log.opts['iitem']))
-    return log.opts['iitem'], X[:,log.opts['iitem']], 0.0, []
+    return log.opts['iitem'], [], []
 
   if X.shape[1] < 1 or U == [] or mu == []:
     printt("Error: No data in X and/or U and/or mu.")
-    return None, None, -1, []
+    return None, [], []
 
   if X.shape[0] != U.shape[0] or X.shape[0] != mu.shape[0]:
     printt("Mismatch in dimensions; must have X mxn, U mxk, mu mx1.")
-    return None, None, -1, []
+    return None, [], []
 
-  # Compute the score for each item
-  (scores, reproj) = score_items(X, U, mu, scoremethod, missingmethod)
+  # If oldscores is empty, compute the score for each item
+  if oldscores == []:
+    (scores, reproj) = score_items(X, U, mu, scoremethod, missingmethod)
+  elif oldreproj == []:
+    printt("Error: oldscores provided, but not oldreproj.")
+    return None, [], []
+  else: # both are valid, so use them here
+    (scores, reproj) = (oldscores, oldreproj)
 
-  # Select and return item with max reconstruction error and its index
+  # Select and return index of item with max reconstruction error,
+  # plus the updated scores and reproj
   m = scores.argmax()
-  return m, reproj[:,m], scores[m], scores
+
+  return m, scores, reproj
 
 
 #______________________________select_next_NN______________________________
@@ -793,7 +806,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
   ###########################################################################
   ## MAIN ITERATIVE DISCOVERY LOOP
-  
+
+  scores = []
+  reproj = []
   for i in range(nsel):
     printt("Time elapsed at start of iteration %d/%d:" % (i, nsel-1),
            time.clock())
@@ -816,14 +831,31 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
       # was picked to be SIMILAR to r, not different from it.
       r = ds.data[:,sels[-1]]
       # We update scores simply by removing this item.
-      scores = np.delete(scores, ind)
+      # I think we don't want to do this since scores gets updated 
+      # after plotting info for this choice.
+      #scores = np.delete(scores, ind)
       
     ###############################################
     # Get the selection, according to model U
     else:
-      ind, r, score, scores = select_next(X, U, mu, scoremethod,
+      # If using a static model, pass in oldscores and oldreproj
+      # to avoid re-calculating scores
+      if log.opts['static']:
+        ind, scores, reproj = select_next(X, U, mu, scoremethod,
+                                          missingmethod, feature_weights,
+                                          oldscores=scores, oldreproj=reproj)
+      else:
+        ind, scores, reproj = select_next(X, U, mu, scoremethod,
                                           missingmethod, feature_weights)
-    
+      # If initializing with a specific item, 
+      # then scores and reproj will be empty
+      if scores == []:
+        score = 0.0
+        r     = X[:,ind] # reproj is same as item itself
+      else:
+        score = scores[ind]
+        r     = reproj[:,ind]
+
     # Update selections
     sels += [orig_ind[ind]]
     sels_idx += [ind]
@@ -994,11 +1026,14 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
       printt("Skipped updating model U because data was interesting.")
 
     ###############################################
-    # Remove this item from X
+    # Remove this item from X and other variables
     keep     = range(X.shape[1])
     keep.remove(ind)
     X        = X[:,keep]
     orig_ind = orig_ind[keep]
+    if scores != []:
+      scores = scores[keep]
+      reproj = reproj[:,keep]
 
     printt()   # spacing
 
@@ -1010,6 +1045,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     #   pylab.clf()
     #   pylab.imshow(U.reshape([ds.along_track, -1]))
     #   pylab.show()
+
+    # End loop over selections
 
   ###############################################
   # Report on when observations from the class of interest were found (if any)
