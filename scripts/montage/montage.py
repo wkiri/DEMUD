@@ -44,6 +44,12 @@ def make_montage(selectionsfile, imagedir, numsel, outdir):
     if numsel != -1 and numsel > 0 and numsel <= sels:
         sels = numsel
 
+    # Sanity check
+    if sels > 100:
+        s = raw_input('** Warning: %d images is a lot!  Would you like to [c]ontinue or [t]runcate to first 100? ' % sels)
+        if s == 't':
+            sels = 100
+
     # Name the file montage-k*.jpg (according to selectionsfile)
     outfn = 'montage-%s.jpg' % selectionsfile.split('-')[-1].split('.')[0]
 
