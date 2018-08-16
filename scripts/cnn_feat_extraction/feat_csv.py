@@ -25,7 +25,6 @@ import csv
 caffe.set_mode_cpu()
 
 localdir = os.path.dirname(os.path.abspath(__file__))
-print localdir
 
 # print usage message
 def usage():	
@@ -106,6 +105,8 @@ def export_csv(model_def, model_weights, mean_image,
 	# feat_list[class#][image#][layer#]
 	for i in range(len(class_list)):
 		temp_image_list = []
+                print('Class %d/%d: Processing %d images.' % \
+                      (i+1, len(class_list), int(qty_list[i])))
 		for j in range(int(qty_list[i])):
 			temp_feat_list = []
 			image_filename = image_list[i][j]
@@ -150,7 +151,7 @@ def export_csv(model_def, model_weights, mean_image,
 		outfilename = imageset_dir.split('/')[-1]+layer_list[i]+'.csv'
 
 		print "exporting %s.csv as %s" % (layer_list[i], 
-						  os.path.join('feats',
+						  os.path.join(out_dir,
 							       outfilename))
 		temp_array = np.vstack(k_feat_list[i])
 		temp_list = []
@@ -162,9 +163,9 @@ def export_csv(model_def, model_weights, mean_image,
 			# add row to temp_list
 		
 		#export list as csv
-		if not os.path.exists('feats'):
-			os.makedirs('feats')
-		with open(os.path.join('feats', outfilename),
+		if not os.path.exists(out_dir):
+			os.makedirs(out_dir)
+		with open(os.path.join(out_dir, outfilename),
 			  'w') as myfile:
 			wr = csv.writer(myfile, quoting=csv.QUOTE_NONE)
 			#print "writing"
@@ -191,6 +192,7 @@ if __name__ == "__main__":
 	
 	imageset_dir = config.get('Files', 'imageset_dir')
 	model_dir = config.get('Files', 'model_dir')
+	out_dir = config.get('Files', 'out_dir')
 
 	model_def = os.path.join(model_dir, config.get('Files', 'model_def'))
 	if not os.path.exists(model_def):
