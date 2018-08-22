@@ -105,19 +105,23 @@ def export_csv(model_def, model_weights, mean_image,
 	# feat_list[class#][image#][layer#]
 	for i in range(len(class_list)):
 		temp_image_list = []
+                n_images = int(qty_list[i])
                 print('Class %d/%d: Processing %d images.' % \
-                      (i+1, len(class_list), int(qty_list[i])))
-		for j in range(int(qty_list[i])):
+                      (i+1, len(class_list), n_images))
+		for j in range(n_images):
 			temp_feat_list = []
 			image_filename = image_list[i][j]
-			print "\rProcessing ", image_filename, "...",
+			print "\rProcessing (%d/%d) " % (j, n_images), image_filename, 
 
 			if not os.path.exists(image_filename):
 				print 'Could not load %s"' % image_filename
 				sys.exit(1)
 
-			# Load image
-			image = caffe.io.load_image(image_filename)
+			# Load image; gracefully skip non-images
+                        try:
+                                image = caffe.io.load_image(image_filename)
+                        except:  # Probably not an image file
+                                continue
 			transformed_image = transformer.preprocess('data', image)
 			net.blobs['data'].data[...] = transformed_image
 
