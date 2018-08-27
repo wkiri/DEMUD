@@ -32,7 +32,6 @@ class DESData(Dataset):
 
     Read in DES catalog data.
     """
-
     # Subset to a single photo-z bin
     photoz_bin = 0
 
@@ -41,45 +40,17 @@ class DESData(Dataset):
                      str(photoz_bin), '')
 
     self.readin()
-
-    # Subset to a single photo-z bin
-#    keep = np.where(self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
-    keep = (self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
-              photoz_bin)
-    self.data   = self.data[:,keep]
-    # Still annoys me that you can't index a list with a list
-    self.labels = [self.labels[k] for k in np.where(keep)[0]]
-
-    # Remove the PHOTOZ_BIN feature
-    features_keep = (self.features != 'PHOTOZ_BIN')
-    self.data     = self.data[features_keep,:]
-    self.features = self.features[features_keep]
-    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
-    print self.data.shape
+    
+    print self.data
     print self.features
 
-
-  def  readin(self):
-    """readin()
-
-    Read in DES catalog data from FITS file.
-    Modified to read in data from a npy, e.g. for DESY3 Gold 
-    """
-    
-    if self.filename.endswith('.fits'):
-      self.features = read_SV_fits(self)
-    elif self.filename.endswith('.npy'): 
-      self.features = read_Y3_npy(self) 
-    else: 
-      print('Unrecognized filetype') 
-  
   def read_Y3_npy(self): 
     
     #load data
     data = np.load(self.filename)
     #data = np.load('DES_Y3.npy')
     
-    #No need for masks for this dataset
+    #Y3 Gold Photometry flags not yet implemented 
     
     #subset Y3 npy array to desired columns according to: 
     """
@@ -105,31 +76,75 @@ class DESData(Dataset):
     19 FLUXERR_PSF_SOF_I
     20 FLUXERR_PSF_SOF_Z
     """
-    
-    
-    subset = data[:, 5:9]
-    
-    #convert to luptitudes 
-    lups = np.arcsinh(subset)
-    
-    #compute luptitude colors
-    
-    #G-R 
-    GR = lups[:,0] - lups[:,1]
 
-    #R - I 
-    RI = lups[:,1] - lups[:,2]
-
-    #I - Z 
-    IZ = lups[:,2] - lups[:,3]
+# Uncomment for luptitudes (e.g. required for flux values in Y3 fits)
     
-    #create data vector 
-    self.data = GR
-    self.data = np.vstack([self.data, RI])
-    self.data = np.vstack([self.data, IZ])
-    self.features = ['LUPTITUDE_G_R']
-    self.features += ['LUPTITUDE_R-I']
-    self.features += ['LUPTITUDE_I-Z']
+# This works for luptitudes computed from the original Y3 fits file 
+# that provides only fluxes
+#    self.data = data[1:4]
+#    self.features = ['LUPTITUDE_G_R']
+#    self.features += ['LUPTITUDE_R-I']
+#    self.features += ['LUPTITUDE_I-Z']
+#    self.labels = ['%d_None_None' % (id) for (id) in data[0]]
+#    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+#    self.features = np.array(self.features)
+    
+# This is for the the subsampled h5 catalog with more info. The subsampled catalog 
+# provides magnitudes, so let's try those rather than luptitudes
+    
+# Filter extreme values    
+    
+    #print(np.max(data))
+    #print(np.min(data))
+    data = data[:,data[2,:]<30]
+    data = data[:,data[3,:]<30]
+    data = data[:,data[4,:]<30]
+    data = data[:,data[5,:]<30]
+    data = data[:,data[2,:]>-1]
+    data = data[:,data[3,:]>-1]
+    data = data[:,data[4,:]>-1]
+    data = data[:,data[5,:]>-1]
+    #print(np.max(data[3:6,:]))
+    #print(np.min(data[3:6,:]))
+    
+    
+# Define data and features
+    # G-R
+    self.data = data[2,:] - data[3,:]
+    self.features += ['G-R']
+
+    # R-I
+    self.data = np.vstack([self.data,
+                           data[3,:] - data[4,:]])
+    self.features += ['R-I']
+
+    # I-Z
+    self.data = np.vstack([self.data,
+                           data[4,:] - data[5,:]])
+    self.features += ['I-Z']
+    
+    self.data = np.vstack([self.data,
+                           data[3,:]])
+
+    self.features += ['R']
+    
+    print np.array(self.features).shape
+    print np.array(self.data).shape 
+    
+    
+    for f in self.features:
+      if 'sof_cm_mag' in f: # subtract the min
+        minval = np.min(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= minval
+        print 'Subtracting %f from %s.' % (minval, f)
+        newf = f + '-sub%.2f' % minval
+        self.features[self.features.index(f)] = newf
+        f = newf
+    
+    self.labels = ['None_%.6f_%.6f' % (ra, dec) for (ra, dec) in zip(data[0], data[1])]
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    self.features = np.array(self.features)
+    
     
 
   def read_SV_fits(self):
@@ -148,45 +163,17 @@ class DESData(Dataset):
     # Read in the desired columns.
 
     # from SVA_GOLD
-    self.features = ['MAG_AUTO_G',
-                     'MAG_AUTO_R',
-                     'MAG_AUTO_I',
-                     'MAG_AUTO_Z',
-                     'MAGERR_AUTO_G',
-                     'MAGERR_AUTO_R',
-                     'MAGERR_AUTO_I',
-                     'MAGERR_AUTO_Z',
-#                     'FLUX_RADIUS_G',  # values are negative?
-#                     'FLUX_RADIUS_R',
-#                     'FLUX_RADIUS_I',
-#                     'FLUX_RADIUS_Z',
-#                     'MODEST_CLASS',
-                     'SPREAD_MODEL_G',
-                     'SPREAD_MODEL_R',
-                     'SPREAD_MODEL_I',
-                     'SPREAD_MODEL_Z',
-                     'CLASS_STAR_G',
-                     'CLASS_STAR_R',
-                     'CLASS_STAR_I',
-                     'CLASS_STAR_Z']
-#                     'BADFLAG']
 
-    # WLINFO filtered by Umaa to omit objects with
-    # SVA1_FLAG != 0
-    # NGMIX_FLAG != 0
-    # PHOTOZ_BIN != -1
 
-    '''
     self.features = ['MAG_AUTO_G',
                      'MAG_AUTO_R',
                      'MAG_AUTO_I',
                      'MAG_AUTO_Z',
                      'PHOTOZ_BIN',
                      'MEAN_PHOTOZ']
-
     #self.data = np.vstack([data.field(f) for f in self.features])
     self.data = np.vstack([data[f] for f in self.features])
-    '''
+
 
     # Ok, now we want R, G-R, I-Z
     self.data = data['MAG_AUTO_R']
@@ -216,6 +203,8 @@ class DESData(Dataset):
     self.data = np.vstack([self.data,
                            data['PHOTOZ_BIN']])
     self.features += ['PHOTOZ_BIN']
+    
+    print self.features
 
     # Data is d x n
     print self.data.shape
@@ -245,7 +234,37 @@ class DESData(Dataset):
 
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.features = np.array(self.features)
+    
+    # Subset to a single photo-z bin
+    #keep = np.where(self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
+    photoz_bin = 0 #why is this not defined globally?
+    keep = (self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
+              photoz_bin)
+    self.data   = self.data[:,keep]
+    # Still annoys me that you can't index a list with a list
+    self.labels = [self.labels[k] for k in np.where(keep)[0]]
 
+    # Remove the PHOTOZ_BIN feature
+    features_keep = (self.features != 'PHOTOZ_BIN')
+    self.data     = self.data[features_keep,:]
+    self.features = self.features[features_keep]
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    
+    
+  def  readin(self):
+    #Read in DES catalog data from FITS file.
+    #Modified to read in data from a npy, e.g. for DESY3 Gold 
+    
+    if self.filename.endswith('.fits'):
+      self.read_SV_fits()
+      print('this was a fits file')
+      print self.features
+    elif self.filename.endswith('.npy'): 
+      self.read_Y3_npy()
+      print('this was a .npy')
+    else: 
+      print('Unrecognized filetype.') 
+    
 
   def  plot_item(self, m, ind, x, r, k, label, U, rerr, feature_weights):
     """plot_item(self, m, ind, x, r, k, label, U, rerr, feature_weights)
@@ -324,7 +343,7 @@ class DESData(Dataset):
   def write_selections_csv(self, i, k, orig_ind, label, ind, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
-
+    
     (objid, RA, DEC) = label.split('_')
 
     # If this is the first selection, open for write
@@ -357,12 +376,51 @@ class DESData(Dataset):
     self.write_selections_html(10, i, k, ind, label, scores)
 
 
+
+#  # Write a list of the selections in CSV format
+#  def write_selections_csv(self, i, k, orig_ind, label, ind, scores):
+#    outdir = os.path.join('results', self.name)
+#    selfile = os.path.join(outdir, 'selections-k%d.csv' % k)
+#
+#    (objid, RA, DEC) = label.split('_')
+#
+#    # If this is the first selection, open for write
+#    # to clear out previous run.
+#    if i == 0:
+#      fid = open(selfile, 'w')
+#      # Output a header.  For some data sets, the label is a class;
+#      # for others it is an object identifier.  To be generic,
+#      # here we call this 'Name'.
+#      fid.write('# Selection, Index, Name, RA, DEC, Score\n')
+#
+#      # If scores is empty, the (first) selection was pre-specified,
+#      # so there are no scores.  Output 0 for this item.
+#      if scores == []:
+#        fid.write('%d,%d,%s,%s,%s,0.0\n' % (i, orig_ind, objid,
+#                                            RA, DEC))
+#      else:
+#        fid.write('%d,%d,%s,%s,%s,%g\n' % (i, orig_ind, objid,
+#                                           RA, DEC, scores[ind]))
+#    else:
+#      # Append to the CSV file
+#      fid = open(selfile, 'a')
+#      fid.write('%d,%d,%s,%s,%s,%g\n' % (i, orig_ind, objid,
+#                                         RA, DEC, scores[ind]))
+#
+#    # Close the file
+#    fid.close()
+#
+#    # Also, append selections to a growing .html file
+#    self.write_selections_html(10, i, k, ind, label, scores)
+
+
   # Write a list of n selections that are similar to selection i (index ind)
   # using scores (with respect to selection i).
   def write_selections_html(self, n, i, k, ind, label, scores):
     outdir = os.path.join('results', self.name)
     selfile = os.path.join(outdir, 'selections-k%d.html' % k)
 
+    #something like if 
     (objid, RA, DEC) = label.split('_')
 
     # If this is the first selection, open for write
