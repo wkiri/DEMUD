@@ -10,11 +10,19 @@
 
 ## Usage
 
-`python feat_csv.py example.cfg` exports the feature vectors of the specified images from the specified neural net layers as a csv. This csv can then be input into DEMUD with the `-v` or `--cnn` option.
+To extract the CNN feature vectors for a set of images:
 
-`example.cfg` specifies all information required, such as the location of the caffe model files, the location of the imageset, and the number of classes and images to export. The example configuration contains more instructions on the options available.
+1. Convert images to size 227x227 pixels.  For example, using ImageMagick:
 
-Note that the images must be preprocessed to 227x227 before extracting its features. For example, for our experiments, we used imagemagick:
 `$ mogrify -path imageset/# -format jpg -resize "227x227^" -gravity center -crop 227x227+0+0 +repage imageset/#/*.jpg`
 
-A future update will perform this preprocessing within the script.
+A future update will perform this preprocessing within the `feat_csv.py` script.
+
+2. Create a config file to specify locations of the trained CNN (Caffe model), the image files, and other parameters.  You can use `example.cfg` as a starting point.
+
+3. Extract the CNN feature vectors, which will be saved to .csv files:
+
+`python feat_csv.py your_config_file.cfg` 
+
+4. The resulting .csv files can be read in by DEMUD with the `-v` or `--cnn` option.
+

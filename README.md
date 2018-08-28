@@ -53,9 +53,9 @@ To get started
 
    **Example 1: Images.**
 
-   To run DEMUD on a collection of images using the pixel representation, specify the directory
-   containing the images on the `imagedatafolder` line in `demud.config`.
-   Then run
+   To run DEMUD on a collection of images using the pixel
+   representation, specify the directory containing the images on the
+   `imagedatafolder` line in `demud.config`.  Then run
 
    `$ demud -I`
 
@@ -68,8 +68,8 @@ To get started
    Several UCI data sets are already supported, and the `glass` and
    `ecoli` data sets are provided in the `data/` directory.  You can
    try them out by specifying the appropriate pathname for the data
-   files in `demud.config` (see the `glassdatafile` and
-   `ecolidatafile` variables), then running
+   file of your choice in `demud.config` (see the `ucidatafile` variable), 
+   then running:
 
    `$ demud -g`
 

@@ -25,7 +25,6 @@ import csv
 caffe.set_mode_cpu()
 
 localdir = os.path.dirname(os.path.abspath(__file__))
-print localdir
 
 # print usage message
 def usage():	
@@ -33,7 +32,7 @@ def usage():
 	sys.exit(1)
 
 # main function for exportcsv
-def export_csv(model_def, model_weights, mean_image, synset_words,
+def export_csv(model_def, model_weights, mean_image, 
 		layer_list, class_list, qty_list, imageset_dir):
 	
 	# check number of classes and number of images
@@ -106,17 +105,23 @@ def export_csv(model_def, model_weights, mean_image, synset_words,
 	# feat_list[class#][image#][layer#]
 	for i in range(len(class_list)):
 		temp_image_list = []
-		for j in range(int(qty_list[i])):
+                n_images = int(qty_list[i])
+                print('Class %d/%d: Processing %d images.' % \
+                      (i+1, len(class_list), n_images))
+		for j in range(n_images):
 			temp_feat_list = []
 			image_filename = image_list[i][j]
-			print "\rProcessing ", image_filename, "...",
+			print "\rProcessing (%d/%d) " % (j, n_images), image_filename, 
 
 			if not os.path.exists(image_filename):
 				print 'Could not load %s"' % image_filename
 				sys.exit(1)
 
-			# Load image
-			image = caffe.io.load_image(image_filename)
+			# Load image; gracefully skip non-images
+                        try:
+                                image = caffe.io.load_image(image_filename)
+                        except:  # Probably not an image file
+                                continue
 			transformed_image = transformer.preprocess('data', image)
 			net.blobs['data'].data[...] = transformed_image
 
@@ -147,7 +152,11 @@ def export_csv(model_def, model_weights, mean_image, synset_words,
 	print "\nthere are ", layercount, " layers"
 	
 	for i in range(len(k_feat_list)):
-		print "exporting %s.csv" % layer_list[i]
+		outfilename = imageset_dir.split('/')[-1]+layer_list[i]+'.csv'
+
+		print "exporting %s.csv as %s" % (layer_list[i], 
+						  os.path.join(out_dir,
+							       outfilename))
 		temp_array = np.vstack(k_feat_list[i])
 		temp_list = []
 		for j in range(temp_array.shape[0]):
@@ -158,9 +167,10 @@ def export_csv(model_def, model_weights, mean_image, synset_words,
 			# add row to temp_list
 		
 		#export list as csv
-		if not os.path.exists('feats'):
-			os.makedirs('feats')
-		with open("feats/"+imageset_dir+layer_list[i]+".csv",'wb') as myfile:
+		if not os.path.exists(out_dir):
+			os.makedirs(out_dir)
+		with open(os.path.join(out_dir, outfilename),
+			  'w') as myfile:
 			wr = csv.writer(myfile, quoting=csv.QUOTE_NONE)
 			#print "writing"
 			wr.writerows(temp_list)
@@ -186,6 +196,7 @@ if __name__ == "__main__":
 	
 	imageset_dir = config.get('Files', 'imageset_dir')
 	model_dir = config.get('Files', 'model_dir')
+	out_dir = config.get('Files', 'out_dir')
 
 	model_def = os.path.join(model_dir, config.get('Files', 'model_def'))
 	if not os.path.exists(model_def):
@@ -202,11 +213,6 @@ if __name__ == "__main__":
 		print 'Could not find mean image file %s.' % mean_image
 		usage()
 
-	synset_words = os.path.join(model_dir, config.get('Files', 'synset_words'))
-	if not os.path.exists(synset_words):
-		print 'Could not find synset words file %s.' % synset_words
-		usage()
-
 	# get layers and layer counts
 	layer_list = config.get('Params', 'layer_list')
 	layer_list = layer_list.split(',')
@@ -217,7 +223,7 @@ if __name__ == "__main__":
 	qty_list = config.get('Params', 'qty_list')
 	qty_list = qty_list.split(',')
 	
-	export_csv(model_def, model_weights, mean_image, synset_words, 
+	export_csv(model_def, model_weights, mean_image, 
 		layer_list, class_list, qty_list, imageset_dir)
 
 
