@@ -123,6 +123,7 @@ def export_csv(model_def, model_weights, mean_image,
 		image_list = [os.path.join(localdir, imageset_dir, image) for image in\
 			image_list]
 		image_list = image_list[:qty_list[0]]
+		label_list = label_list[:qty_list[0]]
 	else:
 		for i in range(len(class_list)):
 			cl_images = list_files(os.path.join(imageset_dir, class_list[i]))
@@ -130,6 +131,7 @@ def export_csv(model_def, model_weights, mean_image,
 			cl_images = [os.path.join(localdir, imageset_dir, class_list[i],\
 				image) for image in cl_images]
 			cl_images = cl_images[:qty_list[i]]
+			cl_labels = cl_labels[:qty_list[i]]
 			if len(image_list) == 0:
 				image_list = cl_images
 				label_list = cl_labels
@@ -138,7 +140,8 @@ def export_csv(model_def, model_weights, mean_image,
 				label_list = np.concatenate((label_list, cl_labels))
 
 	if len(label_list) != len(image_list):
-		print 'Fatal: image list and label list are different lengths.'
+		print 'fatal: image and label list are different lengths (%i!=%i).' \
+			% (len(image_list), len(label_list))
 		sys.exit(1)
 
 	if total_qty != len(image_list):
