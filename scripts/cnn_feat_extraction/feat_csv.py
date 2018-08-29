@@ -21,8 +21,9 @@ import imghdr
 import warnings
 import ConfigParser
 import csv
+import copy
 
-caffe.set_mode_cpu()
+caffe.set_mode_gpu()
 
 localdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -31,58 +32,120 @@ def usage():
 	print "usage: python feat_csv.py config_file.cfg"
 	sys.exit(1)
 
+# config file error
+def bad_config():
+	print "fatal: an error in the config file was encountered."
+	sys.exit(1)
+
+# list only files, no directory
+def list_files(directory):
+	dir_list = os.listdir(directory)
+	for afile in dir_list:
+		if not os.path.isfile(os.path.join(directory,afile)):
+			dir_list.remove(afile)
+		if afile[0] == '.':
+			# we don't mess with weird files.
+			dir_list.remove(afile)
+	return dir_list
+
 # main function for exportcsv
 def export_csv(model_def, model_weights, mean_image, 
 		layer_list, class_list, qty_list, imageset_dir):
-	
-	# check number of classes and number of images
-	dircount = 0
-	imagecount = 0
-	
-	# Make sure defined classes exist
-	# If class_list is empty, use everything
-	if class_list == ['']:
-		class_list = os.listdir(os.path.join(localdir, imageset_dir))
-	for a_dir in os.listdir(os.path.join(localdir, imageset_dir)):
-		if ('.' not in a_dir) and (a_dir in class_list):
-			dircount = dircount + 1
-	if dircount != len(class_list):
-		print 'error, some class directories do not exist'
-		sys.exit(1)
-	
 
-	# Make sure defined images exist
-	allflag = False
-	for i in range(len(class_list)):
-		imagecount = len(os.listdir(os.path.join(localdir, imageset_dir,
-			class_list[i])))
-		if qty_list == ['']:
-			qty_list = [0] * len(class_list)
-			qty_list[i] = imagecount
-			allflag = True
-		if allflag:
-			qty_list[i] = imagecount
-		if imagecount < int(qty_list[i]):
-			print 'error, class %s does not have enough images' % class_list[i]
+	# Flag to indicate all classes were specified
+	all_flag = False
+
+	print 'Verifying class and image qty specs...'
+
+	# Verify specified classes
+	if class_list == ['<all>']:
+		# Use all class subdirectories available
+		class_list = os.listdir(imageset_dir)
+		all_flag = True
+	elif class_list == ['<flat>']:
+		# No subdirectories
+		class_list = []
+	for a_dir in class_list:
+		if a_dir not in os.listdir(imageset_dir):
+			# Some specified directories are not in the imageset directory.
+			missing_path = os.path.join(imageset_dir, a_dir)
+			print 'error, %s does not exist.' % missing_path
 			sys.exit(1)
 	
-	# get list of images
-	# image_list[class#][image#]
+	# Verify specified images
+	if class_list == []:
+		# no subdirectories, count images in imageset_dir
+		imagecount = len(list_files(imageset_dir))
+		if qty_list[0] == '<all>':
+			qty_list[0] = imagecount
+		elif int(qty_list[0]) > imagecount:
+			# more images were specified than exists. assume maximum.
+			print 'error, qty_list is greater than available images (%i>%i)'\
+				% (int(qty_list[0]), imagecount)
+			print 'assuming all images'
+			qty_list[0] = imagecount
+	else:
+		if all_flag and qty_list[0] == '<all>':
+			qty_list = ['all'] * len(class_list)
+		for i in range(len(class_list)):
+			imagecount = len(list_files(os.path.join(imageset_dir, \
+				class_list[i])))
+			if qty_list[i] == 'all':
+				qty_list[i] = imagecount
+				continue
+			try:
+				int(qty_list[i])
+			except:
+				# oops, entry is neither a number nor 'all'
+				print '%s is not a valid parameter.' % qty_list[i]
+				bad_config()
+			if int(qty_list[i]) > imagecount:
+				print 'error, qty_list is greater than available images \
+					(class %s, %i>%i)' % (class_list[i], \
+					int(qty_list[i]), imagecount)
+				print 'assuming all images for class %s' % class_list[i]
+				qty_list[i] = imagecount
+	
+	# At this point
+	# class_list should be empty or a list of directories
+	# qty_list should all be numbers.
+	qty_list = [int(i) for i in qty_list]
+	total_qty = sum(qty_list)
+
+	# get list of imagepaths
+	print 'Compiling imagepaths...'
+	
 	image_list = []
 	label_list = []
-	for i in range(len(class_list)):
-		temp_list = []
-		temp_label_list = []
-		for j in range(int(qty_list[i])):
-			temp_list.append(os.path.join(localdir, imageset_dir, 
-				class_list[i], os.listdir(os.path.join(localdir, 
-				imageset_dir, class_list[i]))[j]))
-			temp_label_list.append(os.listdir(os.path.join(localdir,
-				imageset_dir, class_list[i]))[j])
-		image_list.append(temp_list)
-		label_list.append(temp_label_list)
-	label_list = [an_item for a_list in label_list for an_item in a_list]
-	label_list = label_list[::-1]
+	if class_list == []:
+		image_list = list_files(imageset_dir)
+		label_list = image_list
+		image_list = [os.path.join(localdir, imageset_dir, image) for image in\
+			image_list]
+		image_list = image_list[:qty_list[0]]
+	else:
+		for i in range(len(class_list)):
+			cl_images = list_files(os.path.join(imageset_dir, class_list[i]))
+			cl_labels = [class_list[i]+'-'+image for image in cl_images]
+			cl_images = [os.path.join(localdir, imageset_dir, class_list[i],\
+				image) for image in cl_images]
+			cl_images = cl_images[:qty_list[i]]
+			if len(image_list) == 0:
+				image_list = cl_images
+				label_list = cl_labels
+			else:
+				image_list = np.concatenate((image_list, cl_images))
+				label_list = np.concatenate((label_list, cl_labels))
+
+	if len(label_list) != len(image_list):
+		print 'Fatal: image list and label list are different lengths.'
+		sys.exit(1)
+
+	if total_qty != len(image_list):
+		print 'Warning: spec image qty does not match actual qty (%i!=%i).' \
+			% (total_qty, len(image_list))
+
+	print 'Setting up network...'
 
 	# CaffeNet definitions
 	net = caffe.Net(model_def, model_weights, caffe.TEST)
@@ -97,74 +160,98 @@ def export_csv(model_def, model_weights, mean_image,
 	transformer.set_channel_swap('data', (2,1,0))
 
 	# Reshape to match expected dimensions
-	n_images = 1
+	n_images = 10
+	print 'Batch size is %i' % n_images
 	n_channels = 3 #BGR
 	net.blobs['data'].reshape(n_images, n_channels, 227, 227)
 	
-	feat_list = []
-	# feat_list[class#][image#][layer#]
-	for i in range(len(class_list)):
-		temp_image_list = []
-                n_images = int(qty_list[i])
-                print('Class %d/%d: Processing %d images.' % \
-                      (i+1, len(class_list), n_images))
-		for j in range(n_images):
-			temp_feat_list = []
-			image_filename = image_list[i][j]
-			print "\rProcessing (%d/%d) " % (j, n_images), image_filename, 
+	# Set up batch filler
+	# We need to make the input divisible by the batch size.
+	# Since we're batching imagepaths, we'll just fill with the first image.
+	fillerlen = len(image_list) % n_images
+	batch_filler = [image_list[0]] * fillerlen
+	image_list = np.concatenate((image_list, batch_filler))
 
-			if not os.path.exists(image_filename):
-				print 'Could not load %s"' % image_filename
-				sys.exit(1)
+	print 'Running network forward...'
 
-			# Load image; gracefully skip non-images
-                        try:
-                                image = caffe.io.load_image(image_filename)
-                        except:  # Probably not an image file
-                                continue
-			transformed_image = transformer.preprocess('data', image)
-			net.blobs['data'].data[...] = transformed_image
+	# feat_list[layer#][image#]
+	feat_list = np.asarray([])
+	bad_count = 0
+	for b in range(len(image_list)/n_images):
+		print "Processing batch %i of %i" % (b+1, len(image_list)/n_images)	
+		
+		# load batch
+		curr_batch = image_list[b * n_images: b * n_images + n_images]
 
-			# Classify
-			output = net.forward()
+		for i in range(n_images):
+			# try to load an image into caffe.
+			try:
+				# this will fail if the file is not an image.
+				net.blobs['data'].data[i, ...] = transformer.preprocess( \
+					'data', caffe.io.load_image(curr_batch[i]))
+			except Exception as e:
+				print e
+				# Yikes, someone left a non-image file in the dataset.
+				# This messes up our batching and dataoutput.
+				# We'll try to handle this as gracefully as possible.
+				bad_count += 1
+				bad_index = b * n_images + i
+				bad_label = label_list[bad_index]
+				print "WARNING: Non-image file %s encountered." % bad_label
+				print "Tagging label as BAD and loading synthetic data."
+				label_list[bad_index] = bad_label + "BAD"
+				net.blobs['data'].data[i, ...] = np.zeros((3, 227, 227))
 
-			feat = np.zeros(1)
-			for a_layer in layer_list:
-				try:
-					feat = net.blobs[a_layer].data[0].copy()
-				except KeyError:
-					print '\nerror, invalid layer %s' % a_layer	
-					layer_list.remove(a_layer)
-					continue
-				temp_feat_list.append(feat)
-			temp_image_list.append(temp_feat_list)
 
-		feat_list.append(temp_image_list)
-		# feat_list[class#][image#][layer#]
+		# Classify
+		output = net.forward()
 
-	k_feat_list = []
-	for i in range(0, dircount):
-		k_feat_list = k_feat_list + feat_list[i]
-	k_feat_list = np.rot90(k_feat_list,3)	
-	# k_feat_list[layer#][image#], no class distinction 
+		# Extract features
+		batch_list = []
+		for k in range(len(layer_list)):
+			a_layer = layer_list[k]
+			try:
+				# data should be shape (n_images, 4096)
+				feat = net.blobs[a_layer].data.copy()
+			except KeyError:
+				print 'Warning: invalid layer %s, removed' % a_layer	
+				layer_list.remove(a_layer)
+				continue
+			# We start building feat_list[layer#][image#][featval]
+			if len(feat_list) == 0:
+				batch_list.append(feat)
+			else:
+				feat_list[k] = np.concatenate((feat_list[k], feat), axis=0)
+
+		if len(feat_list) == 0:
+			feat_list = batch_list
+
+	# feat_list[layer#][image#]
+
+	# correct for batch buffer
+	for k in range(len(layer_list)):
+		feat_list[k] = feat_list[k][:total_qty]
+
+	layer_count = len(feat_list)
+	print '== Final Output =='
+	print 'layers: %i' % layer_count
+	print 'valid img: %i' % (total_qty - bad_count)
+	print 'bad files: %i' % bad_count
+
+		
 	
-	layercount = len(k_feat_list)
-	print "\nthere are ", layercount, " layers"
-	
-	for i in range(len(k_feat_list)):
+	for i in range(len(feat_list)):
 		outfilename = imageset_dir.split('/')[-1]+layer_list[i]+'.csv'
 
-		print "exporting %s.csv as %s" % (layer_list[i], 
+		print "exporting %s as %s" % (layer_list[i], 
 						  os.path.join(out_dir,
 							       outfilename))
-		temp_array = np.vstack(k_feat_list[i])
+		temp_array = np.vstack(feat_list[i])
 		temp_list = []
 		for j in range(temp_array.shape[0]):
 			new_row = temp_array[j].tolist()
 			new_row.insert(0, label_list[j])
 			temp_list.insert(0, new_row)
-			# add string ID
-			# add row to temp_list
 		
 		#export list as csv
 		if not os.path.exists(out_dir):
@@ -172,13 +259,16 @@ def export_csv(model_def, model_weights, mean_image,
 		with open(os.path.join(out_dir, outfilename),
 			  'w') as myfile:
 			wr = csv.writer(myfile, quoting=csv.QUOTE_NONE)
-			#print "writing"
 			wr.writerows(temp_list)
-			#print "done"
 
 	return 1
 
 if __name__ == "__main__":	
+
+	print '==============='
+	print '= Begin Debug ='
+	print '==============='
+
 	# check args
 	if len(sys.argv) != 2:
 		usage()
@@ -188,9 +278,11 @@ if __name__ == "__main__":
 	
 	# read in config file
 	if not os.path.exists(configfile):
-		print "could not find config file", configfile
-		usage()
-	
+		print "Could not find config file", configfile
+		sys.exit(1)
+
+	# parse in config file
+	print "Parsing config file..."
 	config = ConfigParser.ConfigParser()
 	config.read(configfile)
 	
@@ -201,19 +293,18 @@ if __name__ == "__main__":
 	model_def = os.path.join(model_dir, config.get('Files', 'model_def'))
 	if not os.path.exists(model_def):
 		print 'Could not find model def file %s.' % model_def
-		usage()
+		bad_config()
 
 	model_weights = os.path.join(model_dir, config.get('Files', 'model_weights'))
 	if not os.path.exists(model_weights):
 		print 'Could not find model weights file %s.' % model_weights
-		usage()
+		bad_config()
 	
 	mean_image = os.path.join(model_dir, config.get('Files', 'mean_image'))
 	if not os.path.exists(mean_image):
 		print 'Could not find mean image file %s.' % mean_image
-		usage()
+		bad_config()
 
-	# get layers and layer counts
 	layer_list = config.get('Params', 'layer_list')
 	layer_list = layer_list.split(',')
 
@@ -222,6 +313,10 @@ if __name__ == "__main__":
 	
 	qty_list = config.get('Params', 'qty_list')
 	qty_list = qty_list.split(',')
+
+	if len(class_list) != len(qty_list):
+		print 'The class_list param list and qty_list param list must have the same length (%i != %i)' % (len(class_list), len(qty_list))
+		bad_config()
 	
 	export_csv(model_def, model_weights, mean_image, 
 		layer_list, class_list, qty_list, imageset_dir)
