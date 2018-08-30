@@ -11,6 +11,7 @@
 # v0.2 - 6/29/17
 # v0.3 - 7/29/17
 # v0.4 - 6/26/18
+# v1.0 - 8/30/18
 
 import sys, os
 import numpy as np
@@ -23,7 +24,6 @@ import ConfigParser
 import csv
 import copy
 
-caffe.set_mode_gpu()
 
 localdir = os.path.dirname(os.path.abspath(__file__))
 
@@ -50,7 +50,7 @@ def list_files(directory):
 
 # main function for exportcsv
 def export_csv(model_def, model_weights, mean_image, 
-		layer_list, class_list, qty_list, imageset_dir):
+		layer_list, class_list, qty_list, imageset_dir, batch_size):
 
 	# Flag to indicate all classes were specified
 	all_flag = False
@@ -163,7 +163,7 @@ def export_csv(model_def, model_weights, mean_image,
 	transformer.set_channel_swap('data', (2,1,0))
 
 	# Reshape to match expected dimensions
-	n_images = 10
+	n_images = batch_size
 	print 'Batch size is %i' % n_images
 	n_channels = 3 #BGR
 	net.blobs['data'].reshape(n_images, n_channels, 227, 227)
@@ -308,6 +308,14 @@ if __name__ == "__main__":
 		print 'Could not find mean image file %s.' % mean_image
 		bad_config()
 
+	batch_size = int(config.get('Params', 'batch_size'))
+
+	GPU_enable = int(config.get('Params', 'GPU_enable'))
+	if GPU_enable:
+		caffe.set_mode_gpu()
+	else:
+		caffe.set_mode_cpu()
+
 	layer_list = config.get('Params', 'layer_list')
 	layer_list = layer_list.split(',')
 
@@ -322,7 +330,7 @@ if __name__ == "__main__":
 		bad_config()
 	
 	export_csv(model_def, model_weights, mean_image, 
-		layer_list, class_list, qty_list, imageset_dir)
+		layer_list, class_list, qty_list, imageset_dir, batch_size)
 
 
 
