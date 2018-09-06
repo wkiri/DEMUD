@@ -26,7 +26,7 @@ Create a config file to specify locations of the trained CNN (Caffe model), the 
 
 *[Files]*
 - `model_dir` is the folder where caffe model definitions are stored.
-- `imageset_dir` is the imageset directory. It contains images or subdirectories. Do not include non-image files in the directory; while it will be rejected, it will mess up the imagecount.
+- `imageset_dir` is the imageset directory. It contains images or subdirectories. Do not include non-image files in the directory; while they will be rejected, the imagecount will be incorrect.
 - `model_def` is the `.prototxt` file within `imageset_dir`.
 - `model_weights` is the `.caffemodel` file within `imageset_dir`.
 - `mean_image` is the `.npy` file within `imageset_dir`.
@@ -44,7 +44,7 @@ Create a config file to specify locations of the trained CNN (Caffe model), the 
     - `<all>` tells the script to extract from all images in the subdirectories specified.
 	- `10` tells the script to extract 10 images from `<flat>`, or the single subdirectory specified.
 	- `10,20,30` tells the script to extract 10, 20, and 30 images from the specified subdirectories, respectively.
-	- `10,all,30` - the `all` keyword can be mixed within the list to specify that all images in the respective subdirectory are too be extracted from.
+	- `10,all,30` - the `all` keyword can be mixed within the list to specify that all images in the respective subdirectory are to be extracted from.
 
 ### 3. Feature Extraction
 
@@ -58,11 +58,3 @@ The first column is a label of the image's subdirectory (if it exists) and the f
 
 The resulting .csv files can be read in by DEMUD with the `-v` or `--cnn` option.
 
-### 5. Performance
-
-| test case               | v0.4 | v1.0 |
-| ------------------------| ---- | ---- |
-| 636 imgs, b=1, Para CPU | 50s  | 40s  |
-| 636 imgs, b=1, Para GPU | N/A  | 32s  |
-| 636 imgs, b=16, Para GPU | N/A | 28s  |
-| 636 imgs, b=32, Para GPU | N/A | 28s  | 
