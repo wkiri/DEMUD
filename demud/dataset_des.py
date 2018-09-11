@@ -21,7 +21,6 @@
 import os, sys, re
 import numpy as np
 #import pyfits, 
-import fitsio
 import pylab
 from dataset import Dataset
 
@@ -33,28 +32,10 @@ class DESData(Dataset):
     Read in DES catalog data.
     """
 
-    # Subset to a single photo-z bin
-    photoz_bin = 0
-
-    #Dataset.__init__(self, desfilename, "DESData", '')
-    Dataset.__init__(self, desfilename, "DESData_colordiff_bin" + 
-                     str(photoz_bin), '')
-
+    Dataset.__init__(self, desfilename, "DESData", '')
+    
     self.readin()
 
-    # Subset to a single photo-z bin
-#    keep = np.where(self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
-    keep = (self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
-              photoz_bin)
-    self.data   = self.data[:,keep]
-    # Still annoys me that you can't index a list with a list
-    self.labels = [self.labels[k] for k in np.where(keep)[0]]
-
-    # Remove the PHOTOZ_BIN feature
-    features_keep = (self.features != 'PHOTOZ_BIN')
-    self.data     = self.data[features_keep,:]
-    self.features = self.features[features_keep]
-    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     print self.data.shape
     print self.features
 
@@ -62,16 +43,17 @@ class DESData(Dataset):
   def  readin(self):
     """readin()
 
-    Read in DES catalog data from FITS file.
-    Modified to read in data from a npy, e.g. for DESY3 Gold 
+    Read in DES catalog data from FITS or .npy files.
     """
     
     if self.filename.endswith('.fits'):
-      self.features = read_SV_fits(self)
+      # Assumes Science Verification data
+      self.read_SV_fits()
     elif self.filename.endswith('.npy'): 
-      self.features = read_Y3_npy(self) 
+      # Assumes DES Y3 Gold data
+      self.read_Y3_npy()
     else: 
-      print('Unrecognized filetype') 
+      print('Unrecognized file type') 
   
   def read_Y3_npy(self): 
     
@@ -132,9 +114,19 @@ class DESData(Dataset):
     self.features += ['LUPTITUDE_I-Z']
     
 
+  # Read Science Verification data set
   def read_SV_fits(self):
-        #datafile = pyfits.open(self.filename)
-    #data   = datafile[1].data[0:1000000] # start small
+    import fitsio
+
+    subset_photoz_bin = False
+
+    if subset_photoz_bin:
+      # Subset to a single photo-z bin
+      photoz_bin = 0
+
+      Dataset.__init__(self, desfilename, "DESData_colordiff_bin" + 
+                       str(photoz_bin), '')
+
     data = fitsio.read(self.filename)
 
     # Mask out the bad objects
@@ -148,47 +140,21 @@ class DESData(Dataset):
     # Read in the desired columns.
 
     # from SVA_GOLD
-    self.features = ['MAG_AUTO_G',
-                     'MAG_AUTO_R',
-                     'MAG_AUTO_I',
-                     'MAG_AUTO_Z',
-                     'MAGERR_AUTO_G',
-                     'MAGERR_AUTO_R',
-                     'MAGERR_AUTO_I',
-                     'MAGERR_AUTO_Z',
-#                     'FLUX_RADIUS_G',  # values are negative?
-#                     'FLUX_RADIUS_R',
-#                     'FLUX_RADIUS_I',
-#                     'FLUX_RADIUS_Z',
-#                     'MODEST_CLASS',
-                     'SPREAD_MODEL_G',
-                     'SPREAD_MODEL_R',
-                     'SPREAD_MODEL_I',
-                     'SPREAD_MODEL_Z',
-                     'CLASS_STAR_G',
-                     'CLASS_STAR_R',
-                     'CLASS_STAR_I',
-                     'CLASS_STAR_Z']
-#                     'BADFLAG']
-
     # WLINFO filtered by Umaa to omit objects with
     # SVA1_FLAG != 0
     # NGMIX_FLAG != 0
     # PHOTOZ_BIN != -1
 
-    '''
     self.features = ['MAG_AUTO_G',
                      'MAG_AUTO_R',
                      'MAG_AUTO_I',
                      'MAG_AUTO_Z',
-                     'PHOTOZ_BIN',
-                     'MEAN_PHOTOZ']
+                     'MEAN_PHOTOZ',
+                     'PHOTOZ_BIN']
 
-    #self.data = np.vstack([data.field(f) for f in self.features])
     self.data = np.vstack([data[f] for f in self.features])
-    '''
 
-    # Ok, now we want R, G-R, I-Z
+    # Ok, now we want R, G-R, R-I, I-Z
     self.data = data['MAG_AUTO_R']
     self.features = ['MAG_AUTO_R']
 
@@ -221,12 +187,6 @@ class DESData(Dataset):
     print self.data.shape
     # Scale some features as needed
     for f in self.features:
-      if 'CLASS_STAR' in f: # 0 to 1.0
-        self.data[self.features.index(f),:] *= 100
-      if 'SPREAD_MODEL' in f:  # -1.0 to 1.0
-        self.data[self.features.index(f),:] += 1.0
-        self.data[self.features.index(f),:] /= 2.0
-        self.data[self.features.index(f),:] *= 100.0
       if 'MAG_AUTO' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= minval
@@ -245,6 +205,23 @@ class DESData(Dataset):
 
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.features = np.array(self.features)
+
+    if subset_photoz_bin:
+      # Subset to a single photo-z bin
+      keep = (self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
+              photoz_bin)
+      self.data   = self.data[:,keep]
+      # Still annoys me that you can't index a list with a list
+      self.labels = [self.labels[k] for k in np.where(keep)[0]]
+      
+    # Remove the MEAN_PHOTOZ and PHOTOZ_BIN features
+    print('Removing PHOTOZ features.')
+    features_keep = ((self.features != 'PHOTOZ_BIN') &
+                     (self.features != 'MEAN_PHOTOZ'))
+    print features_keep
+    self.data     = self.data[features_keep,:]
+    self.features = self.features[features_keep]
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
 
 
   def  plot_item(self, m, ind, x, r, k, label, U, rerr, feature_weights):
