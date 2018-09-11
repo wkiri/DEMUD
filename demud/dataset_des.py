@@ -20,7 +20,6 @@
 
 import os, sys, re
 import numpy as np
-#import pyfits, 
 import pylab
 from dataset import Dataset
 
@@ -55,64 +54,55 @@ class DESData(Dataset):
     else: 
       print('Unrecognized file type') 
   
+
+  # Read DES Y3 gold data set
   def read_Y3_npy(self): 
     
-    #load data
     data = np.load(self.filename)
-    #data = np.load('DES_Y3.npy')
     
-    #No need for masks for this dataset
-    
-    #subset Y3 npy array to desired columns according to: 
-    """
-    0 COADD_OBJECT_ID
-    1 SOF_FLAGS 
-    2 SOF_CM_FLAGS
-    3 SOF_CM_FRACDEV  
-    4 SOF_CM_FRACDEV_ERR  
-    5 FLUX_CM_SOF_G 
-    6 FLUX_CM_SOF_R
-    7 FLUX_CM_SOF_I
-    8 FLUX_CM_SOF_Z
-    9 FLUXERR_CM_SOF_G
-    10 FLUXERR_CM_SOF_R
-    11 FLUXERR_CM_SOF_I
-    12 FLUXERR_CM_SOF_Z 
-    13 FLUX_PSF_SOF_G 
-    14 FLUX_PSF_SOF_R
-    15 FLUX_PSF_SOF_I 
-    16 FLUX_PSF_SOF_Z
-    17 FLUXERR_PSF_SOF_G
-    18 FLUXERR_PSF_SOF_R
-    19 FLUXERR_PSF_SOF_I
-    20 FLUXERR_PSF_SOF_Z
-    """
-    
-    
-    subset = data[:, 5:9]
-    
-    #convert to luptitudes 
-    lups = np.arcsinh(subset)
-    
-    #compute luptitude colors
-    
-    #G-R 
-    GR = lups[:,0] - lups[:,1]
+    # We want R, G-R, R-I, I-Z
+    self.data = data[3,:]
+    self.features = ['MAG_R']
 
-    #R - I 
-    RI = lups[:,1] - lups[:,2]
+    # G-R
+    self.data = np.vstack([self.data, data[2,:] - data[3,:]])
+    self.features += ['G-R']
 
-    #I - Z 
-    IZ = lups[:,2] - lups[:,3]
+    # R-I
+    self.data = np.vstack([self.data, data[3,:] - data[4,:]])
+    self.features += ['R-I']
+
+    # I-Z
+    self.data = np.vstack([self.data, data[4,:] - data[5,:]])
+    self.features += ['I-Z']
     
-    #create data vector 
-    self.data = GR
-    self.data = np.vstack([self.data, RI])
-    self.data = np.vstack([self.data, IZ])
-    self.features = ['LUPTITUDE_G_R']
-    self.features += ['LUPTITUDE_R-I']
-    self.features += ['LUPTITUDE_I-Z']
-    
+    # Filter out bogus MAG_R values
+    keep = self.data[0,:] > -1
+    self.data = self.data[:,keep]
+    data = data[:,keep]
+    print('Removed MAG_R values <= -1.')
+
+    # Data is d x n
+    print self.data.shape
+    # Scale some features as needed
+    for f in self.features:
+      if 'MAG' in f: # subtract the min
+        minval = np.min(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= minval
+        print 'Subtracting %f from %s.' % (minval, f)
+        newf = f + '-sub%.2f' % minval
+        self.features[self.features.index(f)] = newf
+        f = newf
+      print '%s range: ' % f,
+      print self.data[self.features.index(f),:].min(),
+      print self.data[self.features.index(f),:].max()
+
+    self.labels = ['None_%.6f_%.6f' % (ra, dec) for (ra, dec) in 
+                   zip(data[0,:], data[1,:])]
+    # Todo: Need RA and DEC
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    self.features = np.array(self.features)
+
 
   # Read Science Verification data set
   def read_SV_fits(self):
@@ -145,16 +135,7 @@ class DESData(Dataset):
     # NGMIX_FLAG != 0
     # PHOTOZ_BIN != -1
 
-    self.features = ['MAG_AUTO_G',
-                     'MAG_AUTO_R',
-                     'MAG_AUTO_I',
-                     'MAG_AUTO_Z',
-                     'MEAN_PHOTOZ',
-                     'PHOTOZ_BIN']
-
-    self.data = np.vstack([data[f] for f in self.features])
-
-    # Ok, now we want R, G-R, R-I, I-Z
+    # We want R, G-R, R-I, I-Z
     self.data = data['MAG_AUTO_R']
     self.features = ['MAG_AUTO_R']
 
@@ -218,7 +199,6 @@ class DESData(Dataset):
     print('Removing PHOTOZ features.')
     features_keep = ((self.features != 'PHOTOZ_BIN') &
                      (self.features != 'MEAN_PHOTOZ'))
-    print features_keep
     self.data     = self.data[features_keep,:]
     self.features = self.features[features_keep]
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
