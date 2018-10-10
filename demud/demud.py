@@ -30,7 +30,7 @@ from dataset_uci_classes import GlassData, IrisData, EcoliData, AbaloneData, Iso
 from dataset_float import FloatDataset
 from dataset_float_classes import *
 #from dataset_decals import DECaLSData
-#from dataset_des import DESData
+from dataset_des import DESData
 #from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData

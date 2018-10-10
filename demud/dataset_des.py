@@ -50,17 +50,72 @@ class DESData(Dataset):
       self.read_SV_fits()
     elif self.filename.endswith('.npy'): 
       # Assumes DES Y3 Gold data
-      self.read_Y3_npy()
+      self.read_Y3_2_2_npy()
     else: 
       print('Unrecognized file type') 
   
 
-  # Read DES Y3 gold data set
-  def read_Y3_npy(self): 
+  # Read DES Y3 2.2 gold data set
+  def read_Y3_2_2_npy(self): 
+    
+    data = np.load(self.filename)
+    # TODO: feature names will be stored in the file in the future
+    feat_names = ['coadd_object_id', 'ra', 'dec', 
+                  'sof_cm_flux_corrected_g', 'sof_cm_flux_corrected_i', 
+                  'sof_cm_flux_corrected_r', 'sof_cm_flux_corrected_z', 
+                  'sof_cm_flux_err_g', 'sof_cm_flux_err_i', 
+                  'sof_cm_flux_err_r', 'sof_cm_flux_err_z', 
+                  'sof_cm_mag_corrected_g', 'sof_cm_mag_corrected_i', 
+                  'sof_cm_mag_corrected_r', 'sof_cm_mag_corrected_z', 
+                  'sof_cm_mag_err_g', 'sof_cm_mag_err_i', 
+                  'sof_cm_mag_err_r', 'sof_cm_mag_err_z', 
+                  'lup_g', 'lup_r', 'lup_i', 'lup_z', 
+                  'color_g', 'color_i', 'color_z']
+
+    # Features to use
+    self.features = ['lup_r', 'color_g', 'color_i', 'color_z']
+    feat_inds = [feat_names.index(f) for f in self.features]
+    self.data = data[:,feat_inds]
+    # Trrrrranspose for DEMUD (feat x items)
+    self.data = self.data.T
+    print self.data.shape
+
+    # Scale some features as needed
+    for f in self.features:
+      '''
+      if 'MAG' in f: # subtract the min
+        minval = np.min(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= minval
+        print 'Subtracting %f from %s.' % (minval, f)
+        newf = f + '-sub%.2f' % minval
+        self.features[self.features.index(f)] = newf
+        f = newf
+      '''
+      print '%s range: ' % f,
+      print self.data[self.features.index(f),:].min(),
+      print self.data[self.features.index(f),:].max()
+
+    # Also store errors for reporting in explanation plots
+    # (when available)
+    '''
+    self.expl_features = ['']
+    expl_feat_inds = [feat_names.index(f) for f in self.expl_features]
+    self.expl_data = data[:,expl_feat_inds]
+    '''
+
+    # Labels
+    self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
+                   zip(data[:,0], data[:,1], data[:,2])]
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    self.features = np.array(self.features)
+    
+
+  # Read DES Y3 2.0 gold data set
+  def read_Y3_2_0_npy(self): 
     
     data = np.load(self.filename)
     
-    # We want R, G-R, R-I, I-Z
+    # We want R, G-R, I-R, Z-R
     self.data = data[3,:]
     self.features = ['MAG_R']
 
@@ -68,15 +123,16 @@ class DESData(Dataset):
     self.data = np.vstack([self.data, data[2,:] - data[3,:]])
     self.features += ['G-R']
 
-    # R-I
-    self.data = np.vstack([self.data, data[3,:] - data[4,:]])
-    self.features += ['R-I']
+    # I-R
+    self.data = np.vstack([self.data, data[4,:] - data[3,:]])
+    self.features += ['I-R']
 
-    # I-Z
-    self.data = np.vstack([self.data, data[4,:] - data[5,:]])
-    self.features += ['I-Z']
+    # Z-R
+    self.data = np.vstack([self.data, data[5,:] - data[3,:]])
+    self.features += ['Z-R']
     
     # Filter out bogus MAG_R values
+    # TODO: remove this with new version of data file (already filtered)
     keep = self.data[0,:] > -1
     self.data = self.data[:,keep]
     data = data[:,keep]
@@ -86,6 +142,7 @@ class DESData(Dataset):
     print self.data.shape
     # Scale some features as needed
     for f in self.features:
+      '''
       if 'MAG' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= minval
@@ -93,13 +150,14 @@ class DESData(Dataset):
         newf = f + '-sub%.2f' % minval
         self.features[self.features.index(f)] = newf
         f = newf
+      '''
       print '%s range: ' % f,
       print self.data[self.features.index(f),:].min(),
       print self.data[self.features.index(f),:].max()
 
+    # TODO: add/readin id
     self.labels = ['None_%.6f_%.6f' % (ra, dec) for (ra, dec) in 
                    zip(data[0,:], data[1,:])]
-    # Todo: Need RA and DEC
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.features = np.array(self.features)
 
