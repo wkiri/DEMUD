@@ -59,6 +59,7 @@ class DESData(Dataset):
   def read_Y3_2_2_npy(self): 
     
     data = np.load(self.filename)
+
     # TODO: feature names will be stored in the file in the future
     feat_names = ['coadd_object_id', 'ra', 'dec', 
                   'sof_cm_flux_corrected_g', 'sof_cm_flux_corrected_i', 
@@ -288,41 +289,33 @@ class DESData(Dataset):
     else:
       goodfeat = range(len(self.xvals))
 
-    # Make a dual bar graph of the original and reconstructed features
-    width = 0.35
-    offset = (1 - 2*width) / 2
-  
     fig = pylab.figure()
     ax = fig.add_subplot(1, 1, 1)
 
     x = np.array(x)
-    
     xvals = [self.xvals[z][0] for z in range(self.xvals.shape[0])]
     x = [x[z] for z in range(x.shape[0])]
-    
-    bars1 = ax.bar([xvals[i] + offset for i in goodfeat], 
-                   x, width, color='b', label='Observations')
-    bars2 = ax.bar([xvals[i] + width + offset for i in goodfeat], 
-                   r, width, color='r', label='Expected')
+
+    # Make a line plot
+    pylab.plot([xvals[i] for i in goodfeat],
+               x, 'bo-', markersize=12, label='Observations')
+    pylab.plot([xvals[i] for i in goodfeat], 
+               r, 'rx-', markersize=12, label='Expected')
 
     # dashed line to show 0
-    pylab.plot([0, len(self.features)], [0, 0], '--')
-  
+    pylab.plot([0, len(self.features)], [0, 0], 'k--')
+
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
     pylab.title('DEMUD selection %d (%s),\n item %d, using K=%d' % \
                 (m, label, ind, k))
-    pylab.legend(fontsize=10)
-    
-    padding = 1.19
-    pylab.ylim([min(0, float(min(min(x), min(r))) * padding),
-                max(0, float(max(max(x), max(r))) * padding)])
+    pylab.legend(fontsize=12)
     
     if len(self.features) == 0:
-        pylab.xticks(pylab.arange(len(x)) + width + offset, range(len(x)))
+        pylab.xticks(pylab.arange(len(x)), range(len(x)), fontsize=12)
     else:
-        pylab.xticks(pylab.arange(len(x)) + width + offset, self.features,
-                     rotation=-30, ha='left')
+        pylab.xticks(pylab.arange(len(x)), self.features,
+                     rotation=-30, ha='left', fontsize=12)
     pylab.tight_layout()
     
     if not os.path.exists('results'):
