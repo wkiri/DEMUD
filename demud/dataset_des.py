@@ -96,12 +96,10 @@ class DESData(Dataset):
       print self.data[self.features.index(f),:].max()
 
     # Also store errors for reporting in explanation plots
-    # (when available)
-    '''
-    self.expl_features = ['']
+    self.expl_features = ['color_err_g_minus_r', 'lup_err_r', 
+                          'color_err_i_minus_r', 'color_err_z_minus_r']
     expl_feat_inds = [feat_names.index(f) for f in self.expl_features]
     self.expl_data = data[:,expl_feat_inds]
-    '''
 
     # Labels
     self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
@@ -296,10 +294,19 @@ class DESData(Dataset):
     x = [x[z] for z in range(x.shape[0])]
 
     # Make a line plot
-    pylab.plot([xvals[i] for i in goodfeat],
-               x, 'bo-', markersize=12, label='Observations')
+    #pylab.plot([xvals[i] for i in goodfeat],
+    #           x, 'bo-', markersize=12, label='Observations')
+    #pylab.plot([xvals[i] for i in goodfeat], 
+    #           r, 'rx-', markersize=12, label='Expected')
+
+    # Make an errorbar plot to show measurement uncertainty
+    pylab.errorbar([xvals[i] for i in goodfeat],
+                   x, yerr=self.expl_data[ind,:],
+                   color='b', marker='o', linestyle='-', 
+                   ecolor='k',
+                   markersize=10, label='Observations')
     pylab.plot([xvals[i] for i in goodfeat], 
-               r, 'rx-', markersize=12, label='Expected')
+               r, 'rd-', markersize=10, label='Expected')
 
     # dashed line to show 0
     pylab.plot([0, len(self.features)], [0, 0], 'k--')
