@@ -148,7 +148,11 @@ def  score_items(X, U, mu,
     # 1b. Reconstruct by projecting back up and adding mean
     reproj = np.dot(U, proj) + mu
     # 1c. Compute the residual
+    #print 'X:', X.T
+    #print 'reproj:', reproj.T
     err    = X - reproj
+    #print 'err:', err.T
+    #raw_input()
     
   else:
     # Missing method must be 'ignore' (Brand 2002)
@@ -175,6 +179,9 @@ def  score_items(X, U, mu,
   else:
     scores = np.sum(np.array(np.power(err, 2)), axis=0)
 
+  #print 'scores:', scores
+  #print 'reproj:', reproj
+  #raw_input()
   return (scores, reproj)
   
 
@@ -236,6 +243,12 @@ def  select_next(X, U, mu,
   # Select and return index of item with max reconstruction error,
   # plus the updated scores and reproj
   m = scores.argmax()
+  #print 'mu:',mu
+  #print 'selected:', X[:,m]
+  #print 'selected-mu:', (X-mu)[:,m]
+  #print 'reproj:', reproj[:,m]
+  #print 'reproj-mu:', (reproj-mu)[:,m]
+  #raw_input()
 
   return m, scores, reproj
 
@@ -294,15 +307,16 @@ def  update_model(X, U, S, k, n, mu,
   if X == []:
     printt("Error: No data in X.")
     return None, None, None, -1, None
+  #print '%d items in X' % X.shape[1]
+  #print 'init U:', U
 
   # If there is no previous U, and we just got a single item in X,
-  # then create a U the same size, first value 1 (rest 0),
+  # set U to all 0's (degenerate SVD),
   # and return it with mu.
   if U == [] and X.shape[1] == 1:
     mu   = X
     # Do this no matter what.  Let mu get NaNs in it as needed.
     U    = np.zeros_like(mu)
-    U[0] = 1
     S    = np.array([0])
     n    = 1
     pcts = [1.0]
@@ -333,8 +347,14 @@ def  update_model(X, U, S, k, n, mu,
       X[z] = 0
 
     mu      = np.mean(X, axis=1).reshape(-1,1)
-    X       = X - mu
+    X     = X - mu
     U, S, V = linalg.svd(X, full_matrices=False)
+    printt('Just did full SVD on %d items.' % X.shape[1])
+    #print 'X:',X
+    #print 'U:',U
+    # Reset U to all 0's if we only have one item in X (degenerate SVD)
+    if X.shape[1] == 1:
+      U = np.zeros_like(U)
     
     # Keep only the first k components
     S_full = S
@@ -407,6 +427,7 @@ def  update_model(X, U, S, k, n, mu,
     
     # Perform SVD of R.  Then finally update U.
     U, S, V = linalg.svd(R, full_matrices=False)
+    printt('Just did increm-ross SVD on %d items.' % n)
 
     U = np.dot(Q, U)
     
@@ -498,6 +519,8 @@ def  update_model(X, U, S, k, n, mu,
       S = Sq
       # Updating V requires knowing old V,
       # but we don't need the new one either so it's okay to skip.
+
+      printt('Just did increm-brand SVD on %d items.' % n)
       
       ############# end ###########
       
@@ -534,6 +557,7 @@ def  update_model(X, U, S, k, n, mu,
       # V requires knowing old V,
       # but we don't need the new one either so it's okay.
     
+      printt('Just did regular increm SVD on %d items.' % n)
 
     # Keep only the first k components
     U = U[:,0:min([n,k])]
@@ -570,6 +594,8 @@ def  update_model(X, U, S, k, n, mu,
              (k, cumpercents[k-1] * 100))
     if log.opts['pause']: raw_input("Press enter to continue\n")
 
+  #print 'U:', U
+  #print 'mu:', mu
   return U, S, mu, n, indivpcts
 
 #______________________________demud_______________________________________
@@ -1347,7 +1373,7 @@ def  clean():
                    "----- DES FITS data set: desfilename\n"
                    " --des\n"
                    "desfilename  = \n\n"
-                   "---- ChemCam: libsdatafile libsinitdatafile\n"
+                   "---- ChemCam: libsdatafile, libsinitdatafile\n"
                    " -c --chemcam\n"
                    "libsdatafile = \n"
                    "libsinitdatafile = \n\n"
