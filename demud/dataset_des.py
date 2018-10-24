@@ -58,23 +58,15 @@ class DESData(Dataset):
     d = np.load(self.filename)
     data = d['data']
     # Testing
-    data = data[:10,:]
+    #data = data[:10,:]
 
     feat_names = list(d['features'])
-    # Need to do a bit of surgery due to missing comma in the
-    # notebook that generated this file - remove when fixed
-    feat_names = feat_names[0:26] + \
-                 [feat_names[26][0:9], feat_names[26][9:]] + \
-                 feat_names[27:]
 
     # Features to use
-    #self.features = ['lup_r', 'color_g', 'color_i', 'color_z']
-    #self.features = ['lup_r', 'g_minus_r', 'i_minus_r', 'z_minus_r']
     #self.features = ['lup_r', 'color_g_minus_r',
     #                 'color_i_minus_r', 'color_z_minus_r']
     self.features = ['color_g_minus_r', 'lup_r', 
                      'color_i_minus_r', 'color_z_minus_r']
-    print self.features
     feat_inds = [feat_names.index(f) for f in self.features]
     self.data = data[:,feat_inds]
     # Trrrrranspose for DEMUD (feat x items)
@@ -82,6 +74,14 @@ class DESData(Dataset):
 
     # Scale some features as needed
     for f in self.features:
+      if f == 'lup_r':
+        # Subtract the mean value
+        mean_lup_r = np.mean(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= mean_lup_r
+        print 'Subtracting mean (%.2f) from %s.' % (mean_lup_r, f)
+        newf = 'lup_r_minus_mean'
+        self.features[self.features.index(f)] = newf
+        f = newf
       '''
       if 'MAG' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
