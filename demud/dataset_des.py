@@ -35,9 +35,6 @@ class DESData(Dataset):
     
     self.readin()
 
-    print self.data.shape
-    print self.features
-
 
   def  readin(self):
     """readin()
@@ -48,38 +45,40 @@ class DESData(Dataset):
     if self.filename.endswith('.fits'):
       # Assumes Science Verification data
       self.read_SV_fits()
-    elif self.filename.endswith('.npy'): 
+    elif self.filename.endswith('.npz'): 
       # Assumes DES Y3 Gold data
-      self.read_Y3_2_2_npy()
+      self.read_Y3_2_2_npz()
     else: 
-      print('Unrecognized file type') 
+      print('Unrecognized file type: ' + self.filename) 
   
 
-  # Read DES Y3 2.2 gold data set
-  def read_Y3_2_2_npy(self): 
+  # Read (filtered) DES Y3 2.2 gold data set
+  def read_Y3_2_2_npz(self): 
     
-    data = np.load(self.filename)
+    d = np.load(self.filename)
+    data = d['data']
+    # Testing
+    data = data[:10,:]
 
-    # TODO: feature names will be stored in the file in the future
-    feat_names = ['coadd_object_id', 'ra', 'dec', 
-                  'sof_cm_flux_corrected_g', 'sof_cm_flux_corrected_i', 
-                  'sof_cm_flux_corrected_r', 'sof_cm_flux_corrected_z', 
-                  'sof_cm_flux_err_g', 'sof_cm_flux_err_i', 
-                  'sof_cm_flux_err_r', 'sof_cm_flux_err_z', 
-                  'sof_cm_mag_corrected_g', 'sof_cm_mag_corrected_i', 
-                  'sof_cm_mag_corrected_r', 'sof_cm_mag_corrected_z', 
-                  'sof_cm_mag_err_g', 'sof_cm_mag_err_i', 
-                  'sof_cm_mag_err_r', 'sof_cm_mag_err_z', 
-                  'lup_g', 'lup_r', 'lup_i', 'lup_z', 
-                  'color_g', 'color_i', 'color_z']
+    feat_names = list(d['features'])
+    # Need to do a bit of surgery due to missing comma in the
+    # notebook that generated this file - remove when fixed
+    feat_names = feat_names[0:26] + \
+                 [feat_names[26][0:9], feat_names[26][9:]] + \
+                 feat_names[27:]
 
     # Features to use
-    self.features = ['lup_r', 'color_g', 'color_i', 'color_z']
+    #self.features = ['lup_r', 'color_g', 'color_i', 'color_z']
+    #self.features = ['lup_r', 'g_minus_r', 'i_minus_r', 'z_minus_r']
+    #self.features = ['lup_r', 'color_g_minus_r',
+    #                 'color_i_minus_r', 'color_z_minus_r']
+    self.features = ['color_g_minus_r', 'lup_r', 
+                     'color_i_minus_r', 'color_z_minus_r']
+    print self.features
     feat_inds = [feat_names.index(f) for f in self.features]
     self.data = data[:,feat_inds]
     # Trrrrranspose for DEMUD (feat x items)
     self.data = self.data.T
-    print self.data.shape
 
     # Scale some features as needed
     for f in self.features:
