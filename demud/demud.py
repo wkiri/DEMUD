@@ -2286,6 +2286,7 @@ def  main():
     pylab.savefig(os.path.join('results',
                                '%s-n=%d-segmentation.pdf' % 
                                (ds.name, len(sels))))
+    pylab.close()
 
     for l in ds.labels:
       img = ds.fullimages[l.split('_')[0]]
