@@ -373,6 +373,7 @@ class DANSpectra(FloatDataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+    pylab.close()
 
 
   def plot_pcs(self, m, U, mu, k, S):
@@ -428,6 +429,7 @@ class DANSpectra(FloatDataset):
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote SVD to %s' % figfile
+    pylab.close()
 
 
 
