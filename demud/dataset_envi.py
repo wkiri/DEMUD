@@ -155,8 +155,9 @@ class ENVIData(Dataset):
       self.xvals = self.xvals[bandsuse]
 
       # Replace assumed sentinel value of -1.70141143e+38 with NaN
-      bogus = np.where(self.data < -1)
-      self.data[bogus] = np.nan
+      if 'ci.qub' in self.filename:
+        bogus = np.where(self.data < -1)
+        self.data[bogus] = np.nan
       
       # Filter shot noise
       if shotnoisefilt >= 3:
