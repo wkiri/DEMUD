@@ -36,7 +36,7 @@ from dataset_des import DESData
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
 from dataset_envi import ENVIData
-#from dataset_envi import SegENVIData
+from dataset_envi import SegENVIData
 #from dataset_irs  import IRSData
 #from dataset_kepler import KeplerData
 #from dataset_mastcam import MastcamData
@@ -687,6 +687,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   # Add experiment information to dataset name
   # TODO: store this information in a text file within the directory instead,
   # and find another way to usefully create distinct directory names (maybe nested)
+  origname = ds.name
   ds.name += '-k=' + str(k)
   ds.name += '-dim=' + str(ds.data.shape[0])
   ds.name += '-' + svdmethod
@@ -718,7 +719,12 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     os.mkdir(outdir)
   log.logfilename = os.path.join(outdir, 'demud.log')
   log.logfile     = open(log.logfilename, 'w')
-  
+  # Save RGB visualization, if appropriate
+  if (isinstance(ds, SegENVIData) or
+      isinstance(ds, ENVIData)):
+    ds.write_RGB(os.path.join(outdir,
+                              '%s-rgb-viz.png' % ds.name.split('-')[1]))
+
   ###############################################
   # Print dataset info
   printt("Dataset: " + ds.name)
@@ -2142,7 +2148,6 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   elif data_choice == 'aviris':
     #ds = ENVIData(avirisrawfile)
     ds = SegENVIData(data_files[1], data_files[2])
-    ds.write_RGB(data_files[0] + 'f970619t01p02_r02_sc04.png')    
   ## SPITZER IRS DATA SET
   elif data_choice == 'irs':
     ds = IRSData(data_files[0], data_files[1], data_files[2], data_files[3])
@@ -2167,8 +2172,6 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = ENVIData(data_files[0], 
                   shotnoisefilt = log.opts['shotfilt'],
                   fwfile        = log.opts['fw'])
-    ds.write_RGB(os.path.join(os.path.dirname(data_files[0]),
-                              'envi-rgb.png'))
   else:
     ## should never get here
     printt("Invalid data set choice.")
