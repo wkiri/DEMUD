@@ -156,8 +156,9 @@ class ENVIData(Dataset):
 
       # Replace assumed sentinel value of -1.70141143e+38 with NaN
       if 'ci.qub' in self.filename:
-        bogus = np.where(self.data < -1)
-        self.data[bogus] = np.nan
+        nonnan = np.where(~np.isnan(self.data))
+        bogus = np.where(self.data[nonnan] < 0.0)
+        self.data[nonnan][bogus] = np.nan
       
       # Filter shot noise
       if shotnoisefilt >= 3:
