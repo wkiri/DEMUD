@@ -736,6 +736,7 @@ class LIBSData(Dataset):
     figfile = '%s/%s-sel-%d.pdf' % (outdir, self.name, m)
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+    pylab.close()
 
     # I don't think this works -- hasn't been tested?
     '''

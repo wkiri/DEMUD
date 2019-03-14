@@ -103,7 +103,9 @@ class DESData(Dataset):
 
     # Labels
     self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
-                   zip(data[:,0], data[:,1], data[:,2])]
+                   zip(data[:,feat_names.index('coadd_object_id')], 
+                       data[:,feat_names.index('ra_x')],   # gold
+                       data[:,feat_names.index('dec_x')])] # gold
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.features = np.array(self.features)
     
@@ -332,6 +334,7 @@ class DESData(Dataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+    pylab.close()
 
 
   # Write a list of the selections in CSV format

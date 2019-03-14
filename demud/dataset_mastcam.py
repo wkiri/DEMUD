@@ -967,6 +967,7 @@ class MastcamData(Dataset):
       pylab.imshow(fftimage, cmap='gray', interpolation='nearest')
       pylab.colorbar()
       pylab.savefig(os.path.join('mastcam-fft', '/%s.png' % name))
+      pylab.close()
       
       featurevector.extend(fftvector) # 144-item vector, pdf
     
