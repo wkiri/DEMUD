@@ -102,7 +102,6 @@ class ENVIData(Dataset):
       for b in range(wavelengths):
         self.data[b,:] = raw_data[:,:,b].reshape(-1)
 
-
       self.xlabel = 'Wavelength (nm)'
       self.xvals  = np.arange(800,5000,10)
       self.ylabel = 'DN'
@@ -127,8 +126,8 @@ class ENVIData(Dataset):
       for b in range(wavelengths):
         self.data[b,:] = nims.data[:,:,b].reshape(-1)
 
-      self.xlabel = 'Wavelength (nm)'
-      self.xvals  = nims.band_wavelengths * 1000
+      self.xlabel = 'Wavelength ($\mu$m)'
+      self.xvals  = nims.band_wavelengths
       self.ylabel = 'Radiance' if 'cr' in self.filename else 'Reflectance'
 
       # Ensure bands are in order
@@ -148,17 +147,16 @@ class ENVIData(Dataset):
 
       # Restrict wavelength range as appropriate
       if 'cr.qub' in self.filename:
-        bandsuse = self.xvals >= 4000 # at least 4 um
+        bandsuse = self.xvals >= 4.000 # at least 4 um
       else: # assume reflectance
-        bandsuse = self.xvals <= 4000 # below 4 um
+        bandsuse = self.xvals <= 4.000 # below 4 um
       self.data  = self.data[bandsuse,:]
       self.xvals = self.xvals[bandsuse]
 
       # Replace assumed sentinel value of -1.70141143e+38 with NaN
       if 'ci.qub' in self.filename:
-        nonnan = np.where(~np.isnan(self.data))
-        bogus = np.where(self.data[nonnan] < 0.0)
-        self.data[nonnan][bogus] = np.nan
+        bogus = np.where(self.data < -1e37)
+        self.data[bogus] = np.nan
       
       # Filter shot noise
       if shotnoisefilt >= 3:
@@ -436,19 +434,19 @@ class ENVIData(Dataset):
     #b_band = np.argmin([abs(w-468) for w in waves])
     # We're pruning out the first 10 bands due to noise, so use the next one for the blue band
     b_band = np.argmin([abs(w-490) for w in waves])
-
+      
     if '.mat' in self.filename:
       # diff bands for MISE
       r_band = 290 # 3700 nm
       g_band = 145 # 2250 nm
       b_band = 40  # 1200 nm
-    elif '.qub' in self.filename:
+    elif '.qub' in self.filename: 
       # diff bands for NIMS (per Shirley et al., 2010)
-      r_band = np.argmin([abs(w-1500) for w in waves]) # brighter than water ice
-      g_band = np.argmin([abs(w-1300) for w in waves]) # water ice absorption
-      b_band = np.argmin([abs(w-730) for w in waves])
+      r_band = np.argmin([abs(w-1.500) for w in waves]) # brighter than water ice
+      g_band = np.argmin([abs(w-1.300) for w in waves]) # water ice absorption
+      b_band = np.argmin([abs(w-0.730) for w in waves])
 
-    print 'Using bands: %d red (%d nm), %d green (%d), %d blue (%d), zero-indexed.' % \
+    print 'Using bands: %d red (%f), %d green (%f), %d blue (%f), zero-indexed.' % \
         (r_band, waves[r_band],
          g_band, waves[g_band],
          b_band, waves[b_band])
@@ -517,15 +515,39 @@ class ENVIData(Dataset):
     # Set up the subplots
     pylab.figure()
     #pylab.subplots_adjust(wspace=0.1, left=0)
-    pylab.subplots_adjust(wspace=0.05)
+    #pylab.subplots_adjust(wspace=0.05) # Argadnel - 14e006
+    pylab.subplots_adjust(wspace=0.05, hspace=0.45) # Pwyll - 12e001
 
     # Plot #1: expected vs. observed feature vectors
     # xvals, x, and r need to be column vectors
     pylab.subplot(2,2,1)
-    # semilog if full range of feats; else plot
-    pylab.plot(self.xvals[goodfeat], r[goodfeat], 'r-', label='Expected')
-    pylab.plot(self.xvals[goodfeat], x[goodfeat], 'b-', label='Observations')
-    pylab.ylim([0.0, max(1.0, np.nanmax(x))])
+    # plot lines where data is continuous in terms of xvals
+    # NIMS wavelengths are not evenly spaced, so it is nontrivial
+    # to figure out where real data gaps lie.
+    # For gaps > 0.015 um, insert pseudo data points with nans 
+    # to break the plot lines.
+    xvals_full = [self.xvals[goodfeat[0]]]
+    for v in self.xvals[goodfeat[1:]]:
+      if (v-xvals_full[-1] > 0.015):
+        xvals_full += [xvals_full[-1] + 0.015]
+      xvals_full += [v]
+    rused = dict(zip(self.xvals[goodfeat], r[goodfeat]))
+    xused = dict(zip(self.xvals[goodfeat], x[goodfeat]))
+    rcopy = np.ones_like(xvals_full) * np.nan
+    for (i,v) in enumerate(xvals_full):
+      if v in rused:
+        rcopy[i] = rused[v]
+    xcopy = np.ones_like(xvals_full) * np.nan
+    for (i,v) in enumerate(xvals_full):
+      if v in xused:
+        xcopy[i] = xused[v]
+    #import pdb; pdb.set_trace()
+    pylab.plot(xvals_full, rcopy, 'r-', label='Expected',
+               markersize=3)
+    pylab.plot(xvals_full, xcopy, 'b-', label='Observations',
+               markersize=3)
+    pylab.ylim([0.0, max(1.0, np.nanmax(xcopy))])
+    pylab.locator_params(axis='x', nbins=10)
 
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
@@ -538,7 +560,6 @@ class ENVIData(Dataset):
     mins = max(0, s-winwidth/2)
     maxl = min(self.lines,   l+winwidth/2)
     maxs = min(self.samples, s+winwidth/2)
-    #rgb_data = self.get_RGB()
     pylab.imshow(self.rgb_data[minl:maxl, mins:maxs],
                  interpolation='none') #, alpha=0.85)
     pylab.gca().add_patch(Rectangle((min(winwidth/2,s)-1,
@@ -625,7 +646,7 @@ class ENVIData(Dataset):
       os.mkdir(outdir)
 
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
-    pylab.savefig(figfile)
+    pylab.savefig(figfile, bbox_inches='tight')
     print 'Wrote plot to %s' % figfile
     pylab.close()
 
