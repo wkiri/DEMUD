@@ -42,7 +42,7 @@ from dataset_envi import SegENVIData
 #from dataset_mastcam import MastcamData
 #from dataset_tc import TCData
 #from dataset_navcam import NavcamData
-#from dataset_images import ImageData
+from dataset_images import ImageData
 #from exoplanet_lookup import ExoplanetLookup
 #import kepler_lookup
 import log
@@ -1055,7 +1055,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
                                        svdmethod=svdmethod,
                                        missingmethod=missingmethod)
     else:
-      printt("Skipped updating model U because data was interesting.")
+      printt("Skipped updating model U because data was interesting or static model was specified.")
 
     ###############################################
     # Remove this item from X and other variables
