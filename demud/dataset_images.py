@@ -285,6 +285,7 @@ class ImageData(Dataset):
     for idx,f in enumerate(files):
       # Unix-style wildcards. 
       if (fnmatch.fnmatch(f, '*.jpg') or
+          fnmatch.fnmatch(f, '*.JPG') or
           fnmatch.fnmatch(f, '*.png')):
         # Read in the image
         filename = dirname + '/' + f
