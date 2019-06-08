@@ -1369,6 +1369,7 @@ def  clean():
                    "----- DAN spectra data set: floatdatafile\n"
                    " --dan\n"
                    "floatdatafile = \n\n"
+                   "floatinitdatafile = \n\n"
                    "----- GBT filterbank data set: gbtdirname, catalogfile\n"
                    " --gbtfil\n"
                    "gbtdirname  = \n\n"
@@ -1804,7 +1805,8 @@ def  parse_config(config, data_choice):
   ucidatafile     = parse_config_term(config, 'ucidatafile')
 
   # Floating point data (or Pancam, APF, GBT, CNN, or DAN)
-  floatdatafile   = parse_config_term(config, 'floatdatafile')
+  floatdatafile     = parse_config_term(config, 'floatdatafile')
+  floatinitdatafile = parse_config_term(config, 'floatinitdatafile')
 
   # GBT filterbank
   gbtdirname      = parse_config_term(config, 'gbtdirname')
@@ -1872,7 +1874,7 @@ def  parse_config(config, data_choice):
       data_choice == 'ecoli'):
     return ([ucidatafile],'')
   elif data_choice in ['pancam', 'testdata', 'apf', 'dan', 'gbt', 'cnn']:
-    return ([floatdatafile],'')
+    return ([floatdatafile, floatinitdatafile],'')
   elif data_choice == 'gbtfil':
     return ([gbtdirname, catalogfile],'')
   elif data_choice == 'decals':
@@ -2060,7 +2062,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = APFSpectra(data_files[0])
   ## CNN FEATURE DATA SET
   elif data_choice == 'cnn':
-    ds = CNNFeat(data_files[0])
+    ds = CNNFeat(data_files[0], data_files[1])
   ## DAN SPECTRA DATA SET
   elif data_choice == 'dan':
     ds = DANSpectra(data_files[0])
@@ -2078,7 +2080,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = DESData(data_files[0])
   ## TEST DATA SET
   elif data_choice == 'testdata':
-    ds = Floats(data_files[0])
+    ds = Floats(data_files[0], data_files[1])
   ## CHEMCAM DATA SET
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     ds = LIBSData(data_files[0], data_files[1],

@@ -20,12 +20,14 @@
 import os, sys, re
 import csv, numpy, pylab, math
 from dataset import Dataset
+from log import printt
+
 
 class FloatDataset(Dataset):
   # Supersubclass for data sets
 
-  def __init__(self, filename=None, name='Floatdata'):
-    """Dataset(filename="", name="") -> Dataset
+  def __init__(self, filename=None, name='Floatdata', initfilename=None):
+    """Dataset(filename="", name="", initfilename="") -> Dataset
     
     Creates a new Dataset based on the data in filename
     and with the name given.
@@ -37,14 +39,22 @@ class FloatDataset(Dataset):
     but needs to be instantiated with one of its subclasses.
     """
 
-    Dataset.__init__(self, filename, name, '')
+    Dataset.__init__(self, filename, name, initfilename)
 
 
-  def  readin(self, nskip):
-    """readin()
+  @classmethod
+  def  read_csv(cls, filename, nskip):
+    """read_csv(filename, nskip)
+
+    Read in the contents of the (CSV formatted) file
+    and return values to can populate fields of a FloatDataset object.
+    nskip specifies how many columns to skip to get to real data.
     """
-    
-    with open(self.filename, 'r') as csvfile:
+
+    data   = []
+    labels = []
+    xvals  = []
+    with open(filename, 'r') as csvfile:
       lines = csvfile.readlines()
 
       # If there's a header (begins with #), use it to
@@ -52,7 +62,7 @@ class FloatDataset(Dataset):
       if lines[0][0] == '#':
         print 'Populating xvals from data file header.'
         header = lines[0][1:].strip()
-        self.xvals = numpy.array(map(float,header.split(',')))
+        xvals = numpy.array(map(float,header.split(',')))
 
       for line in lines:
         # Skip over empty or commented lines
@@ -60,20 +70,37 @@ class FloatDataset(Dataset):
           continue
         attributes = re.split(',', line.strip())
 
-        self.data += [[float(x) for x in attributes[nskip:]]]
+        data += [[float(x) for x in attributes[nskip:]]]
         if nskip > 0: # Use the first column as a label
-          self.labels.append(attributes[0])
+          labels.append(attributes[0])
         else:  # fake labels
-          self.labels.append('None')
+          labels.append('None')
 
-    self.data = numpy.array(self.data)
+    data = numpy.array(data)
+
+
+    return (xvals, data, labels)
+
+
+  def  readin(self, nskip):
+    """readin()
+    """
+    
+    (self.xvals, self.data, self.labels) = FloatDataset.read_csv(self.filename,
+                                                                 nskip)
 
     self.data = self.data.T  # features x samples
 
     # If there was no header with feature names, just create an empty xvals
     if self.xvals == []:
       self.xvals = numpy.arange(self.data.shape[0]).reshape(-1,1)
-    
+
+    # Read in the init data file, if present
+    if self.initfilename != '':
+      printt('Reading initialization data set from %s' % self.initfilename)
+      (_, self.initdata, _) = FloatDataset.read_csv(self.initfilename, nskip)
+      self.initdata = self.initdata.T  # features x samples
+
 
   def  plot_item_triangles(self, m, ind, x, r, k, label, U,
                            rerr, feature_weights, band_ind):
