@@ -512,6 +512,7 @@ class MISRDataTime(MISRData):
     if not os.path.exists(outdir):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, '%s-sel-%d-k-%d.pdf' % (self.name, m, k))
-    plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
+    pylab.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
     #print 'Wrote plot to %s' % figfile
+    pylab.close()
     

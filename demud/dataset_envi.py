@@ -21,9 +21,11 @@ from PIL import Image
 import numpy as np
 import pylab, math, struct, pickle
 import matplotlib
+import h5py
 from matplotlib.patches import Rectangle
 from dataset import *
 from dataset_libs import LIBSData
+from nims_data import NimsQube
 from log import printt
 
 ################### ENVI ##############
@@ -51,7 +53,9 @@ class ENVIData(Dataset):
                        os.path.splitext(os.path.basename(filename))[0], '')
 
     # Specified filename must end in .img
-    if not filename.lower().endswith('.img'):
+    if not (filename.lower().endswith('.img') or
+            filename.lower().endswith('.mat') or # hack to support MISE APL data
+            filename.lower().endswith('.qub')): # hack to support NIMS data
       raise ValueError('Specify the ENVI filename, ending with .img (or .IMG).')
 
     # Construct the filename.
@@ -64,11 +68,13 @@ class ENVIData(Dataset):
     if fwfile != '':
       fnsuffix += '-fw-%s' % os.path.basename(fwfile)
 
+    '''
     # If neither option was specified, use the .img file as-is (no pre-processing).
     # Otherwise, switch to a .pkl.
     if fnsuffix != '':
       # Pickled filename
       self.filename = self.filename[:-4] + fnsuffix + '.pkl'
+    '''
 
     # If filename is a pickled file (ends in .pkl) and exists,
     # use it directly.
@@ -86,6 +92,78 @@ class ENVIData(Dataset):
         pickle.dump((self.lines, self.samples, self.data, self.rgb_data,
                      self.xlabel, self.ylabel, self.xvals, self.labels), outf)
         outf.close()
+    elif self.filename.endswith('.mat'):  # APL MISE data cube
+      cube = h5py.File(self.filename, 'r').get('cube')
+      cube = np.array(cube)
+      # Cube is wavelengths x height x width
+      raw_data = cube.T
+      (self.lines, self.samples, wavelengths) = raw_data.shape
+      self.data = np.zeros((wavelengths, self.lines * self.samples), 'uint16')
+      for b in range(wavelengths):
+        self.data[b,:] = raw_data[:,:,b].reshape(-1)
+
+      self.xlabel = 'Wavelength (nm)'
+      self.xvals  = np.arange(800,5000,10)
+      self.ylabel = 'DN'
+
+      # Let labels be x,y coordinates
+      # (but store as x_y so CSV doesn't get confused)
+      self.labels = []
+      for l in range(self.lines):
+        for s in range(self.samples):
+          self.labels += ['%d_%d' % (l,s)]
+
+      # Store the RGB data for later use
+      self.rgb_data = self.get_RGB()
+
+    elif self.filename.endswith('.qub'):  # NIMS data
+      nims = NimsQube(self.filename)
+
+      # nims.data is line x sample x band
+      (self.lines, self.samples, wavelengths) = nims.data.shape
+
+      self.data = np.zeros((wavelengths, self.lines * self.samples))
+      for b in range(wavelengths):
+        self.data[b,:] = nims.data[:,:,b].reshape(-1)
+
+      self.xlabel = 'Wavelength ($\mu$m)'
+      self.xvals  = nims.band_wavelengths
+      self.ylabel = 'Radiance' if 'cr' in self.filename else 'Reflectance'
+
+      # Ensure bands are in order
+      ord = np.argsort(self.xvals)
+      self.data  = self.data[ord]
+      self.xvals = self.xvals[ord]
+
+      # Let labels be x,y coordinates 
+      # (but store as x_y so CSV doesn't get confused)
+      self.labels = []
+      for l in range(self.lines):
+        for s in range(self.samples):
+          self.labels += ['%d_%d' % (l,s)]
+
+      # Store the RGB data for later use
+      self.rgb_data = self.get_RGB()
+
+      # Restrict wavelength range as appropriate
+      if 'cr.qub' in self.filename:
+        bandsuse = self.xvals >= 4.000 # at least 4 um
+      else: # assume reflectance
+        bandsuse = self.xvals <= 4.000 # below 4 um
+      self.data  = self.data[bandsuse,:]
+      self.xvals = self.xvals[bandsuse]
+
+      # Replace assumed sentinel value of -1.70141143e+38 with NaN
+      if 'ci.qub' in self.filename:
+        bogus = np.where(self.data < -1e37)
+        self.data[bogus] = np.nan
+      
+      # Filter shot noise
+      if shotnoisefilt >= 3:
+        self.data = LIBSData.medfilter(self.data, shotnoisefilt)
+
+      print self.xvals
+
     else:
       print 'Reading from ENVI file %s, no pre-processing.' % filename
       self.read_from_scratch(filename)
@@ -228,10 +306,11 @@ class ENVIData(Dataset):
     self.ylabel = 'Reflectance'
 
     # Let labels be x,y coordinates
+    # (but store as x_y so CSV doesn't get confused)
     self.labels = []
     for l in range(info['lines']):
       for s in range(info['samples']):
-        self.labels += ['%d,%d' % (l,s)]
+        self.labels += ['%d_%d' % (l,s)]
 
     # Data pre-processing (UCIS specific)
     #if 'UCIS' in envi_file or 'ucis' in envi_file:
@@ -353,9 +432,21 @@ class ENVIData(Dataset):
     r_band = np.argmin([abs(w-636) for w in waves])
     g_band = np.argmin([abs(w-557) for w in waves])
     #b_band = np.argmin([abs(w-468) for w in waves])
-    # We're prunign out the first 10 bands due to noise, so use the next one for the blue band
+    # We're pruning out the first 10 bands due to noise, so use the next one for the blue band
     b_band = np.argmin([abs(w-490) for w in waves])
-    print 'Using bands: %d red (%d nm), %d green (%d), %d blue (%d), zero-indexed.' % \
+      
+    if '.mat' in self.filename:
+      # diff bands for MISE
+      r_band = 290 # 3700 nm
+      g_band = 145 # 2250 nm
+      b_band = 40  # 1200 nm
+    elif '.qub' in self.filename: 
+      # diff bands for NIMS (per Shirley et al., 2010)
+      r_band = np.argmin([abs(w-1.500) for w in waves]) # brighter than water ice
+      g_band = np.argmin([abs(w-1.300) for w in waves]) # water ice absorption
+      b_band = np.argmin([abs(w-0.730) for w in waves])
+
+    print 'Using bands: %d red (%f), %d green (%f), %d blue (%f), zero-indexed.' % \
         (r_band, waves[r_band],
          g_band, waves[g_band],
          b_band, waves[b_band])
@@ -364,9 +455,9 @@ class ENVIData(Dataset):
     rgb_data = np.zeros((self.lines, self.samples, 3),
                            'uint8')
     # Normalize by max for each band
-    r_maxval = data[:,:,r_band].max()
-    g_maxval = data[:,:,g_band].max()
-    b_maxval = data[:,:,b_band].max()
+    r_maxval = np.nanmax(data[:,:,r_band])
+    g_maxval = np.nanmax(data[:,:,g_band])
+    b_maxval = np.nanmax(data[:,:,b_band])
 
     # Normalize per band
     rgb_data[:,:,0] = data[:,:,r_band] / float(r_maxval) * 255
@@ -410,30 +501,57 @@ class ENVIData(Dataset):
       printt("Error: No data in x and/or r.")
       return
 
-    (l,s) = [int(v) for v in label.split(',')]
+    (l,s) = [int(v) for v in label.split('_')]
 
     # Select the features to plot
     if feature_weights != []:
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      goodfeat = range(len(self.xvals))
+      #goodfeat = range(len(self.xvals))
+      # Avoid NaNs
+      goodfeat = np.where(~np.isnan(x) & ~np.isnan(r))[0]
 
     # Set up the subplots
     pylab.figure()
     #pylab.subplots_adjust(wspace=0.1, left=0)
-    pylab.subplots_adjust(wspace=0.05)
+    #pylab.subplots_adjust(wspace=0.05) # Argadnel - 14e006
+    pylab.subplots_adjust(wspace=0.05, hspace=0.45) # Pwyll - 12e001
 
     # Plot #1: expected vs. observed feature vectors
     # xvals, x, and r need to be column vectors
     pylab.subplot(2,2,1)
-    pylab.plot(self.xvals[goodfeat], r[goodfeat], 'r-', label='Expected')
-    pylab.plot(self.xvals[goodfeat], x[goodfeat], 'b.-', label='Observations')
-    pylab.ylim([0.0, max(1.0, x.max())])
+    # plot lines where data is continuous in terms of xvals
+    # NIMS wavelengths are not evenly spaced, so it is nontrivial
+    # to figure out where real data gaps lie.
+    # For gaps > 0.015 um, insert pseudo data points with nans 
+    # to break the plot lines.
+    xvals_full = [self.xvals[goodfeat[0]]]
+    for v in self.xvals[goodfeat[1:]]:
+      if (v-xvals_full[-1] > 0.015):
+        xvals_full += [xvals_full[-1] + 0.015]
+      xvals_full += [v]
+    rused = dict(zip(self.xvals[goodfeat], r[goodfeat]))
+    xused = dict(zip(self.xvals[goodfeat], x[goodfeat]))
+    rcopy = np.ones_like(xvals_full) * np.nan
+    for (i,v) in enumerate(xvals_full):
+      if v in rused:
+        rcopy[i] = rused[v]
+    xcopy = np.ones_like(xvals_full) * np.nan
+    for (i,v) in enumerate(xvals_full):
+      if v in xused:
+        xcopy[i] = xused[v]
+    #import pdb; pdb.set_trace()
+    pylab.plot(xvals_full, rcopy, 'r-', label='Expected',
+               markersize=3)
+    pylab.plot(xvals_full, xcopy, 'b-', label='Observations',
+               markersize=3)
+    pylab.ylim([0.0, max(1.0, np.nanmax(xcopy))])
+    pylab.locator_params(axis='x', nbins=10)
 
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
-    pylab.legend(fontsize=10, loc=2)
+    pylab.legend(fontsize=10)#, loc=2)
 
     # Plot #2: zoom of selected pixel, 20x20 context
     pylab.subplot(2,2,2)
@@ -442,8 +560,7 @@ class ENVIData(Dataset):
     mins = max(0, s-winwidth/2)
     maxl = min(self.lines,   l+winwidth/2)
     maxs = min(self.samples, s+winwidth/2)
-    rgb_data = self.get_RGB()
-    pylab.imshow(rgb_data[minl:maxl, mins:maxs],
+    pylab.imshow(self.rgb_data[minl:maxl, mins:maxs],
                  interpolation='none') #, alpha=0.85)
     pylab.gca().add_patch(Rectangle((min(winwidth/2,s)-1,
                                      min(winwidth/2,l)-1),
@@ -457,9 +574,10 @@ class ENVIData(Dataset):
     #a = pylab.axes([.15, .75, .3, .15])
     pylab.subplot(2,2,3)
     # Use alpha to lighten the RGB data
-    plt = pylab.imshow(rgb_data, interpolation='none', 
+    plt = pylab.imshow(self.rgb_data, interpolation='none', 
                        alpha=0.85)
-    pylab.plot(s, l, 'x', markeredgewidth=2, scalex=False, scaley=False)
+    pylab.plot(s, l, 'x', markeredgewidth=2, color='red', 
+               scalex=False, scaley=False)
     #pylab.setp(a, xticks=[], yticks=[])
     pylab.axis('off')
     pylab.title('Selection')
@@ -486,8 +604,10 @@ class ENVIData(Dataset):
         # Use Euclidean distance.
         #abund[l,s] = math.sqrt(pow(np.sum(x - d), 2)) / float(nbands)
         # Use spectral angle distance
-        num   = np.dot(x, d)
-        denom = np.linalg.norm(x) * np.linalg.norm(d)
+        goodfeat = np.where(~np.isnan(x) & ~np.isnan(d))[0]
+        num   = np.dot(x[goodfeat].astype(float), d[goodfeat].astype(float))
+        denom = np.linalg.norm(x[goodfeat].astype(float)) * \
+            np.linalg.norm(d[goodfeat].astype(float))
         if num > denom: # ensure math.acos() doesn't freak out; clip to 1.0
           num = denom
         abund[l_ind,s_ind] = math.acos(num / denom)
@@ -498,16 +618,22 @@ class ENVIData(Dataset):
         # I used different values for the micro-UCIS cubes from Bethany
         # (see Evernote notes).
         # UCIS
-        if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.10:
+        #if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.10:
         # micro-UCIS
         #if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.13:
+        # MISE
+        #if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.10:
+        # NIMS
+        #if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.05:
+        if self.pr_map[l_ind,s_ind] == 0 and abund[l_ind,s_ind] <= 0.10:
           self.pr_map[l_ind,s_ind] = m+1
 
 
-    printt('Abundance: ', abund.min(), abund.max())
+    printt('Abundance: ', np.nanmin(abund), np.nanmax(abund))
     pylab.subplot(2,2,4)
     # Use colormap jet_r so smallest value is red and largest is blue
-    pylab.imshow(abund, interpolation='none', cmap='jet_r', vmin=0, vmax=0.15)
+    #pylab.imshow(abund, interpolation='none', cmap='jet_r', vmin=0, vmax=0.15)
+    pylab.imshow(abund, interpolation='none', cmap='jet_r', vmin=0, vmax=0.2)
     pylab.axis('off')
     pylab.title('Abundance')
 
@@ -520,7 +646,7 @@ class ENVIData(Dataset):
       os.mkdir(outdir)
 
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
-    pylab.savefig(figfile)
+    pylab.savefig(figfile, bbox_inches='tight')
     print 'Wrote plot to %s' % figfile
     pylab.close()
 
@@ -544,10 +670,10 @@ class ENVIData(Dataset):
     pr_map_plot[pr_map_plot == 0] = m+2
     #pylab.imshow(pr_map_plot, interpolation='none', cmap=cmap, vmin=1, vmax=m+1)
     pylab.imshow(pr_map_plot, interpolation='none', cmap=cmap)
-    prmapfig = os.path.join(outdir, 'prmap-k-%d.pdf' % k)
+    prmapfig = os.path.join(outdir, 'prmap-k-%d.png' % k)
     pylab.savefig(prmapfig)
     if (m % 10) == 0:
-      prmapfig = os.path.join(outdir, 'prmap-k-%d-m-%d.pdf' % (k, m))
+      prmapfig = os.path.join(outdir, 'prmap-k-%d-m-%d.png' % (k, m))
       pylab.savefig(prmapfig)
     print 'Wrote priority map figure to %s (max_c %d)' % (prmapfig, max_c)
     pylab.close()

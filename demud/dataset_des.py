@@ -20,8 +20,6 @@
 
 import os, sys, re
 import numpy as np
-#import pyfits, 
-import fitsio
 import pylab
 from dataset import Dataset
 
@@ -33,40 +31,150 @@ class DESData(Dataset):
     Read in DES catalog data.
     """
 
-    # Subset to a single photo-z bin
-    photoz_bin = 0
-
-    #Dataset.__init__(self, desfilename, "DESData", '')
-    Dataset.__init__(self, desfilename, "DESData_colordiff_bin" + 
-                     str(photoz_bin), '')
-
+    Dataset.__init__(self, desfilename, "DESData", '')
+    
     self.readin()
-
-    # Subset to a single photo-z bin
-#    keep = np.where(self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
-    keep = (self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
-              photoz_bin)
-    self.data   = self.data[:,keep]
-    # Still annoys me that you can't index a list with a list
-    self.labels = [self.labels[k] for k in np.where(keep)[0]]
-
-    # Remove the PHOTOZ_BIN feature
-    features_keep = (self.features != 'PHOTOZ_BIN')
-    self.data     = self.data[features_keep,:]
-    self.features = self.features[features_keep]
-    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
-    print self.data.shape
-    print self.features
 
 
   def  readin(self):
     """readin()
 
-    Read in DES catalog data from FITS file.
+    Read in DES catalog data from FITS or .npy files.
     """
+    
+    if self.filename.endswith('.fits'):
+      # Assumes Science Verification data
+      self.read_SV_fits()
+    elif self.filename.endswith('.npz'): 
+      # Assumes DES Y3 Gold data
+      self.read_Y3_2_2_npz()
+    else: 
+      print('Unrecognized file type: ' + self.filename) 
+  
 
-    #datafile = pyfits.open(self.filename)
-    #data   = datafile[1].data[0:1000000] # start small
+  # Read (filtered) DES Y3 2.2 gold data set
+  def read_Y3_2_2_npz(self): 
+    
+    d = np.load(self.filename)
+    data = d['data']
+    # Testing
+    #data = data[:10,:]
+
+    feat_names = list(d['features'])
+
+    # Features to use
+    #self.features = ['lup_r', 'color_g_minus_r',
+    #                 'color_i_minus_r', 'color_z_minus_r']
+    self.features = ['color_g_minus_r', 'lup_r', 
+                     'color_i_minus_r', 'color_z_minus_r']
+    feat_inds = [feat_names.index(f) for f in self.features]
+    self.data = data[:,feat_inds]
+    # Trrrrranspose for DEMUD (feat x items)
+    self.data = self.data.T
+
+    # Scale some features as needed
+    for f in self.features:
+      if f == 'lup_r':
+        # Subtract the mean value
+        mean_lup_r = np.mean(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= mean_lup_r
+        print 'Subtracting mean (%.2f) from %s.' % (mean_lup_r, f)
+        newf = 'lup_r_minus_mean'
+        self.features[self.features.index(f)] = newf
+        f = newf
+      '''
+      if 'MAG' in f: # subtract the min
+        minval = np.min(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= minval
+        print 'Subtracting %f from %s.' % (minval, f)
+        newf = f + '-sub%.2f' % minval
+        self.features[self.features.index(f)] = newf
+        f = newf
+      '''
+      print '%s range: ' % f,
+      print self.data[self.features.index(f),:].min(),
+      print self.data[self.features.index(f),:].max()
+
+    # Also store errors for reporting in explanation plots
+    self.expl_features = ['color_err_g_minus_r', 'lup_err_r', 
+                          'color_err_i_minus_r', 'color_err_z_minus_r']
+    expl_feat_inds = [feat_names.index(f) for f in self.expl_features]
+    self.expl_data = data[:,expl_feat_inds]
+
+    # Labels
+    self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
+                   zip(data[:,feat_names.index('coadd_object_id')], 
+                       data[:,feat_names.index('ra_x')],   # gold
+                       data[:,feat_names.index('dec_x')])] # gold
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    self.features = np.array(self.features)
+    
+
+  # Read DES Y3 2.0 gold data set
+  def read_Y3_2_0_npy(self): 
+    
+    data = np.load(self.filename)
+    
+    # We want R, G-R, I-R, Z-R
+    self.data = data[3,:]
+    self.features = ['MAG_R']
+
+    # G-R
+    self.data = np.vstack([self.data, data[2,:] - data[3,:]])
+    self.features += ['G-R']
+
+    # I-R
+    self.data = np.vstack([self.data, data[4,:] - data[3,:]])
+    self.features += ['I-R']
+
+    # Z-R
+    self.data = np.vstack([self.data, data[5,:] - data[3,:]])
+    self.features += ['Z-R']
+    
+    # Filter out bogus MAG_R values
+    # TODO: remove this with new version of data file (already filtered)
+    keep = self.data[0,:] > -1
+    self.data = self.data[:,keep]
+    data = data[:,keep]
+    print('Removed MAG_R values <= -1.')
+
+    # Data is d x n
+    print self.data.shape
+    # Scale some features as needed
+    for f in self.features:
+      '''
+      if 'MAG' in f: # subtract the min
+        minval = np.min(self.data[self.features.index(f),:])
+        self.data[self.features.index(f),:] -= minval
+        print 'Subtracting %f from %s.' % (minval, f)
+        newf = f + '-sub%.2f' % minval
+        self.features[self.features.index(f)] = newf
+        f = newf
+      '''
+      print '%s range: ' % f,
+      print self.data[self.features.index(f),:].min(),
+      print self.data[self.features.index(f),:].max()
+
+    # TODO: add/readin id
+    self.labels = ['None_%.6f_%.6f' % (ra, dec) for (ra, dec) in 
+                   zip(data[0,:], data[1,:])]
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    self.features = np.array(self.features)
+
+
+  # Read Science Verification data set
+  def read_SV_fits(self):
+    import fitsio
+
+    subset_photoz_bin = False
+
+    if subset_photoz_bin:
+      # Subset to a single photo-z bin
+      photoz_bin = 0
+
+      Dataset.__init__(self, desfilename, "DESData_colordiff_bin" + 
+                       str(photoz_bin), '')
+
     data = fitsio.read(self.filename)
 
     # Mask out the bad objects
@@ -80,47 +188,12 @@ class DESData(Dataset):
     # Read in the desired columns.
 
     # from SVA_GOLD
-    self.features = ['MAG_AUTO_G',
-                     'MAG_AUTO_R',
-                     'MAG_AUTO_I',
-                     'MAG_AUTO_Z',
-                     'MAGERR_AUTO_G',
-                     'MAGERR_AUTO_R',
-                     'MAGERR_AUTO_I',
-                     'MAGERR_AUTO_Z',
-#                     'FLUX_RADIUS_G',  # values are negative?
-#                     'FLUX_RADIUS_R',
-#                     'FLUX_RADIUS_I',
-#                     'FLUX_RADIUS_Z',
-#                     'MODEST_CLASS',
-                     'SPREAD_MODEL_G',
-                     'SPREAD_MODEL_R',
-                     'SPREAD_MODEL_I',
-                     'SPREAD_MODEL_Z',
-                     'CLASS_STAR_G',
-                     'CLASS_STAR_R',
-                     'CLASS_STAR_I',
-                     'CLASS_STAR_Z']
-#                     'BADFLAG']
-
     # WLINFO filtered by Umaa to omit objects with
     # SVA1_FLAG != 0
     # NGMIX_FLAG != 0
     # PHOTOZ_BIN != -1
 
-    '''
-    self.features = ['MAG_AUTO_G',
-                     'MAG_AUTO_R',
-                     'MAG_AUTO_I',
-                     'MAG_AUTO_Z',
-                     'PHOTOZ_BIN',
-                     'MEAN_PHOTOZ']
-
-    #self.data = np.vstack([data.field(f) for f in self.features])
-    self.data = np.vstack([data[f] for f in self.features])
-    '''
-
-    # Ok, now we want R, G-R, I-Z
+    # We want R, G-R, R-I, I-Z
     self.data = data['MAG_AUTO_R']
     self.features = ['MAG_AUTO_R']
 
@@ -153,12 +226,6 @@ class DESData(Dataset):
     print self.data.shape
     # Scale some features as needed
     for f in self.features:
-      if 'CLASS_STAR' in f: # 0 to 1.0
-        self.data[self.features.index(f),:] *= 100
-      if 'SPREAD_MODEL' in f:  # -1.0 to 1.0
-        self.data[self.features.index(f),:] += 1.0
-        self.data[self.features.index(f),:] /= 2.0
-        self.data[self.features.index(f),:] *= 100.0
       if 'MAG_AUTO' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= minval
@@ -177,6 +244,22 @@ class DESData(Dataset):
 
     self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.features = np.array(self.features)
+
+    if subset_photoz_bin:
+      # Subset to a single photo-z bin
+      keep = (self.data[np.where(self.features == 'PHOTOZ_BIN')[0][0],:] ==  \
+              photoz_bin)
+      self.data   = self.data[:,keep]
+      # Still annoys me that you can't index a list with a list
+      self.labels = [self.labels[k] for k in np.where(keep)[0]]
+      
+    # Remove the MEAN_PHOTOZ and PHOTOZ_BIN features
+    print('Removing PHOTOZ features.')
+    features_keep = ((self.features != 'PHOTOZ_BIN') &
+                     (self.features != 'MEAN_PHOTOZ'))
+    self.data     = self.data[features_keep,:]
+    self.features = self.features[features_keep]
+    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
 
 
   def  plot_item(self, m, ind, x, r, k, label, U, rerr, feature_weights):
@@ -205,41 +288,42 @@ class DESData(Dataset):
     else:
       goodfeat = range(len(self.xvals))
 
-    # Make a dual bar graph of the original and reconstructed features
-    width = 0.35
-    offset = (1 - 2*width) / 2
-  
     fig = pylab.figure()
     ax = fig.add_subplot(1, 1, 1)
 
     x = np.array(x)
-    
     xvals = [self.xvals[z][0] for z in range(self.xvals.shape[0])]
     x = [x[z] for z in range(x.shape[0])]
-    
-    bars1 = ax.bar([xvals[i] + offset for i in goodfeat], 
-                   x, width, color='b', label='Observations')
-    bars2 = ax.bar([xvals[i] + width + offset for i in goodfeat], 
-                   r, width, color='r', label='Expected')
+
+    # Make a line plot
+    #pylab.plot([xvals[i] for i in goodfeat],
+    #           x, 'bo-', markersize=12, label='Observations')
+    #pylab.plot([xvals[i] for i in goodfeat], 
+    #           r, 'rx-', markersize=12, label='Expected')
+
+    # Make an errorbar plot to show measurement uncertainty
+    pylab.errorbar([xvals[i] for i in goodfeat],
+                   x, yerr=self.expl_data[ind,:],
+                   color='b', marker='o', linestyle='-', 
+                   ecolor='k',
+                   markersize=10, label='Observations')
+    pylab.plot([xvals[i] for i in goodfeat], 
+               r, 'rd-', markersize=10, label='Expected')
 
     # dashed line to show 0
-    pylab.plot([0, len(self.features)], [0, 0], '--')
-  
+    pylab.plot([0, len(self.features)], [0, 0], 'k--')
+
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
     pylab.title('DEMUD selection %d (%s),\n item %d, using K=%d' % \
                 (m, label, ind, k))
-    pylab.legend(fontsize=10)
-    
-    padding = 1.19
-    pylab.ylim([min(0, float(min(min(x), min(r))) * padding),
-                max(0, float(max(max(x), max(r))) * padding)])
+    pylab.legend(fontsize=12)
     
     if len(self.features) == 0:
-        pylab.xticks(pylab.arange(len(x)) + width + offset, range(len(x)))
+        pylab.xticks(pylab.arange(len(x)), range(len(x)), fontsize=12)
     else:
-        pylab.xticks(pylab.arange(len(x)) + width + offset, self.features,
-                     rotation=-30, ha='left')
+        pylab.xticks(pylab.arange(len(x)), self.features,
+                     rotation=-30, ha='left', fontsize=12)
     pylab.tight_layout()
     
     if not os.path.exists('results'):
@@ -250,6 +334,7 @@ class DESData(Dataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+    pylab.close()
 
 
   # Write a list of the selections in CSV format

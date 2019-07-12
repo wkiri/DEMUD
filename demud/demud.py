@@ -30,19 +30,19 @@ from dataset_uci_classes import GlassData, IrisData, EcoliData, AbaloneData, Iso
 from dataset_float import FloatDataset
 from dataset_float_classes import *
 #from dataset_decals import DECaLSData
-#from dataset_des import DESData
+from dataset_des import DESData
 #from dataset_gbtfil import GBTFilterbankData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
 from dataset_envi import ENVIData
-#from dataset_envi import SegENVIData
+from dataset_envi import SegENVIData
 #from dataset_irs  import IRSData
 #from dataset_kepler import KeplerData
 #from dataset_mastcam import MastcamData
 #from dataset_tc import TCData
 #from dataset_navcam import NavcamData
-#from dataset_images import ImageData
+from dataset_images import ImageData
 #from exoplanet_lookup import ExoplanetLookup
 #import kepler_lookup
 import log
@@ -148,7 +148,11 @@ def  score_items(X, U, mu,
     # 1b. Reconstruct by projecting back up and adding mean
     reproj = np.dot(U, proj) + mu
     # 1c. Compute the residual
+    #print 'X:', X.T
+    #print 'reproj:', reproj.T
     err    = X - reproj
+    #print 'err:', err.T
+    #raw_input()
     
   else:
     # Missing method must be 'ignore' (Brand 2002)
@@ -175,6 +179,9 @@ def  score_items(X, U, mu,
   else:
     scores = np.sum(np.array(np.power(err, 2)), axis=0)
 
+  #print 'scores:', scores
+  #print 'reproj:', reproj
+  #raw_input()
   return (scores, reproj)
   
 
@@ -236,6 +243,12 @@ def  select_next(X, U, mu,
   # Select and return index of item with max reconstruction error,
   # plus the updated scores and reproj
   m = scores.argmax()
+  #print 'mu:',mu
+  #print 'selected:', X[:,m]
+  #print 'selected-mu:', (X-mu)[:,m]
+  #print 'reproj:', reproj[:,m]
+  #print 'reproj-mu:', (reproj-mu)[:,m]
+  #raw_input()
 
   return m, scores, reproj
 
@@ -294,15 +307,16 @@ def  update_model(X, U, S, k, n, mu,
   if X == []:
     printt("Error: No data in X.")
     return None, None, None, -1, None
+  #print '%d items in X' % X.shape[1]
+  #print 'init U:', U
 
   # If there is no previous U, and we just got a single item in X,
-  # then create a U the same size, first value 1 (rest 0),
+  # set U to all 0's (degenerate SVD),
   # and return it with mu.
   if U == [] and X.shape[1] == 1:
     mu   = X
     # Do this no matter what.  Let mu get NaNs in it as needed.
     U    = np.zeros_like(mu)
-    U[0] = 1
     S    = np.array([0])
     n    = 1
     pcts = [1.0]
@@ -333,8 +347,14 @@ def  update_model(X, U, S, k, n, mu,
       X[z] = 0
 
     mu      = np.mean(X, axis=1).reshape(-1,1)
-    X       = X - mu
+    X     = X - mu
     U, S, V = linalg.svd(X, full_matrices=False)
+    printt('Just did full SVD on %d items.' % X.shape[1])
+    #print 'X:',X
+    #print 'U:',U
+    # Reset U to all 0's if we only have one item in X (degenerate SVD)
+    if X.shape[1] == 1:
+      U = np.zeros_like(U)
     
     # Keep only the first k components
     S_full = S
@@ -407,6 +427,7 @@ def  update_model(X, U, S, k, n, mu,
     
     # Perform SVD of R.  Then finally update U.
     U, S, V = linalg.svd(R, full_matrices=False)
+    printt('Just did increm-ross SVD on %d items.' % n)
 
     U = np.dot(Q, U)
     
@@ -498,6 +519,8 @@ def  update_model(X, U, S, k, n, mu,
       S = Sq
       # Updating V requires knowing old V,
       # but we don't need the new one either so it's okay to skip.
+
+      printt('Just did increm-brand SVD on %d items.' % n)
       
       ############# end ###########
       
@@ -534,6 +557,7 @@ def  update_model(X, U, S, k, n, mu,
       # V requires knowing old V,
       # but we don't need the new one either so it's okay.
     
+      printt('Just did regular increm SVD on %d items.' % n)
 
     # Keep only the first k components
     U = U[:,0:min([n,k])]
@@ -570,6 +594,8 @@ def  update_model(X, U, S, k, n, mu,
              (k, cumpercents[k-1] * 100))
     if log.opts['pause']: raw_input("Press enter to continue\n")
 
+  #print 'U:', U
+  #print 'mu:', mu
   return U, S, mu, n, indivpcts
 
 #______________________________demud_______________________________________
@@ -661,6 +687,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   # Add experiment information to dataset name
   # TODO: store this information in a text file within the directory instead,
   # and find another way to usefully create distinct directory names (maybe nested)
+  origname = ds.name
   ds.name += '-k=' + str(k)
   ds.name += '-dim=' + str(ds.data.shape[0])
   ds.name += '-' + svdmethod
@@ -692,7 +719,12 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     os.mkdir(outdir)
   log.logfilename = os.path.join(outdir, 'demud.log')
   log.logfile     = open(log.logfilename, 'w')
-  
+  # Save RGB visualization, if appropriate
+  if (isinstance(ds, SegENVIData) or
+      isinstance(ds, ENVIData)):
+    ds.write_RGB(os.path.join(outdir,
+                              '%s-rgb-viz.png' % ds.name.split('-')[1]))
+
   ###############################################
   # Print dataset info
   printt("Dataset: " + ds.name)
@@ -1023,7 +1055,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
                                        svdmethod=svdmethod,
                                        missingmethod=missingmethod)
     else:
-      printt("Skipped updating model U because data was interesting.")
+      printt("Skipped updating model U because data was interesting or static model was specified.")
 
     ###############################################
     # Remove this item from X and other variables
@@ -1337,6 +1369,7 @@ def  clean():
                    "----- DAN spectra data set: floatdatafile\n"
                    " --dan\n"
                    "floatdatafile = \n\n"
+                   "floatinitdatafile = \n\n"
                    "----- GBT filterbank data set: gbtdirname, catalogfile\n"
                    " --gbtfil\n"
                    "gbtdirname  = \n\n"
@@ -1347,7 +1380,7 @@ def  clean():
                    "----- DES FITS data set: desfilename\n"
                    " --des\n"
                    "desfilename  = \n\n"
-                   "---- ChemCam: libsdatafile libsinitdatafile\n"
+                   "---- ChemCam: libsdatafile, libsinitdatafile\n"
                    " -c --chemcam\n"
                    "libsdatafile = \n"
                    "libsinitdatafile = \n\n"
@@ -1772,7 +1805,8 @@ def  parse_config(config, data_choice):
   ucidatafile     = parse_config_term(config, 'ucidatafile')
 
   # Floating point data (or Pancam, APF, GBT, CNN, or DAN)
-  floatdatafile   = parse_config_term(config, 'floatdatafile')
+  floatdatafile     = parse_config_term(config, 'floatdatafile')
+  floatinitdatafile = parse_config_term(config, 'floatinitdatafile')
 
   # GBT filterbank
   gbtdirname      = parse_config_term(config, 'gbtdirname')
@@ -1840,7 +1874,7 @@ def  parse_config(config, data_choice):
       data_choice == 'ecoli'):
     return ([ucidatafile],'')
   elif data_choice in ['pancam', 'testdata', 'apf', 'dan', 'gbt', 'cnn']:
-    return ([floatdatafile],'')
+    return ([floatdatafile, floatinitdatafile],'')
   elif data_choice == 'gbtfil':
     return ([gbtdirname, catalogfile],'')
   elif data_choice == 'decals':
@@ -2028,7 +2062,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = APFSpectra(data_files[0])
   ## CNN FEATURE DATA SET
   elif data_choice == 'cnn':
-    ds = CNNFeat(data_files[0])
+    ds = CNNFeat(data_files[0], data_files[1])
   ## DAN SPECTRA DATA SET
   elif data_choice == 'dan':
     ds = DANSpectra(data_files[0])
@@ -2046,7 +2080,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = DESData(data_files[0])
   ## TEST DATA SET
   elif data_choice == 'testdata':
-    ds = Floats(data_files[0])
+    ds = Floats(data_files[0], data_files[1])
   ## CHEMCAM DATA SET
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     ds = LIBSData(data_files[0], data_files[1],
@@ -2116,7 +2150,6 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   elif data_choice == 'aviris':
     #ds = ENVIData(avirisrawfile)
     ds = SegENVIData(data_files[1], data_files[2])
-    ds.write_RGB(data_files[0] + 'f970619t01p02_r02_sc04.png')    
   ## SPITZER IRS DATA SET
   elif data_choice == 'irs':
     ds = IRSData(data_files[0], data_files[1], data_files[2], data_files[3])
@@ -2141,8 +2174,6 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds = ENVIData(data_files[0], 
                   shotnoisefilt = log.opts['shotfilt'],
                   fwfile        = log.opts['fw'])
-    ds.write_RGB(os.path.join(os.path.dirname(data_files[0]),
-                              'envi-rgb.png'))
   else:
     ## should never get here
     printt("Invalid data set choice.")
@@ -2260,6 +2291,7 @@ def  main():
     pylab.savefig(os.path.join('results',
                                '%s-n=%d-segmentation.pdf' % 
                                (ds.name, len(sels))))
+    pylab.close()
 
     for l in ds.labels:
       img = ds.fullimages[l.split('_')[0]]

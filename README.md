@@ -164,8 +164,19 @@ References
 
    This abstract reports on DEMUD results when applied to Mars data
    collected by ChemCam. 
+   
+3. "Interpretable Discovery in Large Image Data Sets."
+   Kiri L. Wagstaff and Jake Lee.
+   Proceedings of the Workshop on Human Interpretability in 
+   Machine Learning (WHI), p. 107-113, 2018.
+   [Paper website](http://jakehlee.github.io/interp-img-disc.html), PDF:
+   [http://wkiri.com/research/papers/wagstaff-interp-18.pdf](http://wkiri.com/research/papers/wagstaff-interp-18.pdf)
+   
+   This paper describes the extension of DEMUD to operate on image 
+   data using CNN-derived features to represent image content
+   and to provide explanations.
 
-3. DEMUD was created as part of the IMBUE project.  You can read more
+4. DEMUD was created as part of the IMBUE project.  You can read more
    about IMBUE and access relevant publications and data sets at the 
    IMBUE website:    
    [http://imbue.jpl.nasa.gov/](http://imbue.jpl.nasa.gov/)

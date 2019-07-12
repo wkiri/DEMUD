@@ -193,4 +193,5 @@ class GBTFilterbankData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, '%s-sel-%d-k-%d.pdf' % (self.name, m, k))
     pylab.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
+    pylab.close()
     

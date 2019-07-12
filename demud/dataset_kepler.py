@@ -127,6 +127,7 @@ class KeplerData(Dataset):
       
       figfile = os.path.join(outdir, 'sel-%d-(%s).pdf' % (selection, label))
       pylab.savefig(figfile)
+      pylab.close()
       
       
       # SECOND PLOT: First nine PCs being plotted

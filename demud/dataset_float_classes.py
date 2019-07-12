@@ -29,13 +29,13 @@ from dataset_float import FloatDataset
 class Floats(FloatDataset):
   # Contains code needed to load, plot, and interpret float data (CSV)
 
-  def  __init__(self, filename=None):
+  def  __init__(self, filename=None, initfilename=None):
     """Floats(filename="")
 
     Read in floating point data in CSV format from filename.
     """
 
-    FloatDataset.__init__(self, filename, "floats")
+    FloatDataset.__init__(self, filename, "floats", initfilename)
     
     try:
       self.readin(0)
@@ -90,16 +90,16 @@ class PancamSpectra(FloatDataset):
 #
 ###############################################################################
 class CNNFeat(FloatDataset):
-  # Contains code needed to load, plot, and interpret APF spectra (CSV) data.
+  # Contains code needed to load, plot, and interpret CNN vector data.
   # Initially copied from APF spectra (CSV) data implementation.
 
-  def  __init__(self, filename=None):
+  def  __init__(self, filename=None, initfilename=None):
     """CNNFeat(filename="")
 
     Read in CNN feature vectors in CSV format from filename.
     """
 
-    FloatDataset.__init__(self, filename, "cnn")
+    FloatDataset.__init__(self, filename, "cnn", initfilename)
 
     # readin(1) means that the first entry on each line is an item name.  
     # readin(0) means that the first entry on each line is the first feature.
@@ -373,6 +373,7 @@ class DANSpectra(FloatDataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+    pylab.close()
 
 
   def plot_pcs(self, m, U, mu, k, S):
@@ -428,6 +429,7 @@ class DANSpectra(FloatDataset):
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote SVD to %s' % figfile
+    pylab.close()
 
 
 

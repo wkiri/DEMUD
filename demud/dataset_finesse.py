@@ -199,3 +199,4 @@ class FINESSEData(Dataset):
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
     print 'Wrote plot to %s' % figfile
+    pylab.close()
