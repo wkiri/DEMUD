@@ -148,18 +148,8 @@ class CNNFeat(FloatDataset):
     # Had ndarrays converting to lists before, not necessary
     inecho = x
     recon = r
-    # Residual calculation - element-wise subtraction. Values are clipped to a
-    # minimum of zero, as there are no negative values in the input vector.
-    resid = (x - r)#.clip(min=0)
-
-    # turns out, we need to maintain the euclidean norm for subtraction.
-    # we'll leave the reconstruction alone for now.
-    # also, clipping to a 0 minimum is a bad idea.
-
-    inecho_l2_norm = np.linalg.norm(inecho, 2)
-    resid_l2_norm = np.linalg.norm(resid, 2)
-    normalized_resid = (resid / resid_l2_norm) * inecho_l2_norm
-
+    # Residual calculation - element-wise subtraction.
+    resid = (x - r)
 
     # Write original, reconstructed, and residual vectors of selections 
     # into a csv
@@ -173,7 +163,7 @@ class CNNFeat(FloatDataset):
 
     with open(residfile, 'a') as f:
       csvwriter = csv.writer(f, dialect='excel')
-      csvwriter.writerow(normalized_resid)
+      csvwriter.writerow(resid)
 
 ###############################################################################
 #
