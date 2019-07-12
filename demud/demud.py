@@ -35,8 +35,8 @@ from dataset_des import DESData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
-from dataset_envi import ENVIData
-from dataset_envi import SegENVIData
+#from dataset_envi import ENVIData
+#from dataset_envi import SegENVIData
 #from dataset_irs  import IRSData
 #from dataset_kepler import KeplerData
 #from dataset_mastcam import MastcamData
@@ -720,10 +720,13 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   log.logfilename = os.path.join(outdir, 'demud.log')
   log.logfile     = open(log.logfilename, 'w')
   # Save RGB visualization, if appropriate
-  if (isinstance(ds, SegENVIData) or
-      isinstance(ds, ENVIData)):
-    ds.write_RGB(os.path.join(outdir,
-                              '%s-rgb-viz.png' % ds.name.split('-')[1]))
+  try:
+    if (isinstance(ds, SegENVIData) or
+        isinstance(ds, ENVIData)):
+      ds.write_RGB(os.path.join(outdir,
+                                '%s-rgb-viz.png' % ds.name.split('-')[1]))
+  except:
+    printt("SegENVIData and ENVIData not imported.")
 
   ###############################################
   # Print dataset info
