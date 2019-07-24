@@ -25,7 +25,7 @@ import h5py
 from matplotlib.patches import Rectangle
 from dataset import *
 from dataset_libs import LIBSData
-from nims_data import NimsQube
+#from nims_data import NimsQube
 from log import printt
 
 ################### ENVI ##############

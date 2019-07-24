@@ -35,8 +35,8 @@ from dataset_des import DESData
 #from dataset_misr import MISRDataTime
 #from dataset_libs import LIBSData
 #from dataset_finesse import FINESSEData
-from dataset_envi import ENVIData
-from dataset_envi import SegENVIData
+#from dataset_envi import ENVIData
+#from dataset_envi import SegENVIData
 #from dataset_irs  import IRSData
 #from dataset_kepler import KeplerData
 #from dataset_mastcam import MastcamData
@@ -618,6 +618,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   - 'full': Recompute SVD from scratch.
   - 'increm-ross': Ross et al.'s method for incremental update,
     with mean tracking.
+  - 'increm-brand': Brand's incremental SVD method
 
   'missingmethod' indicates how to handle missing (NaN) values:
   - 'zero': set missing values to zero
@@ -720,10 +721,13 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   log.logfilename = os.path.join(outdir, 'demud.log')
   log.logfile     = open(log.logfilename, 'w')
   # Save RGB visualization, if appropriate
-  if (isinstance(ds, SegENVIData) or
-      isinstance(ds, ENVIData)):
-    ds.write_RGB(os.path.join(outdir,
-                              '%s-rgb-viz.png' % ds.name.split('-')[1]))
+  try:
+    if (isinstance(ds, SegENVIData) or
+        isinstance(ds, ENVIData)):
+      ds.write_RGB(os.path.join(outdir,
+                                '%s-rgb-viz.png' % ds.name.split('-')[1]))
+  except:
+    printt("SegENVIData and ENVIData not imported.")
 
   ###############################################
   # Print dataset info
@@ -1249,7 +1253,7 @@ def  svd_print():
   printt("- 'increm-brand': Brand's method for incremental update,")
   printt("         with mean tracking. Can handle missing values.")
   printt("")
-  printt("--increm is a shortcut for --svdmethod=increm-ross.")
+  printt("--increm is a shortcut for --svdmethod=increm-brand.")
   printt("")
   exit()
 
@@ -1514,7 +1518,7 @@ def  parse_args():
 
   params.add_option('--svdmethod', help="SVD method to use on each iteration (see --svdmethods for a list)",
                       default='default', type=str, action='store', dest='svdmethod')
-  params.add_option('--increm', help="Same as --svdmethod=increm-ross",
+  params.add_option('--increm', help="Same as --svdmethod=increm-brand",
                       default=False, action='store_true', dest='increm')
   params.add_option('--missingdatamethod', help="How to handle missing data (see --missingdatamethods for a list)",
                       default='none', type=str, action='store', dest='missingdatamethod')    
@@ -1658,7 +1662,7 @@ def  check_opts(datatypes):
       exit()
           
   # Check to make sure that --svdmethod has an appropriate argument
-  if log.opts['svdmethod'] != 'increm-ross' and log.opts['svdmethod'] != 'default' and log.opts['increm']:
+  if log.opts['svdmethod'] != 'increm-brand' and log.opts['svdmethod'] != 'default' and log.opts['increm']:
     printt("Error: cannot specify --increm along with different svdmethod.")
     printt("Use --svdmethods for more info.")
     exit()
@@ -1666,7 +1670,7 @@ def  check_opts(datatypes):
   if log.opts['svdmethod'] == 'default': log.opts['svdmethod'] = 'full'    
   
   if log.opts['increm']: 
-    log.opts['svdmethod'] = 'increm-ross'
+    log.opts['svdmethod'] = 'increm-brand'
     printt("Using increm")
     
   svdmethods = ('full', 'increm-ross', 'increm-brand')
