@@ -20,6 +20,9 @@
 
 import os, sys, re
 import numpy as np
+import math
+import matplotlib
+matplotlib.use('Agg') 
 import pylab
 from dataset import Dataset
 
@@ -66,7 +69,8 @@ class DESData(Dataset):
     #self.features = ['lup_r', 'color_g_minus_r',
     #                 'color_i_minus_r', 'color_z_minus_r']
     self.features = ['color_g_minus_r', 'lup_r', 
-                     'color_i_minus_r', 'color_z_minus_r']
+                     'color_i_minus_r', 'color_z_minus_r',
+                     'T', 'snr']  # add two features
     feat_inds = [feat_names.index(f) for f in self.features]
     self.data = data[:,feat_inds]
     # Trrrrranspose for DEMUD (feat x items)
@@ -97,16 +101,20 @@ class DESData(Dataset):
 
     # Also store errors for reporting in explanation plots
     self.expl_features = ['color_err_g_minus_r', 'lup_err_r', 
-                          'color_err_i_minus_r', 'color_err_z_minus_r']
+                          'color_err_i_minus_r', 'color_err_z_minus_r',
+                          'T_err']
     expl_feat_inds = [feat_names.index(f) for f in self.expl_features]
     self.expl_data = data[:,expl_feat_inds]
+    # Fill zeros errors for the T and snr features until we extract them too
+    self.expl_data = np.hstack((self.expl_data, np.zeros((len(self.expl_data), 2))))
 
     # Labels
     self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
                    zip(data[:,feat_names.index('coadd_object_id')], 
                        data[:,feat_names.index('ra_x')],   # gold
                        data[:,feat_names.index('dec_x')])] # gold
-    self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    #self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
+    self.xvals    = np.arange(self.data.shape[0])
     self.features = np.array(self.features)
     
 
@@ -291,27 +299,40 @@ class DESData(Dataset):
     fig = pylab.figure()
     ax = fig.add_subplot(1, 1, 1)
 
-    x = np.array(x)
-    xvals = [self.xvals[z][0] for z in range(self.xvals.shape[0])]
-    x = [x[z] for z in range(x.shape[0])]
-
-    # Make a line plot
-    #pylab.plot([xvals[i] for i in goodfeat],
-    #           x, 'bo-', markersize=12, label='Observations')
-    #pylab.plot([xvals[i] for i in goodfeat], 
-    #           r, 'rx-', markersize=12, label='Expected')
+    xvals = self.xvals[goodfeat]
+    x = x[goodfeat]
+    r = r[goodfeat]
+    feat_names = self.features[goodfeat]
 
     # Make an errorbar plot to show measurement uncertainty
-    pylab.errorbar([xvals[i] for i in goodfeat],
-                   x, yerr=self.expl_data[ind,:],
+    # for the color/luptitude features
+    color_lup_feats = [f for f in feat_names if 'minus' in f]
+    color_lup_inds = [color_lup_feats.index(f) for f in color_lup_feats]
+    pylab.errorbar([xvals[f] for f in color_lup_inds],
+                   [x[f] for f in color_lup_inds], 
+                   yerr=[self.expl_data[ind,f] for f in color_lup_inds],
                    color='b', marker='o', linestyle='-', 
                    ecolor='k',
                    markersize=10, label='Observations')
-    pylab.plot([xvals[i] for i in goodfeat], 
-               r, 'rd-', markersize=10, label='Expected')
+    pylab.plot([xvals[f] for f in color_lup_inds],
+               [r[f] for f in color_lup_inds], 
+               'rd-', markersize=10, label='Expected')
+
+    # Add T and snr in log form, bar plots
+    for f_name in ['T', 'snr']:
+      f = np.where(feat_names == f_name)[0]
+      feat_names[f] = 'log(%s)' % f_name
+      if f != -1:
+        pylab.bar(xvals[f]-0.2, math.log(r[f]), width=0.4, color='red')
+        if f_name == 'T': # include error bar
+          pylab.bar(xvals[f]+0.2, math.log(x[f]), 
+                    yerr=[math.log(self.expl_data[ind,f])],
+                    width=0.4, color='blue')
+        else:
+          pylab.bar(xvals[f]+0.2, math.log(x[f]), width=0.4, color='blue')
 
     # dashed line to show 0
-    pylab.plot([0, len(self.features)], [0, 0], 'k--')
+    pylab.plot([0, len(goodfeat)], [0, 0], 'k--')
 
     pylab.xlabel(self.xlabel)
     pylab.ylabel(self.ylabel)
@@ -320,9 +341,9 @@ class DESData(Dataset):
     pylab.legend(fontsize=12)
     
     if len(self.features) == 0:
-        pylab.xticks(pylab.arange(len(x)), range(len(x)), fontsize=12)
+        pylab.xticks(pylab.arange(len(goodfeat)), range(len(x))[goodfeat], fontsize=12)
     else:
-        pylab.xticks(pylab.arange(len(x)), self.features,
+        pylab.xticks(pylab.arange(len(goodfeat)), feat_names,
                      rotation=-30, ha='left', fontsize=12)
     pylab.tight_layout()
     
