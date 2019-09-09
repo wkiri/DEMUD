@@ -171,7 +171,7 @@ def export_csv(model_def, model_weights, mean_image,
 	# Set up batch filler
 	# We need to make the input divisible by the batch size.
 	# Since we're batching imagepaths, we'll just fill with the first image.
-	fillerlen = len(image_list) % n_images
+	fillerlen = n_images - (len(image_list) % n_images)
 	batch_filler = [image_list[0]] * fillerlen
 	image_list = np.concatenate((image_list, batch_filler))
 

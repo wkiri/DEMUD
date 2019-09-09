@@ -315,10 +315,12 @@ def  update_model(X, U, S, k, n, mu,
   # If there is no previous U, and we just got a single item in X,
   # set U to all 0's (degenerate SVD),
   # and return it with mu.
+  # (PR #22 sets first value to 1; see decals implementation)
   if U == [] and X.shape[1] == 1:
     mu   = X
     # Do this no matter what.  Let mu get NaNs in it as needed.
     U    = np.zeros_like(mu)
+    U[0] = 1
     S    = np.array([0])
     n    = 1
     pcts = [1.0]
