@@ -24,6 +24,8 @@ from numpy import nanmean
 import math
 import copy, base64, time
 import csv
+import matplotlib
+matplotlib.use('Agg') 
 import pylab
 
 from dataset_uci_classes import GlassData, IrisData, EcoliData, AbaloneData, IsoletData
