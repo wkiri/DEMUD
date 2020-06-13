@@ -13,7 +13,7 @@ import torchvision.datasets as datasets
 from torch.autograd import Variable
 
 def usage():
-    print("usage: python ex-model.py dataset_dir out_dir layer batch")
+    print("usage: python alexnet-extraction.py dataset_dir out_dir layer batch")
     sys.exit(1)
 
 if __name__ == "__main__":
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     
     # read dataset directory
     img_dir = sys.argv[1]
-    if not os.path.isdir(out_dir):
+    if not os.path.isdir(img_dir):
         print("error: {} is not an existing directory".format(img_dir))
         sys.exit(1)
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     try:
         BATCH = int(sys.argv[4])
     except:
-        print("error: {} is not an integer".format(sys.argv[4])
+        print("error: {} is not an integer".format(sys.argv[4]))
         sys.exit(1)
     
     
