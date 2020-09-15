@@ -109,10 +109,17 @@ class DESData(Dataset):
     self.expl_data = np.hstack((self.expl_data, np.zeros((len(self.expl_data), 2))))
 
     # Labels
-    self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
-                   zip(data[:,feat_names.index('coadd_object_id')], 
-                       data[:,feat_names.index('ra_x')],   # gold
-                       data[:,feat_names.index('dec_x')])] # gold
+    print(feat_names)
+    if 'ra' in feat_names:
+      self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
+                     zip(data[:,feat_names.index('coadd_object_id')], 
+                         data[:,feat_names.index('ra')],   # gold
+                         data[:,feat_names.index('dec')])] # gold
+    else:
+      self.labels = ['%s_%.6f_%.6f' % (id, ra, dec) for (id, ra, dec) in 
+                     zip(data[:,feat_names.index('coadd_object_id')], 
+                         data[:,feat_names.index('ra_x')],   # gold
+                         data[:,feat_names.index('dec_x')])] # gold
     #self.xvals    = np.arange(self.data.shape[0]).reshape(-1,1)
     self.xvals    = np.arange(self.data.shape[0])
     self.features = np.array(self.features)
