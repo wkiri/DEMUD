@@ -175,6 +175,15 @@ References
    This paper describes the extension of DEMUD to operate on image 
    data using CNN-derived features to represent image content
    and to provide explanations.
+   
+   You might also find the longer journal paper version useful:
+   
+   "Visualizing Image Content to Explain Novel Image Discovery."
+   Jake H. Lee and Kiri L. Wagstaff.
+   Data Mining and Knowledge Discovery, 34(6), p. 1777-1804, 
+   2020, DOI 10.1007/s10618-020-00700-0.
+   [Paper website](https://jakehlee.github.io/visualize-img-disc.html), PDF:
+   [https://link.springer.com/epdf/10.1007/s10618-020-00700-0](https://link.springer.com/epdf/10.1007/s10618-020-00700-0)
 
 4. DEMUD was created as part of the IMBUE project.  You can read more
    about IMBUE and access relevant publications and data sets at the 
