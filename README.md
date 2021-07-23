@@ -179,5 +179,5 @@ References
 4. DEMUD was created as part of the IMBUE project.  You can read more
    about IMBUE and access relevant publications and data sets at the 
    IMBUE website:    
-   [http://imbue.jpl.nasa.gov/](http://imbue.jpl.nasa.gov/)
+   [http://ml.jpl.nasa.gov/imbue](http://ml.jpl.nasa.gov/imbue)
 
