@@ -62,13 +62,19 @@ class FloatDataset(Dataset):
       if lines[0][0] == '#':
         print 'Populating xvals from data file header.'
         header = lines[0][1:].strip()
-        xvals = numpy.array(map(float,header.split(',')))
+        #xvals = numpy.array(map(float,header.split(',')))
+        xvals = numpy.array(header.split(','))
 
       for line in lines:
         # Skip over empty or commented lines
         if line.strip() == '' or line[0] == '#':
           continue
         attributes = re.split(',', line.strip())
+        # replace '' with NaN
+        i = 0
+        for i in range(len(attributes)):
+          if len(attributes[i]) == 0:
+            attributes[i] = 'nan'
 
         data += [[float(x) for x in attributes[nskip:]]]
         if nskip > 0: # Use the first column as a label
