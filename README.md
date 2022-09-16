@@ -1,6 +1,6 @@
 DEMUD: Discovery via Eigenbasis Modeling of Uninteresting Data
 ==============================================================
-Contact author: Kiri Wagstaff, kiri.wagstaff@jpl.nasa.gov
+Contact author: Kiri Wagstaff, wkiri@wkiri.com
 
 Contributors: James Bedell, Jake Lee
 
@@ -19,6 +19,9 @@ selecting similar items in the future.
 
 Installation
 ------------
+
+Note: DEMUD currently requires Python 2.7.  We are in the process of 
+updating it to Python 3.  Stay tuned!
 
 You should be able to install demud by simply doing
 
@@ -84,8 +87,6 @@ To get started
 
 4. Other data types.
 
-   
-
    If your data type is not yet supported, consider adding it by 
    (1) adding a new command-line option
    (2) adding parsing support for this option in `demud.py`
@@ -114,7 +115,9 @@ Selection and output options:
 * `--init-item=IITEM`:     Index of initialization item (default: 0; -1 or svd
                            for full-data SVD; r for random)
 
-By default, DEMUD starts by selecting the first item in the data set.  You may get more interesting results by using an initial SVD to select the "most anomalous" item from the data set as a starting point, e.g.:
+By default, DEMUD starts by selecting the first item in the data set.  
+You may get more interesting results by using an initial SVD to select 
+the "most anomalous" item from the data set as a starting point, e.g.:
 
 `$ demud -g --init-item=-1`
 
@@ -137,9 +140,11 @@ different feature weighting methods; see:
 Additional scripts
 ------------------
 
-`scripts/` provides additional scripts for preprocessing data for use with DEMUD. Usage instructions are included within each subdirectory.
+`scripts/` provides additional scripts for preprocessing data for use 
+with DEMUD. Usage instructions are included within each subdirectory.
 
-This includes an image feature extraction script used for experiments presented at WHI 2018.
+This includes an image feature extraction script used for experiments 
+presented at WHI 2018.
 
 References
 ----------
