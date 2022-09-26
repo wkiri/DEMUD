@@ -205,7 +205,7 @@ class Dataset(object):
 
     print('%d similar items (those with reconstruction error at most %f) of %d total.' % (numpy.sum(scores <= best_thresh), best_thresh, len(scores)))
 
-    raw_input()
+    input()
 
 
 if __name__ == "__main__":

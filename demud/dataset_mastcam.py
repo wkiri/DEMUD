@@ -746,13 +746,13 @@ class MastcamData(Dataset):
           #imgarr = np.bitwise_and(4095, imgarr)
           imgarr = imgarr.astype('float16')
           imgarr = imgarr / 4095 * 255
-          raw_input("WARNING.  THE CODE HAS JUST CHANGED THE DATA VALUES FROM float16 TO uint8.\n"
-                    " THIS WAS INITIALLY DONE FOR VISUALIZATION BUT HAS CAUSED PROBLEMS.\n"
-                    "  PLEASE FIX, IF POSSIBLE!  NEEDS RE-TYPING OF ALL ARRAYS.\n"
-                    "\n"
-                    "ALSO, THE RADIANCE OFFSET AND SCALING FACTOR IN THE LOG FILES NEED TO BE APPLIED.\n"
-                    "\n"
-                    "    ...press enter if you really want to continue. ")
+          input("WARNING.  THE CODE HAS JUST CHANGED THE DATA VALUES FROM float16 TO uint8.\n"
+                " THIS WAS INITIALLY DONE FOR VISUALIZATION BUT HAS CAUSED PROBLEMS.\n"
+                "  PLEASE FIX, IF POSSIBLE!  NEEDS RE-TYPING OF ALL ARRAYS.\n"
+                "\n"
+                "ALSO, THE RADIANCE OFFSET AND SCALING FACTOR IN THE LOG FILES NEED TO BE APPLIED.\n"
+                "\n"
+                "    ...press enter if you really want to continue. ")
           imgarr = imgarr.astype('uint8')
           
       else:
@@ -821,7 +821,7 @@ class MastcamData(Dataset):
           #pylab.clf()
           #pylab.imshow(subframe)
           #pylab.show()
-          #raw_input()
+          #input()
       return (subunits, sublabels)
     elif unit == 's':
 
@@ -858,7 +858,7 @@ class MastcamData(Dataset):
       # pylab.savefig('segmentation.png')
       # exit()
       # pylab.show()
-      # raw_input()
+      # input()
         
       return (subunits, sublabels)
     else:

@@ -155,7 +155,7 @@ def  score_items(X, U, mu,
     #print('reproj:', reproj.T)
     err    = X - reproj
     #print('err:', err.T)
-    #raw_input()
+    #input()
     
   else:
     # Missing method must be 'ignore' (Brand 2002)
@@ -184,7 +184,7 @@ def  score_items(X, U, mu,
 
   #print('scores:', scores)
   #print('reproj:', reproj)
-  #raw_input()
+  #input()
   return (scores, reproj)
   
 
@@ -251,7 +251,7 @@ def  select_next(X, U, mu,
   #print('selected-mu:', (X-mu)[:,m])
   #print('reproj:', reproj[:,m])
   #print('reproj-mu:', (reproj-mu)[:,m])
-  #raw_input()
+  #input()
 
   return m, scores, reproj
 
@@ -450,7 +450,7 @@ def  update_model(X, U, S, k, n, mu,
 
     if n_new != 1:
       print("WARNING: increm-brand will probably only work by adding one item at a time.")
-      raw_input('\nPress enter to continue or ^C/EOF to exit. ')
+      input('\nPress enter to continue or ^C/EOF to exit. ')
 
     if missingmethod == 'ignore':
       # 1. Update mu
@@ -597,7 +597,7 @@ def  update_model(X, U, S, k, n, mu,
     else:
       printt("Selected value of k=%d captures %5.2f%% of the data variance" % \
              (k, cumpercents[k-1] * 100))
-    if log.opts['pause']: raw_input("Press enter to continue\n")
+    if log.opts['pause']: input("Press enter to continue\n")
 
   #print('U:', U)
   #print('mu:', mu)
@@ -1013,8 +1013,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     ###############################################
     # Be interactive!
     if log.opts['interactive']:
-      userpref = raw_input("Do you want to add this to the model of "
-                           "uninteresting data?\n(Y/N) ")
+      userpref = input("Do you want to add this to the model of "
+                       "uninteresting data?\n(Y/N) ")
       printt(userpref)
       if userpref.lower() in ('y', 'yes', 'yes please'):
         printt("You said yes!")
@@ -1026,7 +1026,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
         bad_input = True
         while bad_input:
           printt("Sorry, I don't recognize that input.  Please choose yes or no.")
-          userpref = raw_input("(Y/N) ")
+          userpref = input("(Y/N) ")
           if userpref.lower() == 'y' or 'yes' or 'yes please':
             bad_input = False
             pass
@@ -1316,7 +1316,7 @@ def  clean():
 
     printt("WARNING: This will overwrite your current demud.config file.")
     printt("  Do you really want to continue?")
-    y = raw_input("  Enter Y to continue, anything else to abort: ")
+    y = input("  Enter Y to continue, anything else to abort: ")
 
     if y.lower() != 'y' and y.lower() != 'yes' and y.lower() != 'yes please':
       printt("Aborting.")
@@ -1988,7 +1988,7 @@ def  optimize_k(ds, v):
   printt("\nChose k = %d, capturing %5.2f%% of the data variance\n" % \
         (minind + 1, 100 * cumpercents[minind]))
   
-  if log.opts['pause']: raw_input("Press enter to continue\n")
+  if log.opts['pause']: input("Press enter to continue\n")
   
   return minind + 1
   
@@ -2113,7 +2113,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     printt("")
     printt("Continuing with execution...")
     printt("")
-    # raw_input('Press enter to continue or enter ^C/EOF to abort.')
+    # input('Press enter to continue or enter ^C/EOF to abort.')
 
 
     ds = MISRDataTime(data_files[0], data_files[1], data_files[2])
