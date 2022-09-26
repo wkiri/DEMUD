@@ -37,7 +37,7 @@ class IRSData(Dataset):
 
     Dataset.__init__(self, filename,
                      'irs-' + \
-                       os.path.splitext(os.path.basename(filename))[0]), '')
+                       os.path.splitext(os.path.basename(filename))[0], '')
     self.datefile    = datefile
     self.modelfile   = modelfile
     self.wavecalfile = wavecalfile
