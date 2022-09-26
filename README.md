@@ -23,15 +23,17 @@ Installation
 Note: DEMUD currently requires Python 2.7.  We are in the process of 
 updating it to Python 3.  Stay tuned!
 
-You should be able to install demud by simply doing
+You should be able to install demud (virtual environment suggested) with:
 
+   `$ pip install -r requirements.txt`
+   
    `$ python setup.py install`
 
 That will make the `demud` console script available system-wide.
 
-If this doesn't work, use 
+If you have trouble installing the package, use 
 
-   `$ python demud.py [options]` 
+   `$ python demud/demud.py [options]` 
 
 in all of the examples below.
 
@@ -39,7 +41,7 @@ in all of the examples below.
 To get started
 --------------
 
-1. DEMUD has an extensive help message.  Start by running (from `src/`)
+1. DEMUD has an extensive help message.  Start by running:
 
    `$ demud -h`
 
@@ -47,12 +49,22 @@ To get started
 
    `$ demud --make-config`
 
-3. DEMUD supports a variety of different input data types.  See the
-   "Datatype Options:" section of the help message and select the
-   appropriate option for your data.  
-
    **Please do not check your demud.config file back in to this 
    repository.  It is a local configuration file for your system.**
+
+3. Each config file defines an experiment.  You can save multiple
+   config files with different names and specify them to demud with the
+   `--config` option.  The default file name is `demud.config`, but
+   any name can be used.
+
+   To configure your experiment, you will need to specify the input
+   data source in the appropriate variable in the config file, then
+   run DEMUD with the appropriate input data type specified as a
+   command line option.
+
+   DEMUD supports a variety of different input data types.  See the
+   "Datatype Options:" section of the help message and select the
+   appropriate option for your data.  
 
    **Example 1: Images.**
 
