@@ -41,7 +41,7 @@ class Floats(FloatDataset):
       self.readin(0)
     except:
       print
-      print 'This class assumes no identifiers in the data, i.e., just numeric values.'
+      print('This class assumes no identifiers in the data, i.e., just numeric values.')
       sys.exit(1)
 
 
@@ -130,7 +130,7 @@ class CNNFeat(FloatDataset):
 
     # Check validity
     if x == [] or r == []:
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
 
     # First item gets to create (and clear) the file 
@@ -331,7 +331,7 @@ class DANSpectra(FloatDataset):
                  rerr, feature_weights):
 
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
   
     pylab.clf()
@@ -362,7 +362,7 @@ class DANSpectra(FloatDataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
 
@@ -418,7 +418,7 @@ class DANSpectra(FloatDataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote SVD to %s' % figfile
+    print('Wrote SVD to %s' % figfile)
     pylab.close()
 
 
@@ -435,5 +435,5 @@ if __name__ == "__main__":
   filename                = os.path.basename(__file__)
 
   if num_failed == 0:
-    print "%-20s All %3d tests passed!" % (filename, num_tests)
+    print("%-20s All %3d tests passed!" % (filename, num_tests))
 

@@ -60,7 +60,7 @@ class FloatDataset(Dataset):
       # If there's a header (begins with #), use it to
       # populate the feature names
       if lines[0][0] == '#':
-        print 'Populating xvals from data file header.'
+        print('Populating xvals from data file header.')
         header = lines[0][1:].strip()
         #xvals = numpy.array(map(float,header.split(',')))
         xvals = numpy.array(header.split(','))
@@ -122,7 +122,7 @@ class FloatDataset(Dataset):
     """
 
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
   
     pylab.clf()
@@ -157,7 +157,7 @@ class FloatDataset(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
     

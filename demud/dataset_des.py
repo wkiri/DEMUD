@@ -82,7 +82,7 @@ class DESData(Dataset):
         # Subtract the mean value
         mean_lup_r = np.mean(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= mean_lup_r
-        print 'Subtracting mean (%.2f) from %s.' % (mean_lup_r, f)
+        print('Subtracting mean (%.2f) from %s.' % (mean_lup_r, f))
         newf = 'lup_r_minus_mean'
         self.features[self.features.index(f)] = newf
         f = newf
@@ -90,14 +90,14 @@ class DESData(Dataset):
       if 'MAG' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= minval
-        print 'Subtracting %f from %s.' % (minval, f)
+        print('Subtracting %f from %s.' % (minval, f))
         newf = f + '-sub%.2f' % minval
         self.features[self.features.index(f)] = newf
         f = newf
       '''
-      print '%s range: ' % f,
-      print self.data[self.features.index(f),:].min(),
-      print self.data[self.features.index(f),:].max()
+      print('%s range: ' % f,
+            self.data[self.features.index(f),:].min(),
+            self.data[self.features.index(f),:].max())
 
     # Also store errors for reporting in explanation plots
     self.expl_features = ['color_err_g_minus_r', 'lup_err_r', 
@@ -154,21 +154,21 @@ class DESData(Dataset):
     print('Removed MAG_R values <= -1.')
 
     # Data is d x n
-    print self.data.shape
+    print(self.data.shape)
     # Scale some features as needed
     for f in self.features:
       '''
       if 'MAG' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= minval
-        print 'Subtracting %f from %s.' % (minval, f)
+        print('Subtracting %f from %s.' % (minval, f))
         newf = f + '-sub%.2f' % minval
         self.features[self.features.index(f)] = newf
         f = newf
       '''
-      print '%s range: ' % f,
-      print self.data[self.features.index(f),:].min(),
-      print self.data[self.features.index(f),:].max()
+      print('%s range: ' % f,
+            self.data[self.features.index(f),:].min(),
+            self.data[self.features.index(f),:].max())
 
     # TODO: add/readin id
     self.labels = ['None_%.6f_%.6f' % (ra, dec) for (ra, dec) in 
@@ -238,19 +238,19 @@ class DESData(Dataset):
     self.features += ['PHOTOZ_BIN']
 
     # Data is d x n
-    print self.data.shape
+    print(self.data.shape)
     # Scale some features as needed
     for f in self.features:
       if 'MAG_AUTO' in f: # subtract the min
         minval = np.min(self.data[self.features.index(f),:])
         self.data[self.features.index(f),:] -= minval
-        print 'Subtracting %f from %s.' % (minval, f)
+        print('Subtracting %f from %s.' % (minval, f))
         newf = f + '-sub%.2f' % minval
         self.features[self.features.index(f)] = newf
         f = newf
-      print '%s range: ' % f,
-      print self.data[self.features.index(f),:].min(),
-      print self.data[self.features.index(f),:].max()
+      print('%s range: ' % f,
+            self.data[self.features.index(f),:].min(),
+            self.data[self.features.index(f),:].max())
 
     self.labels = ['%d_%.6f_%.6f' % (id,ra,dec) for (id,ra,dec) in \
                      zip(data['COADD_OBJECTS_ID'],
@@ -293,7 +293,7 @@ class DESData(Dataset):
     """
     
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
    
     # Select the features to plot
@@ -361,7 +361,7 @@ class DESData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
 
@@ -458,6 +458,6 @@ if __name__ == "__main__":
   filename                = os.path.basename(__file__)
 
   if num_failed == 0:
-    print "%-20s All %3d tests passed!" % (filename, num_tests)
+    print("%-20s All %3d tests passed!" % (filename, num_tests))
   else:
     sys.exit(1)

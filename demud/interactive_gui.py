@@ -33,15 +33,15 @@ class iDEMUD_GUI(tk.Frame):
         self.createWidgets()
 
     def chooseInteresting(self):
-        print 'Interesting'
+        print('Interesting')
         self.nextSelection()
 
     def chooseMaybe(self):
-        print 'Maybe'
+        print('Maybe')
         self.nextSelection()
 
     def chooseUninteresting(self):
-        print 'Uninteresting'
+        print('Uninteresting')
         self.nextSelection()
 
     def nextSelection(self):
