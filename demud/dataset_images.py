@@ -17,12 +17,11 @@
 # countries or providing access to foreign persons.
 
 import os, sys, fnmatch
-#from PIL import Image
-from scipy.misc import imread
 import numpy as np
 from dataset import *
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import imread
 import glob
 from log import printt
 
@@ -70,9 +69,9 @@ class ImageData(Dataset):
           ImageData.read_image_dir(self.initfilename)
       self.initdata = np.asarray(self.initdata)
       self.initdata = self.initdata.T
-      print 'Initializing with %d images (%s).' % \
-          (self.initdata.shape[1], str(imshape))
-      print self.initdata.shape
+      print('Initializing with %d images (%s).' % \
+            (self.initdata.shape[1], str(imshape)))
+      print(self.initdata.shape)
 
     ########## Read in the data to analyze
     # Labels are individual filenames
@@ -80,15 +79,15 @@ class ImageData(Dataset):
         ImageData.read_image_dir(self.filename)
       
     self.data = np.asarray(self.data)
-    print self.data.shape
+    print(self.data.shape)
 
     if len(self.data) == 0: 
-      print 'Error: no image files found.'
+      print('Error: no image files found.')
       sys.exit(1)
 
     self.data = self.data.T
-    print 'Read %d images (%s).' % \
-        (self.data.shape[1], str(self.imshape))
+    print('Read %d images (%s).' % \
+          (self.data.shape[1], str(self.imshape)))
 
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights):
@@ -103,9 +102,9 @@ class ImageData(Dataset):
     U, scores, and feature_weights are optional; ignored in this method, 
     used in some classes' submethods.
     """
-    print "Plotting..."
+    print("Plotting...")
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
 
     vmin = min(np.nanmin(x), np.nanmin(r))
@@ -207,10 +206,10 @@ class ImageData(Dataset):
     plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
     plt.cla()
     plt.clf()
-    print "done."
+    print("done.")
     plt.close()
     pylab.close()
-    #print 'Wrote plot to %s' % figfile
+    #print('Wrote plot to %s' % figfile)
     
 
   def plot_pcs(self, m, U, mu, k, S):
@@ -258,7 +257,7 @@ class ImageData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d.pdf' % (m, k))
     pylab.savefig(figfile)
-    print 'Wrote SVD to %s' % figfile
+    print('Wrote SVD to %s' % figfile)
 
 
   @classmethod
@@ -279,7 +278,7 @@ class ImageData(Dataset):
     # Read in the image data
     files = sorted(os.listdir(dirname))
     numimages = len(os.listdir(dirname))
-    print numimages
+    print(numimages)
     printt("Loading files:")
     counter = 0
     for idx,f in enumerate(files):
