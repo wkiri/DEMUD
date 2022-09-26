@@ -85,11 +85,11 @@ class GBTFilterbankData(Dataset):
           self.labels.append('_'.join(fname.split('_')[0:2]))
 
     self.data = np.asarray(self.data).squeeze().T
-    print self.data.shape
+    print(self.data.shape)
     
     print
     # Data is now d x n, where d = #freq x #times and n = #files
-    print 'Read data set with %d features, %d files.' % self.data.shape
+    print('Read data set with %d features, %d files.' % self.data.shape)
 
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights):
@@ -106,7 +106,7 @@ class GBTFilterbankData(Dataset):
     """
     
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
 
     vmin = min(np.nanmin(x), np.nanmin(r))

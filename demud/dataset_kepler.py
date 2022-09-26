@@ -64,7 +64,7 @@ class KeplerData(Dataset):
     #dirname = filepath if filepath[-1] != '/' else filepath[:-1]
     #self.name += "-" + dirname.split('/')[-1]
     self.name += "-" + os.path.basename(filepath)
-    print self.name
+    print(self.name)
     
     self.data      = []
     self.cadence   = []
@@ -76,7 +76,7 @@ class KeplerData(Dataset):
     if not os.path.exists(self.archive):
       KeplerData.read_kepler_dir(self, filepath, extension)
     else:
-      print "Found pickle at " + self.archive
+      print("Found pickle at " + self.archive)
     
     self.readin()
 
@@ -96,7 +96,7 @@ class KeplerData(Dataset):
     # Use hours from 0 as x axis scale
     self.xvals = self.time_data - self.time_data[0]
     
-    #print self.data
+    #print(self.data)
       
 #_______________________________________________________________________________
 #_____________________________________plot_item_________________________________
@@ -362,7 +362,7 @@ class KeplerData(Dataset):
         return
         
     else:
-      print "Fatal error: I'm too hungry for this right now."
+      print("Fatal error: I'm too hungry for this right now.")
       
 #_______________________________________________________________________________
 #____________________________________fftransform________________________________
@@ -376,11 +376,11 @@ class KeplerData(Dataset):
     """
     #fancy = False
     
-    print "________________________________________"
+    print("________________________________________")
     if fancy:
-      print "          performing fancy FFT          "
+      print("          performing fancy FFT          ")
     else:
-      print "             performing FFT             "
+      print("             performing FFT             ")
     
     if not self.is_fft:
       self.flux_data = copy.deepcopy(self.data)
@@ -393,7 +393,7 @@ class KeplerData(Dataset):
     for j in range(len(dataT)):  
     
       pdc_data = dataT[j]
-   #   print "pdc_data: ", pdc_data
+   #   print("pdc_data: ", pdc_data)
       time = self.time_data 
     
       # Ensure that no NaNs exist
@@ -437,9 +437,9 @@ class KeplerData(Dataset):
         newdata = np.zeros((dataT.shape[0], len(fft_pdc_half)))
       
       newdata[j] = fft_pdc_half
-    #  print "newdata[%d]: " % j, newdata[j]
-    #  print "newdata[0]: ", newdata[0]
-    #  print "j: ", j
+    #  print("newdata[%d]: " % j, newdata[j])
+    #  print("newdata[0]: ", newdata[0])
+    #  print("j: ", j)
     #  Time.sleep(5)
       
       
@@ -465,7 +465,7 @@ class KeplerData(Dataset):
     # GET ALL FILES WITH GIVEN EXTENSION IN FILEPATH
     files = glob.glob(str(filepath) + "*" + str(extension))
     
-    print "found %d files with extension %s in %s:" % (len(files), extension, filepath)
+    print("found %d files with extension %s in %s:" % (len(files), extension, filepath))
     assert len(files) > 0
     
     numfiles = len(files)
@@ -487,7 +487,7 @@ class KeplerData(Dataset):
                         mom1,mom1_err,mom2,mom2_err,pc1,pc2) in 
                         hdulist[1].data])
       
- #     print "Read in %s" % filename
+ #     print("Read in %s" % filename)
      
       use = ((d[:,2] > 0).nonzero())[0]
       #data = d[use,2]  # ignore all nans
@@ -527,17 +527,17 @@ class KeplerData(Dataset):
       # output read-in progress
       if percent < 100:
         if (round((seen / float(numfiles)) * 100, 1) >= percent) and (printed[int(percent * 10)] == False):
-          print "...%3.1f%%..." % percent
+          print("...%3.1f%%..." % percent)
           printed[int(percent * 10)] == True
           percent = round(((seen / float(numfiles)) * 100), 1) + 0.1
-    print "...100%..."
+    print("...100%...")
     data = np.array(flux).T
     
     # Output the pickle
     outf = open(kd.archive, 'w')
     pickle.dump((data, time_data, cadence, labels), outf)
     outf.close()
-    print "Wrote pickle to " + kd.archive
+    print("Wrote pickle to " + kd.archive)
     
 #_______________________________________________________________________________
 #_______________________________________main____________________________________

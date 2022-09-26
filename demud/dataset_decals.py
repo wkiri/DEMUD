@@ -206,7 +206,7 @@ class DECaLSData(Dataset):
     """
     
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
    
     # Select the features to plot
@@ -260,7 +260,7 @@ class DECaLSData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
   
 
@@ -356,6 +356,6 @@ if __name__ == "__main__":
   filename                = os.path.basename(__file__)
 
   if num_failed == 0:
-    print "%-20s All %3d tests passed!" % (filename, num_tests)
+    print("%-20s All %3d tests passed!" % (filename, num_tests))
   else:
     sys.exit(1)

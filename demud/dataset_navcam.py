@@ -314,7 +314,7 @@ class NavcamData(Dataset):
       outf = open(filename, 'w')
       pickle.dump((data, labels, new_feature_string, width, height, self.winsize, self.nbins),outf)
       outf.close()
-      print 'Saved data to %s.' % filename
+      print('Saved data to %s.' % filename)
     
     return (data, labels, new_feature_string, width, height, self.winsize, self.nbins)
 
@@ -373,7 +373,7 @@ class NavcamData(Dataset):
       outf = open(filename, 'w')
       pickle.dump((data, labels, new_feature_string, width, height, self.winsize, self.nbins),outf)
       outf.close()
-      print 'Saved data to %s.' % filename
+      print('Saved data to %s.' % filename)
     
     return (data, labels, new_feature_string, width, height, self.winsize, self.nbins)
 
@@ -450,7 +450,7 @@ class NavcamData(Dataset):
     rand_idx = N.where(self.img_label_split > rand_ind)[0][0] - 1
     
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
   
 #    im = Image.fromarray(x.reshape(self.winsize, self.winsize, 3))
@@ -459,7 +459,7 @@ class NavcamData(Dataset):
       os.mkdir(outdir)
 #    figfile = '%s/%s-sel-%d-k-%d.pdf' % (outdir, self.name, m, k)
 #    im.save(figfile)
-#    print 'Wrote plot to %s' % figfile
+#    print('Wrote plot to %s' % figfile)
 
     # record the selections in order, at their x,y coords
     # subtract selection number from n so first sels have high values
@@ -504,11 +504,11 @@ class NavcamData(Dataset):
 
     # Deck mask
     score = self.compute_score(img_idx, y, x, 0) * 100.0 / self.winsize / self.winsize
-    print 'Deck score: %.2f%%' % score 
+    print('Deck score: %.2f%%' % score)
     self.score.append(score) 
     # Meteorite mask
     met_score = self.compute_score(img_idx, y, x, 1) * 100.0 / self.winsize / self.winsize
-    print 'Meteorite score: %.2f%%' % met_score 
+    print('Meteorite score: %.2f%%' % met_score)
     self.met_score.append(met_score)
     # Shadow mask
     score = self.compute_score(img_idx, y, x, 2)
@@ -526,7 +526,7 @@ class NavcamData(Dataset):
     ax2.axis('off')
     plt.savefig(zoom_file, bbox_inches='tight')
 
-    print 'writing selection to %s/sel-%d.png' % (outdir, self.priority-1)
+    print('writing selection to %s/sel-%d.png' % (outdir, self.priority-1))
     scipy.misc.imsave(os.path.join(outdir, 'sel-%d.png' % (self.priority-1)),
                       im[y-qtrwin:y+qtrwin,x-qtrwin:x+qtrwin])
   
@@ -542,8 +542,8 @@ class NavcamData(Dataset):
 
   def  plot_score(self, outdir):
     # Summary scoring
-    print 'Avg deck score: %.2f%%' % N.mean(self.score)
-    print 'Avg meteorite score: %.2f%%' % N.mean(self.met_score)
+    print('Avg deck score: %.2f%%' % N.mean(self.score))
+    print('Avg meteorite score: %.2f%%' % N.mean(self.met_score))
 
     # Deck scoring technique
     pylab.clf()
@@ -671,7 +671,7 @@ class NavcamData(Dataset):
 
     if not (figfile is None):
         plt.savefig(figfile, bbox_inches='tight')
-        print 'Wrote selection priority plot to %s' % figfile
+        print('Wrote selection priority plot to %s' % figfile)
 
     # Display the output
     if show_image:

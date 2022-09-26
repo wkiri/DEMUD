@@ -116,7 +116,7 @@ class TCData(Dataset):
     outf = open(filename, 'w')
     pickle.dump((data, labels, width, height, winsize, nbins, pix), outf)
     outf.close()
-    print 'Saved data to %s.' % filename
+    print('Saved data to %s.' % filename)
     
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores):
@@ -130,7 +130,7 @@ class TCData(Dataset):
     """
 
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
   
     im = Image.fromarray(x.reshape(self.winsize, self.winsize, 3))
@@ -139,7 +139,7 @@ class TCData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, '%s-sel-%d-k-%d.pdf' % (self.name, m, k))
     im.save(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
 
     # record the selections in order, at their x,y coords
     # subtract selection number from n so first sels have high values
@@ -165,6 +165,6 @@ class TCData(Dataset):
     # Has to be .png or the alpha transparency doesn't work! (pdf)
     figfile = os.path.join(outdir, '%s-priority-k-%d.png' % (self.name, k))
     pylab.savefig(figfile)
-    print 'Wrote selection priority plot to %s' % figfile
+    print('Wrote selection priority plot to %s' % figfile)
 
 

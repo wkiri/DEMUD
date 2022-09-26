@@ -75,7 +75,7 @@ class MastcamData(Dataset):
           self.initfilename = 'param'
       return
     
-    if do_print: print filepath
+    if do_print: print(filepath)
     
     if filepath == '388':
       filepath = '/proj/imbue/data/msl-mastcam/sol388/'
@@ -93,7 +93,7 @@ class MastcamData(Dataset):
     self.name += "-" + subsetname
     if len(suffix) > 0:
       self.name += "-" + eye + '-' + suffix + '-' + unit + '-' + feature
-    if do_print: print "Dataset name: " + self.name
+    if do_print: print("Dataset name: " + self.name)
     
     self.data      = []
     self.cadence   = []
@@ -117,7 +117,7 @@ class MastcamData(Dataset):
       else:
         self.initfilename = 'param'
     elif initdatadir != None:
-      print "Reading in initialization data..."
+      print("Reading in initialization data...")
       #initsubsetname = initdatadir[:-1].split('/')[-1]
       initsubsetname = os.path.basename(initdatadir)
       initarchive = os.path.join(initdatadir,
@@ -126,17 +126,17 @@ class MastcamData(Dataset):
         with open(initarchive, 'r') as f:
           self.initdata = pickle.load(f)[0]
           self.initfilename = initarchive
-        print "...done!"
-        print "initdata.shape:", self.initdata.shape
+        print("...done!")
+        print("initdata.shape:", self.initdata.shape)
       else:
-        print "...initialization data does not exist!"
-        print "Desired pickle was: %s" % initarchive
+        print("...initialization data does not exist!")
+        print("Desired pickle was: %s" % initarchive)
     
     # Determine if we need to preprocess the data
     if (not os.path.exists(self.archive)) or force_read:
       self.read_mastcam_dir(filepath, suffix, unit, feature, extension, lblext, eye)
     else:
-      if do_print: print "Found pickle at " + self.archive
+      if do_print: print("Found pickle at " + self.archive)
     
     self.readin()
 
@@ -163,7 +163,7 @@ class MastcamData(Dataset):
 #______________________________________get_RGB__________________________________
 #
   def get_RGB(self, label):
-    print label
+    print(label)
     labelroot = label.split('_')[0]
     
     # we have a superpixel segment, not a rectangular image window
@@ -182,7 +182,7 @@ class MastcamData(Dataset):
         segm = np.copy(self.segmentation[labelroot])
         part = np.equal(segm, segment)
 
-        print "Chose segment %d" % segment
+        print("Chose segment %d" % segment)
 
         # pylab.clf()
         # pylab.imshow(segm == segment)
@@ -199,7 +199,7 @@ class MastcamData(Dataset):
         imgx[~part] = 255
         W = np.argwhere(part)
         
-        # print W
+        # print(W)
         (ystart, xstart), (ystop, xstop) = W.min(0), W.max(0) + 1
         boundingbox = imgx[ystart:ystop, xstart:xstop]
         return (boundingbox, segimg)
@@ -219,7 +219,7 @@ class MastcamData(Dataset):
         b = int(offsetstr[0].split('-')[1])
         c = int(offsetstr[1].split('-')[0])
         d = int(offsetstr[1].split('-')[1])
-        print "from label, found [%d-%d, %d-%d]" % (a, b, c, d)
+        print("from label, found [%d-%d, %d-%d]" % (a, b, c, d))
         img = self.fullimages[labelroot]
         subframe = img[a:b+1, c:d+1]
         imgwithsubframe = np.ones((img.shape[0], img.shape[1]))
@@ -242,7 +242,7 @@ class MastcamData(Dataset):
       b = int(offsetstr[0].split('-')[1])
       c = int(offsetstr[1].split('-')[0])
       d = int(offsetstr[1].split('-')[1])
-      print "from label, found [%d-%d, %d-%d]" % (a, b, c, d)
+      print("from label, found [%d-%d, %d-%d]" % (a, b, c, d))
       (img, lbl) = self.load_image(name, self.filepath, lblext=self.lblext)
       subframe = img[a:b+1, c:d+1]
       imgwithsubframe = np.ones(img.shape)
@@ -267,7 +267,7 @@ class MastcamData(Dataset):
     """
     
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
   
     (rgb_window, where_in_image) = self.get_RGB(label)
@@ -281,10 +281,10 @@ class MastcamData(Dataset):
     # xvals, x, and r need to be column vectors
     # if feature == 'sh':
       # l = len(r) / 2
-      # print "Length of r is:", len(r)
-      # print r.shape
-      # print "Length of self.xvals:", len(self.xvals)
-      # print self.xvals.shape
+      # print("Length of r is:", len(r))
+      # print(r.shape)
+      # print("Length of self.xvals:", len(self.xvals))
+      # print(self.xvals.shape)
       # xx = [i for i in np.asarray(self.xvals).T]
       # ry = [i for i in np.asarray(r[:l]).T]
       # xy = [i for i in np.asarray(x[:l]).T]
@@ -292,8 +292,8 @@ class MastcamData(Dataset):
       # xl = [i for i in np.asarray(x[l:]).T]
 
       # pylab.clf()
-      # print xx
-      # print ry
+      # print(xx)
+      # print(ry)
       # pylab.plot(xx, ry, 'r-', label='Expected')
       # pylab.errorbar(xx, ry, yerr=rl, fmt=None, ecolor='r')
       # pylab.plot(xx, xy, 'b.-', label='Observations')
@@ -303,8 +303,8 @@ class MastcamData(Dataset):
     #   pylab.plot(self.xvals, x, 'b.-', label='Observations')
     # else:
     
-    # print len(self.xvals)
-    # print len(r)
+    # print(len(self.xvals))
+    # print(len(r))
 
     pylab.plot(self.xvals, r, 'r.-', label='Expected')
     pylab.plot(self.xvals, x, 'b.-', label='Observations')
@@ -313,7 +313,7 @@ class MastcamData(Dataset):
     
     if self.feature in ['sh']:
       if np.greater(self.data, 1.01).any():
-        #print self.data.max()
+        #print(self.data.max())
         pylab.ylim(0, 366)
       else:
         pylab.ylim(0, 1)
@@ -343,7 +343,7 @@ class MastcamData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-(%s).pdf' % (m, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.clf()
 
     pylab.close("all")
@@ -417,7 +417,7 @@ class MastcamData(Dataset):
                    '8. 935 nm\n' +
                    '9. 1035 nm\n')
     else:
-      print "Bad camera: %s" % camera
+      print("Bad camera: %s" % camera)
       lbltxt = "Bad camera."
 
     pylab.annotate(lbltxt, xy=(.2, .95),  xycoords='axes fraction',
@@ -495,7 +495,7 @@ class MastcamData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-(%s).pdf' % (m, label))
     plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
 
     pylab.close(fff)
     pylab.close("all")
@@ -525,9 +525,9 @@ class MastcamData(Dataset):
     # GET ALL FILES WITH GIVEN EXTENSION IN FILEPATH
     files = sorted(glob.glob(str(filepath) + "*" + eyez + "*" + str(suffix) + "*" + str(extension)))
     fileprefixes = sorted(list(set([f.split('/')[-1][0:12] for f in files])))
-    print fileprefixes
+    print(fileprefixes)
     
-    print "found %d files among %d sequences with eye %s and extension %s in %s:" % (len(files), len(fileprefixes), eye, extension, filepath)
+    print("found %d files among %d sequences with eye %s and extension %s in %s:" % (len(files), len(fileprefixes), eye, extension, filepath))
     assert len(files) > 0
     
     numfiles = len(fileprefixes)
@@ -542,7 +542,7 @@ class MastcamData(Dataset):
     self.labels = []
     
     for fileprefix in fileprefixes:
-      print "  " + fileprefix    
+      print("  " + fileprefix)
     
       thissequence = sorted(glob.glob(str(filepath) + fileprefix + "*" + str(suffix) + "*" + str(extension)))
       asdfghjkl = 0
@@ -557,12 +557,12 @@ class MastcamData(Dataset):
         h = int(labels['IMAGE']['LINES'])
         w = int(labels['IMAGE']['LINE_SAMPLES'])
         dimlist.append([h, w])
-        #print "    %s %s %s" % (filt, h, w)
+        #print("    %s %s %s" % (filt, h, w))
 
-        print "Filter name:", labels['INSTRUMENT_STATE_PARMS']['FILTER_NAME']
+        print("Filter name:", labels['INSTRUMENT_STATE_PARMS']['FILTER_NAME'])
         
-      #print seqfiltstr
-      # print dimlist
+      #print(seqfiltstr)
+      # print(dimlist)
       seqstocombine = []
       
       # Handle cases which appear to be several series of observations
@@ -574,7 +574,7 @@ class MastcamData(Dataset):
             cont = False
             for j in range(7*i, 7*i+7):
               if dimlist[7*i] != dimlist[j]:
-                print "SIZE ERROR"
+                print("SIZE ERROR")
                 cont = True
             if cont:
                 continue
@@ -591,7 +591,7 @@ class MastcamData(Dataset):
               
               break
             else:
-              print "Length multiple of 7 but bad sequence"
+              print("Length multiple of 7 but bad sequence")
 
       # Non-7 number of observations
       else:
@@ -602,7 +602,7 @@ class MastcamData(Dataset):
             cont = False
             for j in range(i, i+7):
               if dimlist[i] != dimlist[j]:
-                print "SIZE ERROR"
+                print("SIZE ERROR")
                 cont = True
             if cont: continue
             
@@ -625,7 +625,7 @@ class MastcamData(Dataset):
           try:
             (image, lbls) = self.load_image(namestem, filepath, ext=extension, lblext=lblext)
           except ValueError as e:
-            #print "An error happened while processing %s" % filename
+            #print("An error happened while processing %s" % filename)
             err = True
             break
 
@@ -634,7 +634,7 @@ class MastcamData(Dataset):
           if b == 3:
             self.rgbdict[fileprefix + str(asdfghjkl)] = namestem
             fullimages[fileprefix + str(asdfghjkl)] = image
-            #print "Stored %s to rgbdict" % (fileprefix + str(asdfghjkl))
+            #print("Stored %s to rgbdict" % (fileprefix + str(asdfghjkl)))
           
           if bigimage == None and 'sol388' not in filepath:
             bigimage = np.zeros([h, w, 9], dtype='uint8')
@@ -672,10 +672,10 @@ class MastcamData(Dataset):
           bigimage = bi
 
         if err:
-          print "   ...didn't load sequence.  There was an error."
+          print("   ...didn't load sequence.  There was an error.")
           continue
           
-        print "   ...loaded one sequence:", (fileprefix + str(asdfghjkl))
+        print("   ...loaded one sequence:", (fileprefix + str(asdfghjkl)))
         
         if 'sol388' not in self.archive:
           name = fileprefix + str(asdfghjkl) + '_' + unit + '_' + feature
@@ -698,20 +698,20 @@ class MastcamData(Dataset):
       # output read-in progress
       if percent < 100:
         if (round((seen / float(numfiles)) * 100, 1) >= percent) and (printed[int(percent * 10)] == False):
-          #print "...%3.1f%%..." % percent
+          #print("...%3.1f%%..." % percent)
           printed[int(percent * 10)] == True
           percent = round(((seen / float(numfiles)) * 100), 1) + 1
-    print "...100%..."
-    print "Transposing data..."
+    print("...100%...")
+    print("Transposing data...")
     data = np.array(data).T
     self.xvals.sort()
     
     # Output the pickle
-    print "Writing pickle to " + self.archive + " ..."
+    print("Writing pickle to " + self.archive + " ...")
     outf = open(self.archive, 'w')
     pickle.dump((data, fullimages, segmentation, self.labels, self.xlabel, self.ylabel, self.xvals, self.rgbdict, self.lblext, self.initdata, self.initfilename), outf)
     outf.close()
-    print "Wrote pickle to " + self.archive
+    print("Wrote pickle to " + self.archive)
     
 #_______________________________________________________________________________
 #____________________________________load_image_________________________________
@@ -728,7 +728,7 @@ class MastcamData(Dataset):
       h = int(labels['IMAGE']['LINES'])
       w = int(labels['IMAGE']['LINE_SAMPLES'])
 
-      #print "h: %d, w: %d, type: %s" % (h, w, labels['IMAGE']['SAMPLE_TYPE'])
+      #print("h: %d, w: %d, type: %s" % (h, w, labels['IMAGE']['SAMPLE_TYPE']))
       if labels['IMAGE']['SAMPLE_TYPE'] == 'UNSIGNED_INTEGER':
           dt = "uint" + labels['IMAGE']['SAMPLE_BITS']
           #pprint(labels['IMAGE'])
@@ -740,9 +740,9 @@ class MastcamData(Dataset):
           dt = ">u" + str(int(labels['IMAGE']['SAMPLE_BITS'])/8)
           #pprint(labels['IMAGE'])
           imgarr = np.fromfile(imgpath, dtype=dt, sep="")
-          #print imgarr.dtype
+          #print(imgarr.dtype)
           imgarr = imgarr.byteswap().newbyteorder()
-          #print imgarr.dtype
+          #print(imgarr.dtype)
           #imgarr = np.bitwise_and(4095, imgarr)
           imgarr = imgarr.astype('float16')
           imgarr = imgarr / 4095 * 255
@@ -756,22 +756,22 @@ class MastcamData(Dataset):
           imgarr = imgarr.astype('uint8')
           
       else:
-          print "Error: unknown sample type: %s" % labels['IMAGE']['SAMPLE_TYPE']
+          print("Error: unknown sample type: %s" % labels['IMAGE']['SAMPLE_TYPE'])
           exit()
 
       L = len(imgarr)
       B = int(labels['IMAGE']['BANDS'])
       
-      #print "%7d  %s  %s" % (B, name, labels['INSTRUMENT_STATE_PARMS']['FILTER_NAME'])
+      #print("%7d  %s  %s" % (B, name, labels['INSTRUMENT_STATE_PARMS']['FILTER_NAME']))
       
       if B == 1:
-        #print "One band: %s" % name
-        #print imgarr.shape
+        #print("One band: %s" % name)
+        #print(imgarr.shape)
         pass
       X = L / B
-      #print "len: %d, h*w: %d, bands: %d, div: %d" % (L, h*w, B, X)
+      #print("len: %d, h*w: %d, bands: %d, div: %d" % (L, h*w, B, X))
       assert (L % B == 0)
-      #print "max: %d, min: %d, mean: %d" % (max(imgarr), min(imgarr), np.mean(imgarr))
+      #print("max: %d, min: %d, mean: %d" % (max(imgarr), min(imgarr), np.mean(imgarr)))
       
       if B == 3:
         img = np.zeros((h, w, B), dtype='uint8')
@@ -784,8 +784,8 @@ class MastcamData(Dataset):
         img = img2
       else:
         # should never get here
-        print "Error: Your dimensionality is ridiculous."
-        print "   Why does the image have %d bands?" % B
+        print("Error: Your dimensionality is ridiculous.")
+        print("   Why does the image have %d bands?" % B)
         exit(-1)
       
       if show:
@@ -800,12 +800,12 @@ class MastcamData(Dataset):
 #
   
   def segment_image(self, image, unit='f', windowsize=120, windowoffset=60, n_segments=None, compactness=0.75, margin=6, segment_size_pixels=16.0):
-    #print image.shape
+    #print(image.shape)
     (h, w, b) = image.shape
 
     if n_segments == None:
       n_segments = int((h / segment_size_pixels) * (w / segment_size_pixels))
-      print "Using %d segments" % n_segments
+      print("Using %d segments" % n_segments)
 
     if unit == 'f':
       return ([image], [''])
@@ -839,9 +839,9 @@ class MastcamData(Dataset):
       (segmentation, _, _) = seg.relabel_sequential(segmentation)
 
       segflat = segmentation.flatten()
-      print "Number of segments should be: ", n_segments
+      print("Number of segments should be: ", n_segments)
       n_segments_now = len(list(set(segflat)))
-      print "Number of segments actually is: ", n_segments_now
+      print("Number of segments actually is: ", n_segments_now)
       subunits = []
       sublabels = []
       
@@ -862,11 +862,11 @@ class MastcamData(Dataset):
         
       return (subunits, sublabels)
     else:
-      print "Error: unit %s not supported" % unit
-      print "Accepted units are:"
-      print "  f: full image"
-      print "  w: window regions within image"
-      print "  s: image segments"
+      print("Error: unit %s not supported" % unit)
+      print("Accepted units are:")
+      print("  f: full image")
+      print("  w: window regions within image")
+      print("  s: image segments")
       exit()
 
 #_______________________________________________________________________________
@@ -878,7 +878,7 @@ class MastcamData(Dataset):
     if type(image) == tuple:
       return self.process_segment(image, name, feature)
 
-    #print "...processing %s..." % name
+    #print("...processing %s..." % name)
 
     # Start letters: c, f, g, s
     # End letters:   d, e, h, m, t
@@ -983,7 +983,7 @@ class MastcamData(Dataset):
     if self.unit in ['w', 's']:
       m = np.mean(image.flatten())
       image = np.minimum(np.maximum(np.subtract(image, m - 128), 0), 255)
-      #print "Now: [%d - %d - %d]" % (np.min(image), np.mean(image), np.max(image))
+      #print("Now: [%d - %d - %d]" % (np.min(image), np.mean(image), np.max(image)))
     
     # Get color histograms
     if 'ch' in feature:
@@ -1027,8 +1027,8 @@ class MastcamData(Dataset):
       # if k == 1:
       #   hist = np.minimum(np.maximum(np.subtract(hist, np.mean(hist) - 128), 0), 255)
       
-      #print len(hist)
-      #print hist
+      #print(len(hist))
+      #print(hist)
       
       featurevector.extend(hist)
       # featurevector.extend(stds)
@@ -1039,7 +1039,7 @@ class MastcamData(Dataset):
       elif name[5] == 'R':
         self.xvals = np.array([460, 540, 620, 440, 525, 800, 905, 935, 1035])
       else:
-        print "name[5] is actually", name[5]
+        print("name[5] is actually", name[5])
         self.xvals = np.array(range(0, len(featurevector)))
 
     else:
@@ -1059,7 +1059,7 @@ class MastcamData(Dataset):
     try:
       segno = int(name.split('~')[-1])
       if segno % 25 == 0:
-        print name
+        print(name)
     except:
       pass
     img = image[0]
@@ -1076,7 +1076,7 @@ class MastcamData(Dataset):
           flat.append(img[i,j,:])
 
     flat = np.asarray(flat)
-    # print flat.shape
+    # print(flat.shape)
     flatgray = flat.sum(1) / float(b)
 
     featurevector = []
@@ -1122,7 +1122,7 @@ class MastcamData(Dataset):
   def collapse_RGB(self, image, name):
     if len(image.shape) == 3:
       if image.shape[2] == 1:
-        #print "  this image (%s)\n   is only one channel as of reaching process_image" % name
+        #print("  this image (%s)\n   is only one channel as of reaching process_image" % name)
         pass
       elif image.shape[2] == 3:
         #image = image.astype('uint8')
@@ -1144,13 +1144,13 @@ class MastcamData(Dataset):
         image = image / 7
         image = image.astype('uint8')
       else:
-        print "This image has %d color bands and that's weird." % image.shape[2]
+        print("This image has %d color bands and that's weird." % image.shape[2])
         exit()
     elif len(image.shape) == 2:
-      print "This image has only one channel!"
+      print("This image has only one channel!")
       pass
     else:
-      print "This image has %d dimensions and that's weird." % len(image.shape)
+      print("This image has %d dimensions and that's weird." % len(image.shape))
       exit()
       
     return image

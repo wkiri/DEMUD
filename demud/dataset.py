@@ -58,7 +58,7 @@ class Dataset(object):
     """
     
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
   
     pylab.clf()
@@ -77,7 +77,7 @@ class Dataset(object):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
     
@@ -127,7 +127,7 @@ class Dataset(object):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote SVD to %s' % figfile
+    print('Wrote SVD to %s' % figfile)
     pylab.close()
 
 
@@ -163,7 +163,7 @@ class Dataset(object):
     outdir = os.path.join('results', self.name)
     simfile = os.path.join(outdir, 'similar-k%d-i%d.html' % (k, i))
 
-    print "%d: Scores range from %f to %f." % (i, scores.min(), scores.max())
+    print("%d: Scores range from %f to %f." % (i, scores.min(), scores.max()))
 
     # Not clear how to select a threshold for similarity; 
     # no good histogram-analysis methods so far.
@@ -190,7 +190,7 @@ class Dataset(object):
     j_ind = 0
     while n_printed < n:
       (j, sc) = sel_sort[j_ind]
-      print j, sc
+      print(j, sc)
       j_ind += 1
       if j == ind: # skip this item
         continue
@@ -203,7 +203,7 @@ class Dataset(object):
     fid.write('</body></html>\n')
     fid.close()
 
-    print '%d similar items (those with reconstruction error at most %f) of %d total.' % (numpy.sum(scores <= best_thresh), best_thresh, len(scores))
+    print('%d similar items (those with reconstruction error at most %f) of %d total.' % (numpy.sum(scores <= best_thresh), best_thresh, len(scores)))
 
     raw_input()
 
@@ -215,5 +215,5 @@ if __name__ == "__main__":
   filename                = os.path.basename(__file__)
 
   if num_failed == 0:
-    print "%-20s All %3d tests passed!" % (filename, num_tests)
+    print("%-20s All %3d tests passed!" % (filename, num_tests))
 
