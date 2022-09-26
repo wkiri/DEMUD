@@ -56,7 +56,8 @@ import pickle
 import optparse
 from optparse import *
 
-__VERSION__ = "1.7" # Adds compatibility for Windows filenames
+exec(open('demud/version.py').read())  # brings in a "version" variable
+__VERSION__ = version
 
 default_k_values = {}
 default_n_value = 10
@@ -150,10 +151,10 @@ def  score_items(X, U, mu,
     # 1b. Reconstruct by projecting back up and adding mean
     reproj = np.dot(U, proj) + mu
     # 1c. Compute the residual
-    #print 'X:', X.T
-    #print 'reproj:', reproj.T
+    #print('X:', X.T)
+    #print('reproj:', reproj.T)
     err    = X - reproj
-    #print 'err:', err.T
+    #print('err:', err.T)
     #raw_input()
     
   else:
@@ -181,8 +182,8 @@ def  score_items(X, U, mu,
   else:
     scores = np.sum(np.array(np.power(err, 2)), axis=0)
 
-  #print 'scores:', scores
-  #print 'reproj:', reproj
+  #print('scores:', scores)
+  #print('reproj:', reproj)
   #raw_input()
   return (scores, reproj)
   
@@ -219,7 +220,7 @@ def  select_next(X, U, mu,
     its reconstruction score, and all items' reconstruction scores.
   """
 
-  print "------------ SELECTING --------------"
+  print("------------ SELECTING --------------")
   if U == []:
     printt("Empty DEMUD model: selecting item number %d from data set" % \
              (log.opts['iitem']))
@@ -245,11 +246,11 @@ def  select_next(X, U, mu,
   # Select and return index of item with max reconstruction error,
   # plus the updated scores and reproj
   m = scores.argmax()
-  #print 'mu:',mu
-  #print 'selected:', X[:,m]
-  #print 'selected-mu:', (X-mu)[:,m]
-  #print 'reproj:', reproj[:,m]
-  #print 'reproj-mu:', (reproj-mu)[:,m]
+  #print('mu:',mu)
+  #print('selected:', X[:,m])
+  #print('selected-mu:', (X-mu)[:,m])
+  #print('reproj:', reproj[:,m])
+  #print('reproj-mu:', (reproj-mu)[:,m])
   #raw_input()
 
   return m, scores, reproj
@@ -309,8 +310,8 @@ def  update_model(X, U, S, k, n, mu,
   if X == []:
     printt("Error: No data in X.")
     return None, None, None, -1, None
-  #print '%d items in X' % X.shape[1]
-  #print 'init U:', U
+  #print('%d items in X' % X.shape[1])
+  #print('init U:', U)
 
   # If there is no previous U, and we just got a single item in X,
   # set U to all 0's (degenerate SVD),
@@ -354,8 +355,8 @@ def  update_model(X, U, S, k, n, mu,
     X     = X - mu
     U, S, V = linalg.svd(X, full_matrices=False)
     printt('Just did full SVD on %d items.' % X.shape[1])
-    #print 'X:',X
-    #print 'U:',U
+    #print('X:', X)
+    #print('U:', U)
     # Reset U to all 0's if we only have one item in X (degenerate SVD)
     if X.shape[1] == 1:
       U = np.zeros_like(U)
@@ -377,10 +378,10 @@ def  update_model(X, U, S, k, n, mu,
 
     # This method DOES NOT handle missing values.
     if missingmethod == 'ignore':
-      print 'ERROR: increm-ross cannot handle missing values.'
-      print 'If they are present, try svdmethod=increm-brand'
-      print '  or use missingmethod=zero to zero-fill.'
-      print 'If there are no missing values, specify missingmethod=none.'
+      print('ERROR: increm-ross cannot handle missing values.')
+      print('If they are present, try svdmethod=increm-brand')
+      print('  or use missingmethod=zero to zero-fill.')
+      print('If there are no missing values, specify missingmethod=none.')
       sys.exit(1)
 
     n_new  = X.shape[1]
@@ -416,7 +417,7 @@ def  update_model(X, U, S, k, n, mu,
     # to get orthogonal form of reproj_err
     #  This should return q with dimensions [d(X) by n_new+1], square
     q, dummy   = linalg.qr(reproj_err, mode='full')
-    # print 'q.shape should be 7x2: ', q.shape
+    # print('q.shape should be 7x2: ', q.shape)
     Q = np.hstack((U, q))
 
     # From Ross and Lim, 2008
@@ -448,7 +449,7 @@ def  update_model(X, U, S, k, n, mu,
     n_new  = X.shape[1]
 
     if n_new != 1:
-      print "WARNING: increm-brand will probably only work by adding one item at a time."
+      print("WARNING: increm-brand will probably only work by adding one item at a time.")
       raw_input('\nPress enter to continue or ^C/EOF to exit. ')
 
     if missingmethod == 'ignore':
@@ -481,7 +482,7 @@ def  update_model(X, U, S, k, n, mu,
       # 3. Compute L, the projection of X onto U
       # Note: this will only work for a single item in X
       goodinds = np.where(~np.isnan(X))[0]
-      #print 'X: %d of %d are good.' % (len(goodinds), X.shape[0])
+      #print('X: %d of %d are good.' % (len(goodinds), X.shape[0]))
 
       diagS    = np.diag(S)
       # This is Brand's method, which involves S:
@@ -582,7 +583,7 @@ def  update_model(X, U, S, k, n, mu,
   if (svdmethod == 'full' and output_k and log.opts['k_var'] == -773038.0):
     # Calculate percent variance captured by each 
     cumsum      = np.cumsum(S_full)
-    #print cumsum.shape
+    #print(cumsum.shape)
     if cumsum[-1] != 0:
       indivpcts   = S / cumsum[-1]
       indivpcts   = indivpcts[0:k]  # truncate to first k
@@ -598,8 +599,8 @@ def  update_model(X, U, S, k, n, mu,
              (k, cumpercents[k-1] * 100))
     if log.opts['pause']: raw_input("Press enter to continue\n")
 
-  #print 'U:', U
-  #print 'mu:', mu
+  #print('U:', U)
+  #print('mu:', mu)
   return U, S, mu, n, indivpcts
 
 #______________________________demud_______________________________________
@@ -683,7 +684,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     log.opts['fun'] = False # no fun for you!
     log.opts['pause'] = False
 
-    print "No method of initializing the dataset was chosen.  Defaulting to mean."
+    print("No method of initializing the dataset was chosen.  Defaulting to mean.")
 
   log.opts['start_sol'] = start_sol
   log.opts['end_sol']   = end_sol
@@ -813,7 +814,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     #   then there will still be NaNs in mu.  We can safely set them to zero for now
     #   because 'ignore' will mean that these values don't ever get looked at again.
     #mu[np.isnan(mu)] = 0
-    # print "Just calculated mean."
+    # print("Just calculated mean.")
     #U, S, V = linalg.svd(mu, full_matrices=False)
 
     # Instead, treat this like we do for first selection normally.
@@ -851,7 +852,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   reproj = []
   for i in range(nsel):
     printt("Time elapsed at start of iteration %d/%d:" % (i, nsel-1),
-           time.clock())
+           '%.1f sec' % time.perf_counter())
 
     ###############################################
     # If we just found a COI (class of interest) in the previous round,
@@ -934,15 +935,15 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     if (len(np.where(np.isnan(X))[0]) > 0 or 
         len(np.where(np.isnan(seen))[0]) > 0):
       goodinds = np.where(~np.isnan(x))[0]
-      print '  Sel. %d: %d (%.2f%%) good indices (not NaN)' % \
-          (i, len(goodinds), 100*len(goodinds) / float(len(x)))
+      print('  Sel. %d: %d (%.2f%%) good indices (not NaN)' % \
+            (i, len(goodinds), 100*len(goodinds) / float(len(x))))
     
     ###############################################
     # Plot item using dataset's plotting method.
     label = ds.labels[orig_ind[ind]]
     if log.opts['kepler']:
       dc = log.opts['static'] or (U != [] and U.shape[1] > 1)
-      dsvd = (log.opts['static'] and i is 0) or (U != [] and U.shape[1] > 1)
+      dsvd = (log.opts['static'] and i == 0) or (U != [] and U.shape[1] > 1)
       if log.opts['plot']:
         ds.plot_item(i, orig_ind[ind], x, r, k, label,
                      U, mu, S, X, pcts, scores, drawsvd=dsvd, drawcloud=dc)
@@ -1189,7 +1190,8 @@ def  read_feature_weights(fwfile, xvals):
 def  finish_initialization(ds, action='reading in dataset'):
   global use_max_n, default_n_value
 
-  printt("Time elapsed after " + action + ":", time.clock())
+  printt("Time elapsed after " + action + ":",
+         '%.1f sec' % time.perf_counter())
 
   if use_max_n or default_n_value > ds.data.shape[1]:
     printt("Iterating through all data vectors.")
@@ -1221,7 +1223,7 @@ def  check_if_files_exist(files, ftype='input'):
 # Reports upon classes found.  Suppressed with --no-report option.
 def report_classes(ds, sels, sels_idx, data_choice):
   # print a list of all classes found in first nsel selections
-  if not (data_choice is 'navcam'):
+  if data_choice != 'navcam':
     found = []
     printt("CLASSES FOUND:\n")
     for (i, s) in enumerate(sels):
@@ -2235,7 +2237,8 @@ def  main():
     content        = config_file.readlines()
     data_files,etc = parse_config(content, data_choice)
 
-  printt("Elapsed time after parsing args and reading config file:", time.clock())
+  printt("Elapsed time after parsing args and reading config file:",
+         '%.1f sec' % time.perf_counter())
   
   ###########################################################################
   ## Now we are moving on to the cases which handle each data set.
@@ -2335,13 +2338,14 @@ def  main():
       
   ###########################################################################
 
-  printt("Total elapsed processor time:", time.clock()) 
+  printt("Total elapsed processor time:",
+         '%.1f sec' % time.perf_counter())
 
   log.logfile.close()
-  print "Wrote log to %s\n" % log.logfilename
+  print("Wrote log to %s\n" % log.logfilename)
 
   if (log.opts['fun']):
-    print base64.b64decode('VGhhbmsgeW91LCBjb21lIGFnYWlu')
+    print(base64.b64decode('VGhhbmsgeW91LCBjb21lIGFnYWlu'))
     print
 
 
@@ -2357,7 +2361,8 @@ if __name__ == "__main__":
 #  1.4: Incremental SVD fully functional; choice of first element
 #  1.5: Feature weighting included; full SVD option for init-item=-1 back in
 #  1.6: Start of summer 2014, added to include Mastcam support
-#  1.7: [inprogress] implementing image processing w/ CNN
+#  1.7: Implemented image processing w/ CNN
+#  2.0: Compatible with python 3
 #
 #####
 
