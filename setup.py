@@ -16,6 +16,9 @@ setup(name='DEMUD',
       author_email='kiri.wagstaff@jpl.nasa.gov',
       url='https://github.com/wkiri/DEMUD',
       packages=['demud'],
-      install_requires=['matplotlib', 'numpy', 'pillow'],
+      install_requires=['matplotlib',
+                        'numpy',
+                        'scipy',
+                        'pillow'],
       entry_points={'console_scripts': ['demud=demud.demud:main']}
      )
