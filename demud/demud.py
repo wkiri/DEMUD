@@ -1499,9 +1499,9 @@ def  parse_args():
                       default=False, action='store_true', dest='ucis')
   dtypes.add_option('-z', '--isolet', help='ISOLET letter recognition data', 
                       default=False, action='store_true', dest='isolet')
-  dtypes.add_option('-q', '--navcam', help='Run for sequence of Images (MER purpose)', 
+  dtypes.add_option('-q', '--navcam', help='Sequence of MER Pancam images)', 
                       default=False, action='store_true', dest='navcam')
-  dtypes.add_option('-j', '--mastcam', help='MSL Mastcam image data', 
+  dtypes.add_option('-j', '--mastcam', help='MSL Mastcam images', 
                       default=False, action='store_true', dest='mastcam')
   dtypes.add_option('-I', '--images', help='Image data in a directory', 
                       default=False, action='store_true', dest='images')
