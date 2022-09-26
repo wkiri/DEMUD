@@ -39,7 +39,7 @@ def printt(*args):
     printed += str(s) + ' '
   
   printed = printed[:-1]
-  print printed
+  print(printed)
   
   if opts != {} and opts['log']:
     if logfile != None:
