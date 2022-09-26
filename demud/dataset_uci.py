@@ -46,8 +46,9 @@ class UCIDataset(Dataset):
         # Skip over empty lines
         if line.strip() == '' or line[0] == '#':
           continue
-        attributes = re.split(',* *', line.strip())
-        
+        attributes = re.split(',* +', line.strip())
+
+        print(attributes)
         self.data += [[float(x) for x in attributes[nskip:-1]]]
         self.samples.append(attributes[0])
         self.labels.append(attributes[-1])
@@ -72,7 +73,7 @@ class UCIDataset(Dataset):
     """
     
     if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+      print("Error: No data in x and/or r.")
       return
    
     # Select the features to plot
@@ -121,7 +122,7 @@ class UCIDataset(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
   
     
