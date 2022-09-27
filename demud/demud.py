@@ -1068,7 +1068,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
     ###############################################
     # Remove this item from X and other variables
-    keep     = range(X.shape[1])
+    keep     = list(range(X.shape[1]))
     keep.remove(ind)
     X        = X[:,keep]
     orig_ind = orig_ind[keep]
