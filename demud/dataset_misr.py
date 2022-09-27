@@ -254,7 +254,7 @@ class MISRData(Dataset):
         for x in range(0,data_g.shape[0],64):
           for y in range(0,data_g.shape[1],64):
             converted = np.multiply(data_g[x:x+64,y:y+64],
-                                       conv_factor[x/64,y/64])
+                                       conv_factor[x // 64, y // 64])
             data_g[x:x+64,y:y+64] = converted
         
         dataset  = sd.select('Red Radiance/RDQI')
@@ -277,7 +277,7 @@ class MISRData(Dataset):
         for x in range(0,data_r.shape[0],64):
           for y in range(0,data_r.shape[1],64):
             converted = np.multiply(data_r[x:x+64,y:y+64],
-                                       conv_factor[x/64,y/64])
+                                       conv_factor[x // 64, y // 64])
             data_r[x:x+64,y:y+64] = converted
         
         dataset  = sd.select('Blue Radiance/RDQI')
@@ -300,7 +300,7 @@ class MISRData(Dataset):
         for x in range(0,data_b.shape[0],64):
           for y in range(0,data_b.shape[1],64):
             converted = np.multiply(data_b[x:x+64,y:y+64],
-                                       conv_factor[x/64,y/64])
+                                       conv_factor[x // 64, y // 64])
             data_b[x:x+64,y:y+64] = converted
         
         im = np.zeros([2048, 2048, 3])

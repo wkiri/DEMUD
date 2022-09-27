@@ -280,7 +280,7 @@ class MastcamData(Dataset):
     pylab.clf()
     # xvals, x, and r need to be column vectors
     # if feature == 'sh':
-      # l = len(r) / 2
+      # l = len(r) // 2
       # print("Length of r is:", len(r))
       # print(r.shape)
       # print("Length of self.xvals:", len(self.xvals))
@@ -567,7 +567,7 @@ class MastcamData(Dataset):
       
       # Handle cases which appear to be several series of observations
       if len(seqfiltstr) % 7 == 0:
-        for i in range(len(seqfiltstr) / 7):
+        for i in range(len(seqfiltstr) // 7):
           subseq = thissequence[7*i:7*i+7]
           subseqfilt = seqfiltstr[7*i:7*i+7]
           if subseqfilt == '0123456':
@@ -583,8 +583,8 @@ class MastcamData(Dataset):
             
           else:
             if seqfiltstr == '00112233445566':
-              seq1 = [thissequence[2*i] for i in range(len(thissequence)/2)]
-              seq2 = [thissequence[2*i+1] for i in range(len(thissequence)/2)]
+              seq1 = [thissequence[2*i] for i in range(len(thissequence) // 2)]
+              seq2 = [thissequence[2*i+1] for i in range(len(thissequence) // 2)]
               
               seqstocombine.append(seq1)
               seqstocombine.append(seq2)
@@ -737,7 +737,7 @@ class MastcamData(Dataset):
           
       elif labels['IMAGE']['SAMPLE_TYPE'] == 'MSB_UNSIGNED_INTEGER':
           #dt = "uint" + labels['IMAGE']['SAMPLE_BITS']
-          dt = ">u" + str(int(labels['IMAGE']['SAMPLE_BITS'])/8)
+          dt = ">u" + str(int(labels['IMAGE']['SAMPLE_BITS']) // 8)
           #pprint(labels['IMAGE'])
           imgarr = np.fromfile(imgpath, dtype=dt, sep="")
           #print(imgarr.dtype)
@@ -745,7 +745,7 @@ class MastcamData(Dataset):
           #print(imgarr.dtype)
           #imgarr = np.bitwise_and(4095, imgarr)
           imgarr = imgarr.astype('float16')
-          imgarr = imgarr / 4095 * 255
+          imgarr = imgarr // 4095 * 255
           input("WARNING.  THE CODE HAS JUST CHANGED THE DATA VALUES FROM float16 TO uint8.\n"
                 " THIS WAS INITIALLY DONE FOR VISUALIZATION BUT HAS CAUSED PROBLEMS.\n"
                 "  PLEASE FIX, IF POSSIBLE!  NEEDS RE-TYPING OF ALL ARRAYS.\n"
@@ -768,7 +768,7 @@ class MastcamData(Dataset):
         #print("One band: %s" % name)
         #print(imgarr.shape)
         pass
-      X = L / B
+      X = L // B
       #print("len: %d, h*w: %d, bands: %d, div: %d" % (L, h*w, B, X))
       assert (L % B == 0)
       #print("max: %d, min: %d, mean: %d" % (max(imgarr), min(imgarr), np.mean(imgarr)))
@@ -804,7 +804,7 @@ class MastcamData(Dataset):
     (h, w, b) = image.shape
 
     if n_segments == None:
-      n_segments = int((h / segment_size_pixels) * (w / segment_size_pixels))
+      n_segments = (h // segment_size_pixels) * (w // segment_size_pixels)
       print("Using %d segments" % n_segments)
 
     if unit == 'f':
@@ -960,7 +960,7 @@ class MastcamData(Dataset):
       #fftimagefull = fftimage
       #fftimage = fftimage[fftimage.shape[0]/2.0-fftlen/2.0:fftimage.shape[0]/2.0+fftlen/2.0, fftimage.shape[1]/2.0-fftlen/2.0:fftimage.shape[1]/2.0+fftlen/2.0]
       fftvector = fftimage.flatten()
-      fftvector = fftvector/ float(sum(fftvector))
+      fftvector = fftvector / float(sum(fftvector))
       
       pylab.clf()
       #fftimagefull[fftimagefull.shape[0]/2-1:fftimagefull.shape[0]/2, fftimagefull.shape[1]/2-1:fftimagefull.shape[1]/2] = 0
@@ -1019,7 +1019,8 @@ class MastcamData(Dataset):
         if k == 1:
           hist[b] = np.mean(image[...,b].flatten())
         else:
-          thishist = np.histogram(image[...,b/k].flatten(), np.arange(0,257,256.0/k))[0]
+          thishist = np.histogram(image[...,b // k].flatten(),
+                                  np.arange(0,257,256.0 / k))[0]
           thishist = thishist / float(sum(thishist))
           hist[b:b+k] = thishist
         stds[b] = np.std(image[...,b].flatten())
@@ -1097,7 +1098,7 @@ class MastcamData(Dataset):
       # featurevector.extend(stds)
 
     # Return values and cleanup      
-    # self.xvals  = np.array(range(0, len(featurevector) / 2))
+    # self.xvals  = np.array(range(0, len(featurevector) // 2))
     if 'sh' in feature:
       if name[5] == 'L':
         self.xvals = np.array([460, 540, 620, 440, 525, 675, 750, 865, 1035])
@@ -1134,14 +1135,14 @@ class MastcamData(Dataset):
         #img_show.save('./mastcam_images/%s_bandB.png' % name)
         image = image.astype('uint16')
         image = image[...,0] + image[...,1] + image[...,2]
-        image = image / 3
+        image = image // 3
         image = image.astype('uint8')
         #img_show = PIL.Image.fromarray(image)
         #img_show.save('./mastcam_images/%s_rgb.png' % name)
       elif image.shape[2] == 7:
         image = image.astype('uint16')
         image = image[...,0] + image[...,1] + image[...,2] + image[...,3] + image[...,4] + image[...,5] + image[...,6]
-        image = image / 7
+        image = image // 7
         image = image.astype('uint8')
       else:
         print("This image has %d color bands and that's weird." % image.shape[2])

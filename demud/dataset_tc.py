@@ -82,7 +82,7 @@ class TCData(Dataset):
     #winsize = 20  # for test.pgm
     winsize = 100
     #winsize = 0  # for RGB
-    halfwin = winsize/2
+    halfwin = winsize // 2
 
     nbins   = 101
     bins    = np.linspace(0, 255, nbins)
@@ -94,8 +94,8 @@ class TCData(Dataset):
     labels  = []
 
     # Pick up all windows, stepping by half of the window size
-    for y in range(halfwin, height-halfwin, halfwin/2):
-      for x in range(halfwin, width-halfwin, halfwin/2):
+    for y in range(halfwin, height-halfwin, halfwin // 2):
+      for x in range(halfwin, width-halfwin, halfwin // 2):
         # Read in data in row-major order
         ind = (y-halfwin)*mywidth + (x-halfwin)
         #data[:,ind] = \
@@ -151,8 +151,8 @@ class TCData(Dataset):
       priority = 2
     self.selections[np.where(self.selections < priority)] = priority-2
     (y,x) = map(int, label.strip('()').split(','))
-    #self.selections[ind/mywidth, ind%myheight] = priority
-    qtrwin = self.winsize/8
+    #self.selections[ind // mywidth, ind%myheight] = priority
+    qtrwin = self.winsize // 8
     self.selections[y-qtrwin:y+qtrwin, x-qtrwin:x+qtrwin] = priority
     
     pylab.clf()

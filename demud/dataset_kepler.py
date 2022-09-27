@@ -420,7 +420,7 @@ class KeplerData(Dataset):
                                               range(len(self.cadence_time) - 1)]
       spacing = np.mean(np.array(timediffs)[np.where(~np.isnan(timediffs))])
       freq = np.fft.fftfreq(n, spacing)
-      half_n = np.floor(n / 2.0)
+      half_n = n // 2
       fft_pdc_half = (2.0 / n) * fft_pdc[:half_n]
       freq_half = freq[:half_n]
       
@@ -526,10 +526,10 @@ class KeplerData(Dataset):
       
       # output read-in progress
       if percent < 100:
-        if (round((seen / float(numfiles)) * 100, 1) >= percent) and (printed[int(percent * 10)] == False):
+        if (round((seen / numfiles) * 100, 1) >= percent) and (printed[int(percent * 10)] == False):
           print("...%3.1f%%..." % percent)
           printed[int(percent * 10)] == True
-          percent = round(((seen / float(numfiles)) * 100), 1) + 0.1
+          percent = round(((seen / numfiles) * 100), 1) + 0.1
     print("...100%...")
     data = np.array(flux).T
     

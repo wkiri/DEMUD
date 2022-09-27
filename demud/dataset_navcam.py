@@ -195,7 +195,7 @@ class NavcamData(Dataset):
 
       for ikp in kp:
         (x,y) = ikp.pt
-        scale_angle.append([ikp.size/12, ikp.angle])
+        scale_angle.append([ikp.size // 12, ikp.angle])
         labels    += ['(%d,%d)' % (y,x)]
     
       scale_angle = N.array(scale_angle)
@@ -220,9 +220,9 @@ class NavcamData(Dataset):
     # To be removed in the future
     # Pick up all windows, stepping by half of the window size
     labels  = []
-    halfwin = int(winsize/2)
-    for y in range(halfwin, height-halfwin, int(halfwin/2)):
-      for x in range(halfwin, width-halfwin, int(halfwin/2)):
+    halfwin = winsize // 2
+    for y in range(halfwin, height-halfwin, halfwin // 2):
+      for x in range(halfwin, width-halfwin, halfwin // 2):
         labels    += ['(%d,%d)' % (y,x)]
 
     mlab.bb_dsift(N.array(im), winsize, 'temp.mat')
@@ -244,7 +244,7 @@ class NavcamData(Dataset):
     # Generate one feature vector (histogram) per pixel
     #winsize = 20  # for test.pgm
     #winsize = 0  # for RGB
-    halfwin = int(winsize/2)
+    halfwin = winsize // 2
 
     bins    = scipy.linspace(0, 255, nbins)
 
@@ -257,8 +257,8 @@ class NavcamData(Dataset):
     labels  = []
 
     # Pick up all windows, stepping by half of the window size
-    for y in range(halfwin, height-halfwin, int(halfwin/2)):
-      for x in range(halfwin, width-halfwin, int(halfwin/2)):
+    for y in range(halfwin, height-halfwin, halfwin // 2):
+      for x in range(halfwin, width-halfwin, halfwin // 2):
         # Read in data in row-major order
         ind = (y-halfwin)*mywidth + (x-halfwin)
         #data[:,ind] = \
@@ -346,7 +346,7 @@ class NavcamData(Dataset):
     if not new_feature_string.count('histogram'):
       updated_feature = 1 
       (hist_features, labels, width, height) = self.extract_hist(rawfilename, self.winsize, self.nbins)
-      hist_features = hist_features/(self.winsize)
+      hist_features = hist_features // self.winsize
       if data.size:
         data = scipy.concatenate((data.transpose(), hist_features.transpose()), 1).transpose()
       else:
@@ -399,7 +399,7 @@ class NavcamData(Dataset):
 
   def compute_score(self, img_idx, y, x, mask):
     " Compute the score for deck or met with idx "
-    qtrwin = self.winsize/2
+    qtrwin = self.winsize // 2
     if mask==0:
       mask_file = self.datafiles[img_idx].split('.')[0] + '.jpg'
     elif mask==1:
@@ -416,7 +416,7 @@ class NavcamData(Dataset):
     
     # Matches are pixels with intensity 255, so divide by this
     # to get number of matching pixels.
-    return (csel_mask.sum()/255) 
+    return (csel_mask.sum() // 255) 
 
   def save_rec(self, reconst_features, ind, orig_features, k):
 
@@ -468,7 +468,7 @@ class NavcamData(Dataset):
     # set all unselected items to a value 1 less than the latest
 
     (y,x) = map(int, label.strip('()').split(','))
-    qtrwin = self.winsize/2
+    qtrwin = self.winsize // 2
     if y < qtrwin:
         y = qtrwin
 
@@ -485,7 +485,7 @@ class NavcamData(Dataset):
     im1 = cv2.medianBlur(im1,5)
 
     # Selection matrix manipulation
-    #self.selections[ind/mywidth, ind%myheight] = priority
+    #self.selections[ind // mywidth, ind%myheight] = priority
     self.priority = self.priority + 1
     self.selections[img_idx][y-qtrwin:y+qtrwin, x-qtrwin:x+qtrwin] = self.priority
     self.select_rect[img_idx][self.priority] = ((x-qtrwin, y-qtrwin), (x+qtrwin, y+qtrwin))

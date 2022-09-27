@@ -936,7 +936,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
         len(np.where(np.isnan(seen))[0]) > 0):
       goodinds = np.where(~np.isnan(x))[0]
       print('  Sel. %d: %d (%.2f%%) good indices (not NaN)' % \
-            (i, len(goodinds), 100*len(goodinds) / float(len(x))))
+            (i, len(goodinds), 100*len(goodinds) / len(x)))
     
     ###############################################
     # Plot item using dataset's plotting method.
@@ -1996,7 +1996,7 @@ def  optimize_k(ds, v):
 def plot_variance(ds):
   X = ds.data
   U, S, V = linalg.svd(X, full_matrices=False)
-  pylab.plot([qq+1 for qq in range(S.shape[0])], [sum(S[:a+1]) / float(sum(S)) for a in range(len(S))], '-r')
+  pylab.plot([qq+1 for qq in range(S.shape[0])], [sum(S[:a+1]) / sum(S) for a in range(len(S))], '-r')
   pylab.xlabel('Number of PCs')
   pylab.ylabel('Percentage of variance explained')
   pylab.title('PCs vs. variance for dataset %s' % ds.name.split('-')[0])

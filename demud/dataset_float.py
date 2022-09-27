@@ -141,7 +141,7 @@ class FloatDataset(Dataset):
     pylab.legend(fontsize=10)
 
     # width of triangles to plot
-    width = (self.xvals.max() - self.xvals.min())/100.0
+    width = (self.xvals.max() - self.xvals.min()) / 100.0
     
     for band in band_ind:
       w = float(self.xvals[band])

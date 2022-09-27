@@ -218,7 +218,7 @@ class DECaLSData(Dataset):
 
     # Make a dual bar graph of the original and reconstructed features
     width = 0.35
-    offset = (1 - 2*width) / 2
+    offset = (1 - 2*width) // 2
   
     fig = pylab.figure()
     ax = fig.add_subplot(1, 1, 1)

@@ -26,7 +26,7 @@ import glob
 from log import printt
 
 def progbar(current, to, width=40, show=True):
-    percent = float(current)/float(to)
+    percent = float(current) / float(to)
     length = int( width * percent)
     if show:
         count = " (%d/%d)    " % (current, to)

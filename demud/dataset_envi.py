@@ -276,7 +276,7 @@ class ENVIData(Dataset):
       raw_data = raw_data.reshape((info['bands'],info['lines'],info['samples']))
       for b in range(info['bands']):
         for i in range(info['lines'] * info['samples']):
-          l = int(i / info['samples'])
+          l = i // info['samples']
           s = i % info['samples']
           self.data[b,i] = raw_data[b,l,s]
 
@@ -285,7 +285,7 @@ class ENVIData(Dataset):
       raw_data = raw_data.reshape((info['lines'],info['bands'],info['samples']))
       for b in range(info['bands']):
         for i in range(info['lines'] * info['samples']):
-          l = int(i / info['samples'])
+          l = i // info['samples']
           s = i % info['samples']
           self.data[b,i] = raw_data[l,b,s]
     
@@ -556,14 +556,14 @@ class ENVIData(Dataset):
     # Plot #2: zoom of selected pixel, 20x20 context
     pylab.subplot(2,2,2)
     winwidth = 20
-    minl = max(0, l-winwidth/2)
-    mins = max(0, s-winwidth/2)
-    maxl = min(self.lines,   l+winwidth/2)
-    maxs = min(self.samples, s+winwidth/2)
+    minl = max(0, l - winwidth // 2)
+    mins = max(0, s - winwidth // 2)
+    maxl = min(self.lines,   l + winwidth // 2)
+    maxs = min(self.samples, s + winwidth // 2)
     pylab.imshow(self.rgb_data[minl:maxl, mins:maxs],
                  interpolation='none') #, alpha=0.85)
-    pylab.gca().add_patch(Rectangle((min(winwidth/2,s)-1,
-                                     min(winwidth/2,l)-1),
+    pylab.gca().add_patch(Rectangle((min(winwidth // 2, s) - 1,
+                                     min(winwidth // 2, l) - 1),
                                      2, 2,
                                      fill=None, alpha=1))
     pylab.axis('off')

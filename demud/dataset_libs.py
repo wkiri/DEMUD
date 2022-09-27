@@ -553,7 +553,7 @@ class LIBSData(Dataset):
 
     printt('Filtering shot noise with a width of %d (this may take some time).' % L)
 
-    Lwing = (L-1)/2
+    Lwing = (L-1) // 2
 
     (d,n) = data.shape  # assume items are column vectors
     data2 = np.zeros_like(data)
@@ -782,7 +782,7 @@ class LIBSData(Dataset):
     waves.sort()
     lo_b = 0
     hi_b = len(waves)
-    b    = int(math.floor((hi_b + lo_b) / 2))
+    b    = (hi_b + lo_b) // 2
     while lo_b < hi_b:
       diff = float(waves[b]) - w
       ldiff = float('Inf')
@@ -799,7 +799,7 @@ class LIBSData(Dataset):
         hi_b = b
       else:  # too low
         lo_b = b
-      b = int(math.floor((hi_b + lo_b) / 2))
+      b = (hi_b + lo_b) // 2
 
     # Quality control: must be within match nm
     if abs(float(waves[b]) - w) > min_match_nm:
