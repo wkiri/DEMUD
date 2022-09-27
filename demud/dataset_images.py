@@ -287,7 +287,7 @@ class ImageData(Dataset):
           fnmatch.fnmatch(f, '*.JPG') or
           fnmatch.fnmatch(f, '*.png')):
         # Read in the image
-        filename = dirname + '/' + f
+        filename = os.path.join(dirname, f)
         im = imread(filename)
 
         if imshape[0] == -1:
