@@ -276,33 +276,31 @@ class ImageData(Dataset):
     imshape = (-1, -1, -1)
 
     # Read in the image data
-    files = sorted(os.listdir(dirname))
-    numimages = len(os.listdir(dirname))
-    print(numimages)
-    printt("Loading files:")
+    files = sorted([f for f in os.listdir(dirname) if
+                    (f.endswith('.jpg') or
+                     f.endswith('.JPG') or
+                     f.endswith('.png'))])
+    numimages = len(files)
+    printt("Loading %d files:" % numimages)
     counter = 0
     for idx,f in enumerate(files):
-      # Unix-style wildcards. 
-      if (fnmatch.fnmatch(f, '*.jpg') or
-          fnmatch.fnmatch(f, '*.JPG') or
-          fnmatch.fnmatch(f, '*.png')):
         # Read in the image
         filename = os.path.join(dirname, f)
         im = imread(filename)
 
         if imshape[0] == -1:
-          #data = np.zeros([], dtype=np.float32).reshape(numimages, np.prod(im.shape))
-          data = np.zeros([numimages, np.prod(im.shape)], dtype=np.float32)
-          #data = np.array([], dtype=np.float32).reshape(0,np.prod(im.shape))
-          imshape = im.shape
+            #data = np.zeros([], dtype=np.float32).reshape(numimages, np.prod(im.shape))
+            data = np.zeros([numimages, np.prod(im.shape)], dtype=np.float32)
+            #data = np.array([], dtype=np.float32).reshape(0,np.prod(im.shape))
+            imshape = im.shape
         else:
-          # Ensure that all images are the same dimensions
-          if imshape != im.shape:
-            if len(im.shape) == 2:
-              # Convert grayscale to rgb
-              im = np.dstack((im, im, im))
-            else:
-              raise ValueError('Images must all have the same dimensions.')
+            # Ensure that all images are the same dimensions
+            if imshape != im.shape:
+                if len(im.shape) == 2:
+                    # Convert grayscale to rgb
+                    im = np.dstack((im, im, im))
+                else:
+                    raise ValueError('Images must all have the same dimensions.')
 
         #data = np.vstack([data, im.reshape(1,np.prod(im.shape))])
         data[counter] = im.reshape(1, np.prod(im.shape))
