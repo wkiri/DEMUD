@@ -180,8 +180,8 @@ class ImageData(Dataset):
         # Shift so 0 is at 127,127,127.
         minres = np.min(resid)
         maxres = np.max(resid)
-        range  = max(abs(minres), maxres)
-        im = pylab.imshow(np.uint8(resid*127./range+127).reshape(self.imshape))
+        range_val  = max(abs(minres), maxres)
+        im = pylab.imshow(np.uint8(resid*127./range_val+127).reshape(self.imshape))
 
       pylab.tick_params(\
         axis='both',          # changes apply to the x-axis
