@@ -46,9 +46,8 @@ class UCIDataset(Dataset):
         # Skip over empty lines
         if line.strip() == '' or line[0] == '#':
           continue
-        attributes = re.split(',* +', line.strip())
+        attributes = re.split(r',|\s+', line.strip())
 
-        print(attributes)
         self.data += [[float(x) for x in attributes[nskip:-1]]]
         self.samples.append(attributes[0])
         self.labels.append(attributes[-1])
@@ -81,7 +80,7 @@ class UCIDataset(Dataset):
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      goodfeat = range(len(self.xvals))
+      goodfeat = list(range(len(self.xvals)))
 
     # Make a dual bar graph of the original and reconstructed features
     width = 0.35
@@ -111,7 +110,7 @@ class UCIDataset(Dataset):
     #             * padding, float(max(max(x), max(r))))])
     
     if len(self.features) == 0:
-        pylab.xticks(pylab.arange(len(x)) + width + offset, range(len(x)))
+        pylab.xticks(pylab.arange(len(x)) + width + offset, list(range(len(x))))
     else:
         pylab.xticks(pylab.arange(len(x)) + width + offset, self.features)
     
