@@ -170,7 +170,7 @@ def  score_items(X, U, mu,
     pass
   
   # Weight features if requested
-  if feature_weights != []:
+  if len(feature_weights) > 0:
     for i in range(len(feature_weights)):
       err[i,:] = err[i,:] * feature_weights[i]
 
@@ -221,12 +221,12 @@ def  select_next(X, U, mu,
   """
 
   print("------------ SELECTING --------------")
-  if U == []:
+  if len(U) == 0:
     printt("Empty DEMUD model: selecting item number %d from data set" % \
              (log.opts['iitem']))
     return log.opts['iitem'], [], []
 
-  if X.shape[1] < 1 or U == [] or mu == []:
+  if X.shape[1] < 1 or len(U) == 0 or len(mu) == 0:
     printt("Error: No data in X and/or U and/or mu.")
     return None, [], []
 
@@ -235,9 +235,9 @@ def  select_next(X, U, mu,
     return None, [], []
 
   # If oldscores is empty, compute the score for each item
-  if oldscores == []:
+  if len(oldscores) == 0:
     (scores, reproj) = score_items(X, U, mu, scoremethod, missingmethod)
-  elif oldreproj == []:
+  elif len(oldreproj) == 0:
     printt("Error: oldscores provided, but not oldreproj.")
     return None, [], []
   else: # both are valid, so use them here
@@ -265,7 +265,7 @@ def  select_next_NN(X, x):
   Return the index of the selected item.
   """
 
-  if X == [] or x == []:
+  if len(X) == 0 or len(x) == 0:
     printt("Error: No data in X and/or x.")
     return None
   if X.shape[0] != x.shape[0]:
@@ -307,7 +307,7 @@ def  update_model(X, U, S, k, n, mu,
   Return new U, S, mu, n, and percent variances.
   """
 
-  if X == []:
+  if len(X) == 0:
     printt("Error: No data in X.")
     return None, None, None, -1, None
   #print('%d items in X' % X.shape[1])
@@ -317,7 +317,7 @@ def  update_model(X, U, S, k, n, mu,
   # set U to all 0's (degenerate SVD),
   # and return it with mu.
   # (PR #22 sets first value to 1; see decals implementation)
-  if U == [] and X.shape[1] == 1:
+  if len(U) == 0 and X.shape[1] == 1:
     mu   = X
     # Do this no matter what.  Let mu get NaNs in it as needed.
     U    = np.zeros_like(mu)
@@ -331,15 +331,15 @@ def  update_model(X, U, S, k, n, mu,
   # Do full SVD of X if this is requested, regardless of what is in U 
   # Also, if n = 0 or U is empty, start from scratch
   output_k = False
-  if svdmethod == 'full' or U == [] or n == 0:
+  if svdmethod == 'full' or len(U) == 0 or n == 0:
     if n == 0:
-      if U == []:
+      if len(U) == 0:
         printt("----- initial SVD -----")
         output_k = True
       else:
         # Reshape so we don't have an empty dimension (yay python)
         U = U.reshape(-1, 1)
-    elif U == []:
+    elif len(U) == 0:
       printt("WARNING: N (number of items modeled by U) is %d, not zero, but U is empty!" % n)
 
     # Bootstrap
@@ -640,7 +640,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
   ###########################################################################
   # Check to ensure that parameters are valid
-  if ds.data == []:
+  if len(ds.data) == 0:
     printt("Error: No data in ds.data.")
     return 
   if k < 1:
@@ -699,7 +699,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   ds.name += '-' + svdmethod
   if scoremethod != 'lowhigh': ds.name += '-score=' + scoremethod
   if missingmethod != "none": ds.name += '-missing=' + missingmethod
-  if feature_weights != []: ds.name += '-featureweight=' + os.path.basename(log.opts['fw'])
+  if len(feature_weights) != 0: ds.name += '-featureweight=' + os.path.basename(log.opts['fw'])
   if log.opts['sol'] != -1: ds.name += '-sol%d' % log.opts['sol']
   if log.opts['sols'] != None: ds.name += '-sol%d' % log.opts['start_sol']
   if log.opts['sols'] != None: ds.name += '-%d' % log.opts['end_sol']
@@ -860,7 +860,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     #   then don't use the model to select the next item.
     # Instead, do a nearest-neighbor search through X based on sels[-1].
     
-    if whencoiswerefound != [] and (whencoiswerefound[-1] == i-1) and \
+    if len(whencoiswerefound) > 0 and (whencoiswerefound[-1] == i-1) and \
         (log.opts['coiaction'] == 'seek'):
       printt("Actively searching for the next COI based on item %d"
              % sels[-1])
@@ -890,7 +890,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
                                           missingmethod, feature_weights)
       # If initializing with a specific item, 
       # then scores and reproj will be empty
-      if scores == []:
+      if len(scores) == 0:
         score = 0.0
         r     = X[:,ind] # reproj is same as item itself
       else:
@@ -942,8 +942,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     # Plot item using dataset's plotting method.
     label = ds.labels[orig_ind[ind]]
     if log.opts['kepler']:
-      dc = log.opts['static'] or (U != [] and U.shape[1] > 1)
-      dsvd = (log.opts['static'] and i == 0) or (U != [] and U.shape[1] > 1)
+      dc = log.opts['static'] or (len(U) > 0 and U.shape[1] > 1)
+      dsvd = (log.opts['static'] and i == 0) or (len(U) > 0 and U.shape[1] > 1)
       if log.opts['plot']:
         ds.plot_item(i, orig_ind[ind], x, r, k, label,
                      U, mu, S, X, pcts, scores, drawsvd=dsvd, drawcloud=dc)
@@ -1048,7 +1048,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
       # We are doing this check because 'full' will only model what's in seen
       #   increm-ross will add what's in seen to the model U, S
       if svdmethod == 'full':
-        if seen == []:
+        if len(seen) == 0:
           seen = x.reshape(-1,1)
         else:
           seen = np.hstack((seen,x.reshape(-1,1)))
@@ -1057,7 +1057,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
         # Reset U to empty if this is the first iteration
         # in case an SVD was used to select the first item,
         # UNLESS an initial data set was specified.
-        if (i == 0 and ds.initdata == []): 
+        if (i == 0 and len(ds.initdata) == 0): 
           U = []
 
       U, S, mu, n, pcts = update_model(seen, U, S, k, n, mu,
@@ -1072,7 +1072,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     keep.remove(ind)
     X        = X[:,keep]
     orig_ind = orig_ind[keep]
-    if scores != []:
+    if len(scores) > 0:
       scores = scores[keep]
       reproj = reproj[:,keep]
 
@@ -1080,7 +1080,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
     ###############################################
     # Plot the top 4 principal components of the new model
-    if U != [] and log.opts['plot'] and log.opts['dan']:
+    if len(U) > 0 and log.opts['plot'] and log.opts['dan']:
       ds.plot_pcs(i, U, mu, k, S)
     # if log.opts['misr']:
     #   pylab.clf()
@@ -1796,7 +1796,7 @@ def  parse_config_term(config, term):
   lines = [line for line in config if line.startswith(term)]
 
   # This term may not be defined in the config file
-  if lines == []:
+  if len(lines) == 0:
     return ''
 
   # If the term is used multiple times, it uses the last one
@@ -1957,13 +1957,13 @@ def  optimize_k(ds, v):
   else:
     X = ds.data
   
-  if X == []:
+  if len(X) == 0:
     printt("Error: No data in input.")
     exit()
 
   # Handle NaNs with zeros for this lookup
   z = np.where(np.isnan(X))
-  if z[0] != []:
+  if len(z[0]) > 0:
     printt("Filling NaNs with 0: %d of %d total." % \
           (z[0].shape[1], X.shape[0] * X.shape[1]))
     X = copy.deepcopy(X)

@@ -266,7 +266,7 @@ class MastcamData(Dataset):
     classes' submethods.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   

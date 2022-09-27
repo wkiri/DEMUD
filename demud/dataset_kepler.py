@@ -433,7 +433,7 @@ class KeplerData(Dataset):
         freq_half = freq_half[:cutoff]
         fft_pdc_half = fft_pdc_half[:cutoff]
       
-      if newdata == []:
+      if len(newdata) == 0:
         newdata = np.zeros((dataT.shape[0], len(fft_pdc_half)))
       
       newdata[j] = fft_pdc_half
@@ -511,7 +511,7 @@ class KeplerData(Dataset):
           pdc_data[i] = pdc_data[i-1]
 
       # Make sure all sources have same cadence (they should)
-      if cadence == []:
+      if len(cadence) == 0:
         cadence = cadence_data
       assert (cadence == cadence_data).all()
 

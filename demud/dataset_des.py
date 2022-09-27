@@ -292,12 +292,12 @@ class DESData(Dataset):
     from the plot.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0: 
       print("Error: No data in x and/or r.")
       return
    
     # Select the features to plot
-    if feature_weights != []:
+    if len(feature_weights) > 0:
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
@@ -383,7 +383,7 @@ class DESData(Dataset):
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
-      if scores == []:
+      if len(scores) == 0:
         fid.write('%d,%d,%s,%s,%s,0.0\n' % (i, orig_ind, objid,
                                             RA, DEC))
       else:
@@ -429,7 +429,7 @@ class DESData(Dataset):
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output -1 for this item.
-      if scores == []:
+      if len(scores) == 0:
         score = 'N/A'
       else:
         score = '%f' % scores[ind]

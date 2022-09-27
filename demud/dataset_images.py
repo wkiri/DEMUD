@@ -103,7 +103,7 @@ class ImageData(Dataset):
     used in some classes' submethods.
     """
     print("Plotting...")
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
 

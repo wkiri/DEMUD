@@ -129,7 +129,7 @@ class CNNFeat(FloatDataset):
     residfile = os.path.join(outdir, 'resid-%s.csv' % self.name)
 
     # Check validity
-    if x == [] or r == []:
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
 
@@ -330,7 +330,7 @@ class DANSpectra(FloatDataset):
   def  plot_item(self, m, ind, x, r, k, label, U,
                  rerr, feature_weights):
 
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   

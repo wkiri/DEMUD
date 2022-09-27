@@ -161,7 +161,7 @@ class LIBSData(Dataset):
                          if int(s.split('_')[0][3:]) < startsol]
         printt("Putting previous sols' (before %d) data in initialization model." % startsol)
         # Concatenate initdata with data from all previous sols
-        if self.initdata != []:
+        if len(self.initdata) > 0:
           print(self.initdata.shape)
           print(self.data[:,previous_sols].shape)
           self.initdata = np.hstack((self.initdata, self.data[:,previous_sols]))
@@ -442,7 +442,7 @@ class LIBSData(Dataset):
         
         printt(' Read %d new items, %d features.' % mydata.shape[::-1])
 
-        if wavelengths != [] and np.any(wavelengths != mywaves):
+        if len(wavelengths) > 0 and np.any(wavelengths != mywaves):
           printt('Error: wavelengths in file %d do not match previous.' % f_ind)
         if f_ind == 0:
           data        = mydata
@@ -455,7 +455,7 @@ class LIBSData(Dataset):
         printt('Total so far: %d items, %d files.' % (data.shape[1], f_ind))
 
     print
-    if data == []:
+    if len(data) == 0:
       printt('No data files found, exiting.')
       sys.exit()
 
@@ -543,7 +543,7 @@ class LIBSData(Dataset):
     zero are NOT weighted; they all participate normally.
     """
 
-    if data == []: 
+    if len(data) == 0:
       print('Error: empty data; cannot filter.')
       return data
     
@@ -571,7 +571,7 @@ class LIBSData(Dataset):
 
         # If featureweights are specified,
         # adjust ind to only include the nonzero ones.
-        if fw != []:
+        if len(fw) > 0:
           # If there aren't any features with nonzero weights,
           # this won't use anything (set data value to 0)
           ind = [i for i in ind if fw[i]>0]
@@ -579,7 +579,7 @@ class LIBSData(Dataset):
         # Perform the median filter.
         # If there are no valid features to use, set this point to 0
         # (it won't be used later anyway)
-        if ind == []:
+        if len(ind) == 0:
           data2[i, j] = 0
         else:
           data2[i, j] = np.median(data[ind, j])
@@ -627,12 +627,12 @@ class LIBSData(Dataset):
     If feature_weights are specified, omit any 0-weighted features from the plot.
     """
 
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   
     # Select the features to plot
-    if feature_weights != []:
+    if len(feature_weights) > 0:
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:

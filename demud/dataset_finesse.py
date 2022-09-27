@@ -106,7 +106,7 @@ class FINESSEData(Dataset):
 
         # Save the wavelengths, if needed
         # (note: we ASSUME this is the same for all planets!)
-        if wavelengths == []:
+        if len(wavelengths) == 0:
           wavelengths = planet_data[:,0]
 
         pd = planet_data[:,1].reshape((-1,1))
@@ -114,7 +114,7 @@ class FINESSEData(Dataset):
         # Find the normalization entry that matches this id
         file_id = int(f[0:10])
         ind = np.where(norm_data['file_identifier'] == file_id)
-        if ind == []:
+        if len(ind) == 0:
           print('Error: could not find norm constants for file id %d' % file_id)
           break
         else:
@@ -142,7 +142,7 @@ class FINESSEData(Dataset):
         else:
           truelabel = 'not' #not interesting
           
-        if data == []:
+        if len(data) == 0:
           data   = pd
           labels = [truelabel]
         else:
@@ -171,7 +171,7 @@ class FINESSEData(Dataset):
     with k and label to annotate of the plot.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   

@@ -57,7 +57,7 @@ class Dataset(object):
     sed in some classes' submethods.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   
@@ -146,7 +146,7 @@ class Dataset(object):
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
-      if scores == []:
+      if len(scores) == 0:
         fid.write('%d,%d,%s,0.0\n' % (i, orig_ind, label))
       else:
         fid.write('%d,%d,%s,%g\n' % (i, orig_ind, label, scores[ind]))

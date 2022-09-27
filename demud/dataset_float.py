@@ -98,7 +98,7 @@ class FloatDataset(Dataset):
     self.data = self.data.T  # features x samples
 
     # If there was no header with feature names, just create an empty xvals
-    if self.xvals == []:
+    if len(self.xvals) == 0:
       self.xvals = numpy.arange(self.data.shape[0]).reshape(-1,1)
 
     # Read in the init data file, if present
@@ -121,7 +121,7 @@ class FloatDataset(Dataset):
     to call this function instead.
     """
 
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   

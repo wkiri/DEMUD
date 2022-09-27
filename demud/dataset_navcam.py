@@ -270,7 +270,7 @@ class NavcamData(Dataset):
         # RGB window
         #data[:,ind] = pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin].flat
         hist_features = TCData.extract_hist_subimg(pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin])
-        if data == []:
+        if len(data) == 0:
           data = hist_features.reshape(-1,1)
         else:
           data = scipy.concatenate((data, hist_features.reshape(-1,1)),1)
@@ -449,7 +449,7 @@ class NavcamData(Dataset):
     rand_ind = random.randint(0, self.img_label_split[-1])
     rand_idx = N.where(self.img_label_split > rand_ind)[0][0] - 1
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   

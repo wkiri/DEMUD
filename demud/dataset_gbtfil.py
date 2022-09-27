@@ -72,7 +72,7 @@ class GBTFilterbankData(Dataset):
 
           # If it's the first item, set data dimensions
           # Skip the first row of frequencies.
-          if self.data == []:
+          if len(self.data) == 0:
             (self.ntime, self.nfreq) = d[1:,:].shape
           
           # First row is frequencies.  This is different
@@ -105,7 +105,7 @@ class GBTFilterbankData(Dataset):
     used in some classes' submethods.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
 

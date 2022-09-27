@@ -180,7 +180,7 @@ class MISRData(Dataset):
         data_now = data_now.reshape((-1, 1))
         #print(type(data_now))
         #print(data_now.shape)
-        if data == []:
+        if len(data) == 0:
           data = [data_now]
         else:
           data.append(data_now)
@@ -389,7 +389,7 @@ class MISRDataTime(MISRData):
     classes' submethods.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
 

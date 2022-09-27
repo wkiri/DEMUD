@@ -497,14 +497,14 @@ class ENVIData(Dataset):
     If feature_weights are specified, omit any 0-weighted features from the plot.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0: 
       printt("Error: No data in x and/or r.")
       return
 
     (l,s) = [int(v) for v in label.split('_')]
 
     # Select the features to plot
-    if feature_weights != []:
+    if len(feature_weights) > 0:
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
@@ -728,7 +728,7 @@ class ENVIData(Dataset):
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
-      if scores == []:
+      if len(scores) == 0:
         fid.write('%d,0.0,' % (m))
     else:
       fid = open(selfile, 'a')

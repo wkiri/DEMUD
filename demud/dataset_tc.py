@@ -106,7 +106,7 @@ class TCData(Dataset):
         #data[:,ind] = pix[y,x]
         # RGB window
         #data[:,ind] = pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin].flat
-        if data == []:
+        if len(data) == 0:
           data = pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin].reshape(-1,1)
         else:
           data = np.concatenate((data,
@@ -129,7 +129,7 @@ class TCData(Dataset):
     classes' submethods.
     """
 
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0:
       print("Error: No data in x and/or r.")
       return
   
