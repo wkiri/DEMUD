@@ -301,7 +301,7 @@ class DESData(Dataset):
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      goodfeat = range(len(self.xvals))
+      goodfeat = list(range(len(self.xvals)))
 
     fig = pylab.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -348,7 +348,7 @@ class DESData(Dataset):
     pylab.legend(fontsize=12)
     
     if len(self.features) == 0:
-        pylab.xticks(pylab.arange(len(goodfeat)), range(len(x))[goodfeat], fontsize=12)
+        pylab.xticks(pylab.arange(len(goodfeat)), list(range(len(x)))[goodfeat], fontsize=12)
     else:
         pylab.xticks(pylab.arange(len(goodfeat)), feat_names,
                      rotation=-30, ha='left', fontsize=12)

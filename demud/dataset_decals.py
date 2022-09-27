@@ -214,7 +214,7 @@ class DECaLSData(Dataset):
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      goodfeat = range(len(self.xvals))
+      goodfeat = list(range(len(self.xvals)))
 
     # Make a dual bar graph of the original and reconstructed features
     width = 0.35
@@ -247,7 +247,7 @@ class DECaLSData(Dataset):
                 max(0, float(max(max(x), max(r))) * padding)])
     
     if len(self.features) == 0:
-        pylab.xticks(pylab.arange(len(x)) + width + offset, range(len(x)))
+        pylab.xticks(pylab.arange(len(x)) + width + offset, list(range(len(x))))
     else:
         pylab.xticks(pylab.arange(len(x)) + width + offset, self.features,
                      rotation=-30, ha='left')

@@ -508,7 +508,7 @@ class ENVIData(Dataset):
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      #goodfeat = range(len(self.xvals))
+      #goodfeat = list(range(len(self.xvals)))
       # Avoid NaNs
       goodfeat = np.where(~np.isnan(x) & ~np.isnan(r))[0]
 
@@ -773,7 +773,7 @@ class SegENVIData(ENVIData):
       printt('Error: mismatch in number of pixels between image and segmap.')
       return
 
-    goodbands = range(len(self.xvals))
+    goodbands = list(range(len(self.xvals)))
     # For AVIRIS data:
     if 'f970619' in self.name:
       printt('Removing known bad bands, assuming AVIRIS data.')
@@ -781,7 +781,7 @@ class SegENVIData(ENVIData):
       # Indexing from 1: [10:100 116:150 180:216]
       # Subtract 1 to index from 0, but not to the end values
       # because range() is not inclusive of end
-      goodbands  = range(9,100) + range(115,150) + range(179,216)
+      goodbands  = list(range(9,100)) + list(range(115,150)) + list(range(179,216))
     # For UCIS data:
     elif 'mars_yard' in self.name:
       printt('Removing known bad bands, assuming UCIS data.')
@@ -789,14 +789,14 @@ class SegENVIData(ENVIData):
       # Exclude 1.4-1.9 um (per Diana).
       waterband_min = np.argmin([abs(x-1400) for x in self.xvals])
       waterband_max = np.argmin([abs(x-1900) for x in self.xvals])
-      waterbands    = range(waterband_min, waterband_max+1)
+      waterbands    = list(range(waterband_min, waterband_max+1))
       # Based on Hua's visual examination, exclude bands
       # 1-6, 99-105, and 145-155.
       # Good bands are therefore 7-98, 106-144, and 156-maxband.
       # Subtract 1 to index from 0, but not to the end values
       # because range() is not inclusive of end
       maxband    = len(self.xvals)
-      goodbands  = range(6,98) + range(105,144) + range(155,maxband)
+      goodbands  = list(range(6,98)) + list(range(105,144)) + list(range(155,maxband))
       # Remove the water bands
       printt('Removing water absorption bands.')
       printt('%d good bands -> ' % len(goodbands))

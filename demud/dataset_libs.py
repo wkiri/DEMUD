@@ -198,7 +198,7 @@ class LIBSData(Dataset):
     #for i in [1461]: # test broad feature
     #for i in [3400]: # test broad feature
     for i in range(n):
-      waves     = range(data.shape[0])
+      waves     = list(range(data.shape[0]))
       this_data = data[waves,i]
       peak_ind  = this_data.argmax()
       peak_wave = self.xvals[waves[peak_ind]]
@@ -563,11 +563,11 @@ class LIBSData(Dataset):
 
         # Specify the range over which to compute the median
         if (i < Lwing):
-          ind = range(0, i+Lwing+1)
+          ind = list(range(0, i+Lwing+1))
         elif (i >= d - Lwing):
-          ind = range(i-Lwing, d)
+          ind = list(range(i-Lwing, d))
         else:
-          ind = range(i-Lwing, i+Lwing+1)
+          ind = list(range(i-Lwing, i+Lwing+1))
 
         # If featureweights are specified,
         # adjust ind to only include the nonzero ones.
@@ -636,7 +636,7 @@ class LIBSData(Dataset):
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      goodfeat = range(len(self.xvals))
+      goodfeat = list(range(len(self.xvals)))
 
     pylab.clf()
     # xvals, x, and r need to be column vectors

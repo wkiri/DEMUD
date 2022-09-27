@@ -658,7 +658,7 @@ class NavcamData(Dataset):
     divider = make_axes_locatable(plt.gca())
     cax = divider.append_axes("left", "8%", pad="5%")
     cax = plt.colorbar(img_disp, ticks = N.linspace(0.5,num_classes-.5, num_classes), cax = cax)
-    cax.set_ticklabels(range(0,num_classes) )
+    cax.set_ticklabels(list(range(0,num_classes)))
     cax.ax.tick_params(labelsize=5)
 
     # Display original image as well
