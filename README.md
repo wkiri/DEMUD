@@ -68,9 +68,9 @@ To get started
 
    **Example 1: Images.**
 
-   To run DEMUD on a collection of images using the pixel
-   representation, specify the directory containing the images on the
-   `imagedatafolder` line in `demud.config`.  Then run
+   To run DEMUD on a collection of images (must be all the same size)
+   using their pixels as features, specify the directory containing
+   the images on the `imagedatafolder` line in `demud.config`.  Then run
 
    `$ demud -I`
 
