@@ -1172,7 +1172,7 @@ def  read_feature_weights(fwfile, xvals):
 
     # 2. Two values per line (feature - matches xvals, weight)
     elif len(values) == 2:
-      values = map(float, values)
+      values = list(map(float, values))
       feat_ind = np.where(xvals == values[0])[0]
       if len(feat_ind) == 0:
         raise ValueError('Could not find feature %s.' % values[0])
@@ -1754,7 +1754,7 @@ def  check_opts(datatypes):
     if len(svals) != 2:
       printt("Error parsing start and end sols from %s (format: s1-s2)." % log.opts['sols'])
       exit()
-    (start, end) = map(int, svals)
+    (start, end) = list(map(int, svals))
     if start >= 0 and end >= 0 and start <= end:
       printt("Analyzing data from sols %d-%d, inclusive." % (start, end))
       log.opts['start_sol'] = start

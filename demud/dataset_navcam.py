@@ -359,7 +359,7 @@ class NavcamData(Dataset):
       
       position_features = []
       for label in labels:
-        (y,x) = map(int, label.strip('()').split(','))
+        (y,x) = list(map(int, label.strip('()').split(',')))
         position_features.append([x,y]) 
       position_features = N.array(position_features)
     
@@ -421,7 +421,7 @@ class NavcamData(Dataset):
   def save_rec(self, reconst_features, ind, orig_features, k):
 
     img_idx = N.where(self.img_label_split > ind)[0][0] - 1
-    (y,x) = map(int, self.labels[ind].strip('()').split(','))
+    (y,x) = list(map(int, self.labels[ind].strip('()').split(',')))
 
     outdir  = os.path.join('results', self.name)
     figfile = os.path.join(outdir, 
@@ -467,7 +467,7 @@ class NavcamData(Dataset):
     myheight = self.height[img_idx] - self.winsize
     # set all unselected items to a value 1 less than the latest
 
-    (y,x) = map(int, label.strip('()').split(','))
+    (y,x) = list(map(int, label.strip('()').split(',')))
     qtrwin = self.winsize // 2
     if y < qtrwin:
         y = qtrwin
@@ -532,7 +532,7 @@ class NavcamData(Dataset):
   
 
     # rand choices
-    (y,x) = map(int, self.labels[rand_ind].strip('()').split(','))
+    (y,x) = list(map(int, self.labels[rand_ind].strip('()').split(',')))
     score = self.compute_score(rand_idx, y, x, 0)
     self.rand_score.append(score) 
     met_score = self.compute_score(rand_idx, y, x, 1)

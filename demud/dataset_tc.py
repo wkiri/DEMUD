@@ -150,7 +150,7 @@ class TCData(Dataset):
     if priority < 2:
       priority = 2
     self.selections[np.where(self.selections < priority)] = priority-2
-    (y,x) = map(int, label.strip('()').split(','))
+    (y,x) = list(map(int, label.strip('()').split(',')))
     #self.selections[ind // mywidth, ind%myheight] = priority
     qtrwin = self.winsize // 8
     self.selections[y-qtrwin:y+qtrwin, x-qtrwin:x+qtrwin] = priority
