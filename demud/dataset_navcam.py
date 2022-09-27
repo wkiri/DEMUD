@@ -175,7 +175,7 @@ class NavcamData(Dataset):
       sift_features = sift_features['d_']
       sift_features  = scipy.concatenate((sift_features.transpose(), kp[2:4].transpose()), 1).transpose()
 
-      labels = [];
+      labels = []
       for ikp in kp.transpose():
         (x,y) = ikp[0:2]
         labels    += ['(%d,%d)' % (y,x)]

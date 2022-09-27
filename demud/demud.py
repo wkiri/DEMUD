@@ -1232,18 +1232,18 @@ def report_classes(ds, sels, sels_idx, data_choice):
         found.append(ds.labels[s])
     printt("\nNumber of classes found: %d\n" % len(found))
   else:
-    file_sels = {};
+    file_sels = {}
 
     for files in ds.datafiles:
-      file_sels[files] = [];
+      file_sels[files] = []
 
     for i,idx in enumerate(sels_idx):
-      file_idx = np.where(ds.img_label_split > idx)[0][0]-1;
-      file_sels[ds.datafiles[file_idx]] += [sels[i]];
+      file_idx = np.where(ds.img_label_split > idx)[0][0]-1
+      file_sels[ds.datafiles[file_idx]] += [sels[i]]
 
     for key in file_sels:
       if file_sels[key]: 
-        print("File: %s" %(key));
+        print("File: %s" %(key))
         for csels in file_sels[key]:
           i = sels.index(csels) 
           printt('Class found on selection %d: %s' % (i,ds.labels[csels]))
@@ -1911,9 +1911,9 @@ def  parse_config(config, data_choice):
     return ([imagedatafolder, imageinitdatafolder],'')
   elif data_choice == 'navcam':
     # Parse through initdatasols to convert it into a tuple
-    initsols = [];
-    start_sols = [];
-    end_sols = [];
+    initsols = []
+    start_sols = []
+    end_sols = []
     if len(initdatasols):
         for sols in initdatasols.split(','):
             sols.replace(" ", "")
@@ -1922,16 +1922,16 @@ def  parse_config(config, data_choice):
                     printt('Error: unrecognized data set %s.' % data_choice)
                     printt('Incorrect initdatasols format.')
                     printt("Example initdatasols: '(1950,1955),1959'")
-                end_sols.append(int(sols[:4]));
-                continue;
+                end_sols.append(int(sols[:4]))
+                continue
             
             if sols[0] == '(':
-                start_sols.append(int(sols[1:]));
+                start_sols.append(int(sols[1:]))
             else:
-                initsols.append(int(sols));
+                initsols.append(int(sols))
 
         for start,end in zip(start_sols, end_sols):
-            initsols.extend(range(start,end + 1));
+            initsols.extend(range(start,end + 1))
     
     return ([datafolder], (int(solnumber), initsols, scaleInvariant))
 
@@ -2178,7 +2178,7 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
     ds.selections = np.zeros((ds.height, ds.width))
   ## NAVCAM
   elif data_choice == 'navcam':
-    ds = NavcamData(data_files[0], sol_number, initsols, scaleInvariant); 
+    ds = NavcamData(data_files[0], sol_number, initsols, scaleInvariant) 
   ## UCIS (ENVI) DATA SET
   elif data_choice == 'ucis':
     ds = ENVIData(data_files[0], 
