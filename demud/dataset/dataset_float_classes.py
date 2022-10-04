@@ -117,10 +117,6 @@ class CNNFeat(FloatDataset):
   def  plot_item(self, m, ind, x, r, k, label, U,
                  rerr, feature_weights):
 
-    # This should probably be somewhere else in the code but
-    reload(sys)
-    sys.setdefaultencoding("UTF-8")
-
     # Save out top hits file
     outdir   = os.path.join('results', self.name)
     #hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
