@@ -23,19 +23,10 @@ Installation
 Note: DEMUD now requires Python 3.
 
 You should be able to install demud (virtual environment suggested) with:
-
-   `$ pip install -r requirements.txt`
    
    `$ pip install .`
 
 That will make the `demud` console script available system-wide.
-
-If you have trouble installing the package, use 
-
-   `$ python demud/demud.py [options]` 
-
-in all of the examples below.
-
 
 To get started
 --------------
