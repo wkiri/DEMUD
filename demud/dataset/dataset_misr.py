@@ -22,7 +22,7 @@ import numpy as np
 import pylab
 from scipy.stats import nanmean
 from pyhdf import HDF, SD
-from dataset import Dataset
+from .dataset import Dataset
 import matplotlib
 #import matplotlib.plyplot as plt
 import datetime
@@ -56,7 +56,7 @@ class MISRData(Dataset):
     Read in MISR data (pickled) from self.filename.
     """
 
-    print "Loading in MISR data from pickle..."
+    print("Loading in MISR data from pickle...")
 
     inf = open(self.filename, 'r')
     (self.data, self.rgbimages, self.along_track, self.cross_track,
@@ -64,7 +64,7 @@ class MISRData(Dataset):
         pickle.load(inf)
     inf.close()
     
-    print "...done."
+    print("...done.")
 
     self.xlabel = 'Date'
     self.ylabel = 'AOD (tau)'
@@ -132,19 +132,19 @@ class MISRData(Dataset):
     files = sorted(os.listdir(AODdirname))
     for f in files:
       if fnmatch.fnmatch(f, '*.hdf'):
-        print " %d / %d " % (i, len(files)),
+        print(" %d / %d " % (i, len(files)))
         i += 1
       
         filename = AODdirname + f
 
         # Check that filename exists and is an HDF file
         if HDF.ishdf(filename) != 1:
-          print "File %s cannot be found or is not an HDF-4 file." % filename
+          print("File %s cannot be found or is not an HDF-4 file." % filename)
           continue
 
         orbit    = int(filename.split('_')[5].split('O')[1])
         thisdate = MISRData.orbit_to_date(orbit)
-        print "orbit: %d -> %s " % (orbit, thisdate)
+        print("orbit: %d -> %s " % (orbit, thisdate))
         datestr = datestr + [thisdate]
         
         sd = SD.SD(filename)
@@ -178,9 +178,9 @@ class MISRData(Dataset):
         data_now[naninds] = float('NaN')
 
         data_now = data_now.reshape((-1, 1))
-        #print type(data_now)
-        #print data_now.shape
-        if data == []:
+        #print(type(data_now))
+        #print(data_now.shape)
+        if len(data) == 0:
           data = [data_now]
         else:
           data.append(data_now)
@@ -188,41 +188,41 @@ class MISRData(Dataset):
         # Close the file
         sd.end()
 
-        print '.',
+        print('.', end='')
         sys.stdout.flush()
 
     data = np.asarray(data).squeeze().T
-    print data.shape
+    print(data.shape)
     
     print
     # Data is now n x d, where n = # pixels and d = # timepts
-    print 'Read data set with %d pixels, %d time points.' % data.shape
+    print('Read data set with %d pixels, %d time points.' % data.shape)
     
     # TODO: Add lat/lon coords here
     latlons = ['Unknown'] * data.shape[0]
 
     # Read in the raw data (for later visualization)
     files = sorted(os.listdir(rawdirname + 'AN/'))
-    print "+++++++++++++"
-    print len(files)
+    print("+++++++++++++")
+    print(len(files))
     iii = 0
     for f in files:
       if fnmatch.fnmatch(f, '*.hdf'):
         filename = rawdirname + 'AN/' + f
-        #print filename
-        print " %d / %d " % (iii, len(files)),
+        #print(filename)
+        print(" %d / %d " % (iii, len(files)), end='')
         iii += 1
 
         # Check that filename exists and is an HDF file
         if HDF.ishdf(filename) != 1:
-          print "File %s cannot be found or is not an HDF-4 file." % filename
+          print("File %s cannot be found or is not an HDF-4 file." % filename)
           continue
 
         # We'll assume there's a one-to-one correspondence
         # with the AOD data.  But print it out anyway as a check.
         orbit    = int(filename.split('_')[6].split('O')[1])
         thisdate = MISRData.orbit_to_date(orbit)
-        print "orbit: %d -> %s " % (orbit, thisdate)
+        print("orbit: %d -> %s " % (orbit, thisdate))
         datestr2 = datestr2 + [thisdate]
         
         sd = SD.SD(filename)
@@ -254,7 +254,7 @@ class MISRData(Dataset):
         for x in range(0,data_g.shape[0],64):
           for y in range(0,data_g.shape[1],64):
             converted = np.multiply(data_g[x:x+64,y:y+64],
-                                       conv_factor[x/64,y/64])
+                                       conv_factor[x // 64, y // 64])
             data_g[x:x+64,y:y+64] = converted
         
         dataset  = sd.select('Red Radiance/RDQI')
@@ -277,7 +277,7 @@ class MISRData(Dataset):
         for x in range(0,data_r.shape[0],64):
           for y in range(0,data_r.shape[1],64):
             converted = np.multiply(data_r[x:x+64,y:y+64],
-                                       conv_factor[x/64,y/64])
+                                       conv_factor[x // 64, y // 64])
             data_r[x:x+64,y:y+64] = converted
         
         dataset  = sd.select('Blue Radiance/RDQI')
@@ -300,7 +300,7 @@ class MISRData(Dataset):
         for x in range(0,data_b.shape[0],64):
           for y in range(0,data_b.shape[1],64):
             converted = np.multiply(data_b[x:x+64,y:y+64],
-                                       conv_factor[x/64,y/64])
+                                       conv_factor[x // 64, y // 64])
             data_b[x:x+64,y:y+64] = converted
         
         im = np.zeros([2048, 2048, 3])
@@ -332,17 +332,17 @@ class MISRData(Dataset):
         # Close the file
         sd.end()
 
-        print '.',
+        print('.', end='')
         sys.stdout.flush()
     
     outf = open(outfile, 'w')
-    print len(datestr)
+    print(len(datestr))
     
     # Assert that the raw and AOD sequences are corresponding
     for i in range(len(datestr)):
       if datestr[i] != datestr2[i]:
-        print "ERROR!  Date sequences do not align."
-        print "  detected at index %d: AOD %s, raw %s" % (i, datestr[i], datestr2[i])
+        print("ERROR!  Date sequences do not align.")
+        print("  detected at index %d: AOD %s, raw %s" % (i, datestr[i], datestr2[i]))
     
     pickle.dump((data, rgbimages, along_track, cross_track,
                  latlons, datestr), outf)
@@ -373,7 +373,7 @@ class MISRDataTime(MISRData):
 
     self.name   = self.name + '-time'
     self.labels = self.datestr
-    # print len(self.labels)
+    # print(len(self.labels))
 
     
   def  plot_item(self, m, ind, x, r, k, label, U, scores):
@@ -389,8 +389,8 @@ class MISRDataTime(MISRData):
     classes' submethods.
     """
     
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
 
     vmin = min(np.nanmin(x), np.nanmin(r))
@@ -457,9 +457,9 @@ class MISRDataTime(MISRData):
     
     pylab.subplot(2,2,3)
     resid = x - r
-    #print "Residual Min: %5.3f, Avg: %5.3f, Max: %5.3f" % (np.nanmin(resid),
+    #print("Residual Min: %5.3f, Avg: %5.3f, Max: %5.3f" % (np.nanmin(resid),
     #                                                       nanmean(resid),
-    #                                                       np.nanmax(resid))
+    #                                                       np.nanmax(resid)))
     
     im = pylab.imshow(resid.reshape((self.along_track,
                                      self.cross_track)),
@@ -513,6 +513,6 @@ class MISRDataTime(MISRData):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, '%s-sel-%d-k-%d.pdf' % (self.name, m, k))
     pylab.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
-    #print 'Wrote plot to %s' % figfile
+    #print('Wrote plot to %s' % figfile)
     pylab.close()
     

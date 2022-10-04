@@ -19,7 +19,7 @@
 import os, fnmatch, sys, pickle
 import numpy as np
 import pylab
-from dataset import Dataset
+from .dataset import Dataset
 import matplotlib
 import datetime
 
@@ -72,7 +72,7 @@ class GBTFilterbankData(Dataset):
 
           # If it's the first item, set data dimensions
           # Skip the first row of frequencies.
-          if self.data == []:
+          if len(self.data) == 0:
             (self.ntime, self.nfreq) = d[1:,:].shape
           
           # First row is frequencies.  This is different
@@ -85,11 +85,11 @@ class GBTFilterbankData(Dataset):
           self.labels.append('_'.join(fname.split('_')[0:2]))
 
     self.data = np.asarray(self.data).squeeze().T
-    print self.data.shape
+    print(self.data.shape)
     
     print
     # Data is now d x n, where d = #freq x #times and n = #files
-    print 'Read data set with %d features, %d files.' % self.data.shape
+    print('Read data set with %d features, %d files.' % self.data.shape)
 
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights):
@@ -105,8 +105,8 @@ class GBTFilterbankData(Dataset):
     used in some classes' submethods.
     """
     
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
 
     vmin = min(np.nanmin(x), np.nanmin(r))

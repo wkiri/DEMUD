@@ -19,8 +19,8 @@
 
 import os, sys, re
 import csv, numpy, pylab, math
-from dataset import Dataset
-from log import printt
+from .dataset import Dataset
+#from ..log.log import log.printt
 
 
 class FloatDataset(Dataset):
@@ -60,7 +60,7 @@ class FloatDataset(Dataset):
       # If there's a header (begins with #), use it to
       # populate the feature names
       if lines[0][0] == '#':
-        print 'Populating xvals from data file header.'
+        print('Populating xvals from data file header.')
         header = lines[0][1:].strip()
         #xvals = numpy.array(map(float,header.split(',')))
         xvals = numpy.array(header.split(','))
@@ -98,7 +98,7 @@ class FloatDataset(Dataset):
     self.data = self.data.T  # features x samples
 
     # If there was no header with feature names, just create an empty xvals
-    if self.xvals == []:
+    if len(self.xvals) == 0:
       self.xvals = numpy.arange(self.data.shape[0]).reshape(-1,1)
 
     # Read in the init data file, if present
@@ -121,8 +121,8 @@ class FloatDataset(Dataset):
     to call this function instead.
     """
 
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
   
     pylab.clf()
@@ -141,7 +141,7 @@ class FloatDataset(Dataset):
     pylab.legend(fontsize=10)
 
     # width of triangles to plot
-    width = (self.xvals.max() - self.xvals.min())/100.0
+    width = (self.xvals.max() - self.xvals.min()) / 100.0
     
     for band in band_ind:
       w = float(self.xvals[band])
@@ -157,7 +157,7 @@ class FloatDataset(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
     

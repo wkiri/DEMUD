@@ -23,7 +23,7 @@ import matplotlib.cm as cm
 import matplotlib as mpl
 import pylab
 import pickle as pickle
-from dataset import *
+from .dataset import Dataset
 
 # For color_mask_img function
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -175,7 +175,7 @@ class NavcamData(Dataset):
       sift_features = sift_features['d_']
       sift_features  = scipy.concatenate((sift_features.transpose(), kp[2:4].transpose()), 1).transpose()
 
-      labels = [];
+      labels = []
       for ikp in kp.transpose():
         (x,y) = ikp[0:2]
         labels    += ['(%d,%d)' % (y,x)]
@@ -195,7 +195,7 @@ class NavcamData(Dataset):
 
       for ikp in kp:
         (x,y) = ikp.pt
-        scale_angle.append([ikp.size/12, ikp.angle])
+        scale_angle.append([ikp.size // 12, ikp.angle])
         labels    += ['(%d,%d)' % (y,x)]
     
       scale_angle = N.array(scale_angle)
@@ -220,9 +220,9 @@ class NavcamData(Dataset):
     # To be removed in the future
     # Pick up all windows, stepping by half of the window size
     labels  = []
-    halfwin = int(winsize/2)
-    for y in range(halfwin, height-halfwin, int(halfwin/2)):
-      for x in range(halfwin, width-halfwin, int(halfwin/2)):
+    halfwin = winsize // 2
+    for y in range(halfwin, height-halfwin, halfwin // 2):
+      for x in range(halfwin, width-halfwin, halfwin // 2):
         labels    += ['(%d,%d)' % (y,x)]
 
     mlab.bb_dsift(N.array(im), winsize, 'temp.mat')
@@ -244,7 +244,7 @@ class NavcamData(Dataset):
     # Generate one feature vector (histogram) per pixel
     #winsize = 20  # for test.pgm
     #winsize = 0  # for RGB
-    halfwin = int(winsize/2)
+    halfwin = winsize // 2
 
     bins    = scipy.linspace(0, 255, nbins)
 
@@ -257,8 +257,8 @@ class NavcamData(Dataset):
     labels  = []
 
     # Pick up all windows, stepping by half of the window size
-    for y in range(halfwin, height-halfwin, int(halfwin/2)):
-      for x in range(halfwin, width-halfwin, int(halfwin/2)):
+    for y in range(halfwin, height-halfwin, halfwin // 2):
+      for x in range(halfwin, width-halfwin, halfwin // 2):
         # Read in data in row-major order
         ind = (y-halfwin)*mywidth + (x-halfwin)
         #data[:,ind] = \
@@ -270,7 +270,7 @@ class NavcamData(Dataset):
         # RGB window
         #data[:,ind] = pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin].flat
         hist_features = TCData.extract_hist_subimg(pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin])
-        if data == []:
+        if len(data) == 0:
           data = hist_features.reshape(-1,1)
         else:
           data = scipy.concatenate((data, hist_features.reshape(-1,1)),1)
@@ -314,7 +314,7 @@ class NavcamData(Dataset):
       outf = open(filename, 'w')
       pickle.dump((data, labels, new_feature_string, width, height, self.winsize, self.nbins),outf)
       outf.close()
-      print 'Saved data to %s.' % filename
+      print('Saved data to %s.' % filename)
     
     return (data, labels, new_feature_string, width, height, self.winsize, self.nbins)
 
@@ -346,7 +346,7 @@ class NavcamData(Dataset):
     if not new_feature_string.count('histogram'):
       updated_feature = 1 
       (hist_features, labels, width, height) = self.extract_hist(rawfilename, self.winsize, self.nbins)
-      hist_features = hist_features/(self.winsize)
+      hist_features = hist_features // self.winsize
       if data.size:
         data = scipy.concatenate((data.transpose(), hist_features.transpose()), 1).transpose()
       else:
@@ -359,7 +359,7 @@ class NavcamData(Dataset):
       
       position_features = []
       for label in labels:
-        (y,x) = map(int, label.strip('()').split(','))
+        (y,x) = list(map(int, label.strip('()').split(',')))
         position_features.append([x,y]) 
       position_features = N.array(position_features)
     
@@ -373,7 +373,7 @@ class NavcamData(Dataset):
       outf = open(filename, 'w')
       pickle.dump((data, labels, new_feature_string, width, height, self.winsize, self.nbins),outf)
       outf.close()
-      print 'Saved data to %s.' % filename
+      print('Saved data to %s.' % filename)
     
     return (data, labels, new_feature_string, width, height, self.winsize, self.nbins)
 
@@ -399,7 +399,7 @@ class NavcamData(Dataset):
 
   def compute_score(self, img_idx, y, x, mask):
     " Compute the score for deck or met with idx "
-    qtrwin = self.winsize/2
+    qtrwin = self.winsize // 2
     if mask==0:
       mask_file = self.datafiles[img_idx].split('.')[0] + '.jpg'
     elif mask==1:
@@ -416,12 +416,12 @@ class NavcamData(Dataset):
     
     # Matches are pixels with intensity 255, so divide by this
     # to get number of matching pixels.
-    return (csel_mask.sum()/255) 
+    return (csel_mask.sum() // 255) 
 
   def save_rec(self, reconst_features, ind, orig_features, k):
 
     img_idx = N.where(self.img_label_split > ind)[0][0] - 1
-    (y,x) = map(int, self.labels[ind].strip('()').split(','))
+    (y,x) = list(map(int, self.labels[ind].strip('()').split(',')))
 
     outdir  = os.path.join('results', self.name)
     figfile = os.path.join(outdir, 
@@ -449,8 +449,8 @@ class NavcamData(Dataset):
     rand_ind = random.randint(0, self.img_label_split[-1])
     rand_idx = N.where(self.img_label_split > rand_ind)[0][0] - 1
     
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
   
 #    im = Image.fromarray(x.reshape(self.winsize, self.winsize, 3))
@@ -459,7 +459,7 @@ class NavcamData(Dataset):
       os.mkdir(outdir)
 #    figfile = '%s/%s-sel-%d-k-%d.pdf' % (outdir, self.name, m, k)
 #    im.save(figfile)
-#    print 'Wrote plot to %s' % figfile
+#    print('Wrote plot to %s' % figfile)
 
     # record the selections in order, at their x,y coords
     # subtract selection number from n so first sels have high values
@@ -467,8 +467,8 @@ class NavcamData(Dataset):
     myheight = self.height[img_idx] - self.winsize
     # set all unselected items to a value 1 less than the latest
 
-    (y,x) = map(int, label.strip('()').split(','))
-    qtrwin = self.winsize/2
+    (y,x) = list(map(int, label.strip('()').split(',')))
+    qtrwin = self.winsize // 2
     if y < qtrwin:
         y = qtrwin
 
@@ -485,7 +485,7 @@ class NavcamData(Dataset):
     im1 = cv2.medianBlur(im1,5)
 
     # Selection matrix manipulation
-    #self.selections[ind/mywidth, ind%myheight] = priority
+    #self.selections[ind // mywidth, ind%myheight] = priority
     self.priority = self.priority + 1
     self.selections[img_idx][y-qtrwin:y+qtrwin, x-qtrwin:x+qtrwin] = self.priority
     self.select_rect[img_idx][self.priority] = ((x-qtrwin, y-qtrwin), (x+qtrwin, y+qtrwin))
@@ -504,11 +504,11 @@ class NavcamData(Dataset):
 
     # Deck mask
     score = self.compute_score(img_idx, y, x, 0) * 100.0 / self.winsize / self.winsize
-    print 'Deck score: %.2f%%' % score 
+    print('Deck score: %.2f%%' % score)
     self.score.append(score) 
     # Meteorite mask
     met_score = self.compute_score(img_idx, y, x, 1) * 100.0 / self.winsize / self.winsize
-    print 'Meteorite score: %.2f%%' % met_score 
+    print('Meteorite score: %.2f%%' % met_score)
     self.met_score.append(met_score)
     # Shadow mask
     score = self.compute_score(img_idx, y, x, 2)
@@ -526,13 +526,13 @@ class NavcamData(Dataset):
     ax2.axis('off')
     plt.savefig(zoom_file, bbox_inches='tight')
 
-    print 'writing selection to %s/sel-%d.png' % (outdir, self.priority-1)
+    print('writing selection to %s/sel-%d.png' % (outdir, self.priority-1))
     scipy.misc.imsave(os.path.join(outdir, 'sel-%d.png' % (self.priority-1)),
                       im[y-qtrwin:y+qtrwin,x-qtrwin:x+qtrwin])
   
 
     # rand choices
-    (y,x) = map(int, self.labels[rand_ind].strip('()').split(','))
+    (y,x) = list(map(int, self.labels[rand_ind].strip('()').split(',')))
     score = self.compute_score(rand_idx, y, x, 0)
     self.rand_score.append(score) 
     met_score = self.compute_score(rand_idx, y, x, 1)
@@ -542,8 +542,8 @@ class NavcamData(Dataset):
 
   def  plot_score(self, outdir):
     # Summary scoring
-    print 'Avg deck score: %.2f%%' % N.mean(self.score)
-    print 'Avg meteorite score: %.2f%%' % N.mean(self.met_score)
+    print('Avg deck score: %.2f%%' % N.mean(self.score))
+    print('Avg meteorite score: %.2f%%' % N.mean(self.met_score))
 
     # Deck scoring technique
     pylab.clf()
@@ -658,7 +658,7 @@ class NavcamData(Dataset):
     divider = make_axes_locatable(plt.gca())
     cax = divider.append_axes("left", "8%", pad="5%")
     cax = plt.colorbar(img_disp, ticks = N.linspace(0.5,num_classes-.5, num_classes), cax = cax)
-    cax.set_ticklabels(range(0,num_classes) )
+    cax.set_ticklabels(list(range(0,num_classes)))
     cax.ax.tick_params(labelsize=5)
 
     # Display original image as well
@@ -671,7 +671,7 @@ class NavcamData(Dataset):
 
     if not (figfile is None):
         plt.savefig(figfile, bbox_inches='tight')
-        print 'Wrote selection priority plot to %s' % figfile
+        print('Wrote selection priority plot to %s' % figfile)
 
     # Display the output
     if show_image:

@@ -19,7 +19,7 @@
 import os, sys
 import csv,  pylab
 import numpy as np
-from dataset_float import FloatDataset
+from .dataset_float import FloatDataset
 
 ###############################################################################
 #
@@ -41,7 +41,7 @@ class Floats(FloatDataset):
       self.readin(0)
     except:
       print
-      print 'This class assumes no identifiers in the data, i.e., just numeric values.'
+      print('This class assumes no identifiers in the data, i.e., just numeric values.')
       sys.exit(1)
 
 
@@ -117,10 +117,6 @@ class CNNFeat(FloatDataset):
   def  plot_item(self, m, ind, x, r, k, label, U,
                  rerr, feature_weights):
 
-    # This should probably be somewhere else in the code but
-    reload(sys)
-    sys.setdefaultencoding("UTF-8")
-
     # Save out top hits file
     outdir   = os.path.join('results', self.name)
     #hitsfile = os.path.join(outdir, 'hits-%s.txt' % self.name)
@@ -129,8 +125,8 @@ class CNNFeat(FloatDataset):
     residfile = os.path.join(outdir, 'resid-%s.csv' % self.name)
 
     # Check validity
-    if x == [] or r == []:
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
 
     # First item gets to create (and clear) the file 
@@ -330,8 +326,8 @@ class DANSpectra(FloatDataset):
   def  plot_item(self, m, ind, x, r, k, label, U,
                  rerr, feature_weights):
 
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
   
     pylab.clf()
@@ -362,7 +358,7 @@ class DANSpectra(FloatDataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
 
@@ -418,7 +414,7 @@ class DANSpectra(FloatDataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote SVD to %s' % figfile
+    print('Wrote SVD to %s' % figfile)
     pylab.close()
 
 
@@ -435,5 +431,5 @@ if __name__ == "__main__":
   filename                = os.path.basename(__file__)
 
   if num_failed == 0:
-    print "%-20s All %3d tests passed!" % (filename, num_tests)
+    print("%-20s All %3d tests passed!" % (filename, num_tests))
 

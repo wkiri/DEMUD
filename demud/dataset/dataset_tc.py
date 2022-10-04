@@ -20,7 +20,7 @@ import os, sys, pickle
 import numpy as np
 import pylab, math
 import Image
-from dataset import *
+from .dataset import Dataset
 
 ################### TEXTURECAM ##############
 class TCData(Dataset):
@@ -82,7 +82,7 @@ class TCData(Dataset):
     #winsize = 20  # for test.pgm
     winsize = 100
     #winsize = 0  # for RGB
-    halfwin = winsize/2
+    halfwin = winsize // 2
 
     nbins   = 101
     bins    = np.linspace(0, 255, nbins)
@@ -94,8 +94,8 @@ class TCData(Dataset):
     labels  = []
 
     # Pick up all windows, stepping by half of the window size
-    for y in range(halfwin, height-halfwin, halfwin/2):
-      for x in range(halfwin, width-halfwin, halfwin/2):
+    for y in range(halfwin, height-halfwin, halfwin // 2):
+      for x in range(halfwin, width-halfwin, halfwin // 2):
         # Read in data in row-major order
         ind = (y-halfwin)*mywidth + (x-halfwin)
         #data[:,ind] = \
@@ -106,7 +106,7 @@ class TCData(Dataset):
         #data[:,ind] = pix[y,x]
         # RGB window
         #data[:,ind] = pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin].flat
-        if data == []:
+        if len(data) == 0:
           data = pix[y-halfwin:y+halfwin,x-halfwin:x+halfwin].reshape(-1,1)
         else:
           data = np.concatenate((data,
@@ -116,7 +116,7 @@ class TCData(Dataset):
     outf = open(filename, 'w')
     pickle.dump((data, labels, width, height, winsize, nbins, pix), outf)
     outf.close()
-    print 'Saved data to %s.' % filename
+    print('Saved data to %s.' % filename)
     
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores):
@@ -129,8 +129,8 @@ class TCData(Dataset):
     classes' submethods.
     """
 
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
   
     im = Image.fromarray(x.reshape(self.winsize, self.winsize, 3))
@@ -139,7 +139,7 @@ class TCData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, '%s-sel-%d-k-%d.pdf' % (self.name, m, k))
     im.save(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
 
     # record the selections in order, at their x,y coords
     # subtract selection number from n so first sels have high values
@@ -150,9 +150,9 @@ class TCData(Dataset):
     if priority < 2:
       priority = 2
     self.selections[np.where(self.selections < priority)] = priority-2
-    (y,x) = map(int, label.strip('()').split(','))
-    #self.selections[ind/mywidth, ind%myheight] = priority
-    qtrwin = self.winsize/8
+    (y,x) = list(map(int, label.strip('()').split(',')))
+    #self.selections[ind // mywidth, ind%myheight] = priority
+    qtrwin = self.winsize // 8
     self.selections[y-qtrwin:y+qtrwin, x-qtrwin:x+qtrwin] = priority
     
     pylab.clf()
@@ -165,6 +165,6 @@ class TCData(Dataset):
     # Has to be .png or the alpha transparency doesn't work! (pdf)
     figfile = os.path.join(outdir, '%s-priority-k-%d.png' % (self.name, k))
     pylab.savefig(figfile)
-    print 'Wrote selection priority plot to %s' % figfile
+    print('Wrote selection priority plot to %s' % figfile)
 
 

@@ -21,7 +21,7 @@
 import os, sys, re
 import numpy as np
 import pyfits, pylab
-from dataset import Dataset
+from .dataset import Dataset
 
 class DECaLSData(Dataset):
 
@@ -205,20 +205,20 @@ class DECaLSData(Dataset):
     from the plot.
     """
     
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0: 
+      print("Error: No data in x and/or r.")
       return
    
     # Select the features to plot
-    if feature_weights != []:
+    if len(feature_weights) > 0:
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      goodfeat = range(len(self.xvals))
+      goodfeat = list(range(len(self.xvals)))
 
     # Make a dual bar graph of the original and reconstructed features
     width = 0.35
-    offset = (1 - 2*width) / 2
+    offset = (1 - 2*width) // 2
   
     fig = pylab.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -247,7 +247,7 @@ class DECaLSData(Dataset):
                 max(0, float(max(max(x), max(r))) * padding)])
     
     if len(self.features) == 0:
-        pylab.xticks(pylab.arange(len(x)) + width + offset, range(len(x)))
+        pylab.xticks(pylab.arange(len(x)) + width + offset, list(range(len(x))))
     else:
         pylab.xticks(pylab.arange(len(x)) + width + offset, self.features,
                      rotation=-30, ha='left')
@@ -260,7 +260,7 @@ class DECaLSData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
   
 
@@ -282,7 +282,7 @@ class DECaLSData(Dataset):
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
-      if scores == []:
+      if len(scores) == 0:
         fid.write('%d,%d,%s_%s,%s,%s,0.0\n' % (i, orig_ind, brickname, objid,
                                                   RA, DEC))
       else:
@@ -326,7 +326,7 @@ class DECaLSData(Dataset):
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output -1 for this item.
-      if scores == []:
+      if len(scores) == 0:
         score = 'N/A'
       else:
         score = '%f' % scores[ind]
@@ -356,6 +356,6 @@ if __name__ == "__main__":
   filename                = os.path.basename(__file__)
 
   if num_failed == 0:
-    print "%-20s All %3d tests passed!" % (filename, num_tests)
+    print("%-20s All %3d tests passed!" % (filename, num_tests))
   else:
     sys.exit(1)

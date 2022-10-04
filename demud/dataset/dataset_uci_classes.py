@@ -2,7 +2,7 @@
 # File: dataset_uci_classes.py
 # Author: James Bedell, 8/20/13
 #
-# Specififc details for UCI CSV data sets
+# Specific details for UCI CSV data sets
 #
 # Copyright 2013-2015, by the California Institute of Technology. ALL
 # RIGHTS RESERVED.  United States Government Sponsorship
@@ -18,7 +18,7 @@
 
 import os, sys
 import csv, numpy, pylab
-from dataset_uci import UCIDataset
+from .dataset_uci import UCIDataset
 
 ################################################################################
 #
@@ -216,5 +216,5 @@ if __name__ == "__main__":
   filename                = os.path.basename(__file__)
 
   if num_failed == 0:
-    print "%-20s All %3d tests passed!" % (filename, num_tests)
+    print("%-20s All %3d tests passed!" % (filename, num_tests))
 

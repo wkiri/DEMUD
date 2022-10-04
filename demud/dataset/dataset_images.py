@@ -17,17 +17,17 @@
 # countries or providing access to foreign persons.
 
 import os, sys, fnmatch
-#from PIL import Image
-from scipy.misc import imread
 import numpy as np
-from dataset import *
+import pylab
+from .dataset import Dataset
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import imread
 import glob
-from log import printt
+from ..log.log import printt
 
 def progbar(current, to, width=40, show=True):
-    percent = float(current)/float(to)
+    percent = float(current) / float(to)
     length = int( width * percent)
     if show:
         count = " (%d/%d)    " % (current, to)
@@ -70,9 +70,9 @@ class ImageData(Dataset):
           ImageData.read_image_dir(self.initfilename)
       self.initdata = np.asarray(self.initdata)
       self.initdata = self.initdata.T
-      print 'Initializing with %d images (%s).' % \
-          (self.initdata.shape[1], str(imshape))
-      print self.initdata.shape
+      print('Initializing with %d images (%s).' % \
+            (self.initdata.shape[1], str(imshape)))
+      print(self.initdata.shape)
 
     ########## Read in the data to analyze
     # Labels are individual filenames
@@ -80,15 +80,15 @@ class ImageData(Dataset):
         ImageData.read_image_dir(self.filename)
       
     self.data = np.asarray(self.data)
-    print self.data.shape
+    print(self.data.shape)
 
     if len(self.data) == 0: 
-      print 'Error: no image files found.'
+      print('Error: no image files found.')
       sys.exit(1)
 
     self.data = self.data.T
-    print 'Read %d images (%s).' % \
-        (self.data.shape[1], str(self.imshape))
+    print('Read %d images (%s).' % \
+          (self.data.shape[1], str(self.imshape)))
 
 
   def  plot_item(self, m, ind, x, r, k, label, U, scores, feature_weights):
@@ -103,9 +103,9 @@ class ImageData(Dataset):
     U, scores, and feature_weights are optional; ignored in this method, 
     used in some classes' submethods.
     """
-    print "Plotting..."
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    print("Plotting...")
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
 
     vmin = min(np.nanmin(x), np.nanmin(r))
@@ -181,8 +181,8 @@ class ImageData(Dataset):
         # Shift so 0 is at 127,127,127.
         minres = np.min(resid)
         maxres = np.max(resid)
-        range  = max(abs(minres), maxres)
-        im = pylab.imshow(np.uint8(resid*127./range+127).reshape(self.imshape))
+        range_val  = max(abs(minres), maxres)
+        im = pylab.imshow(np.uint8(resid*127./range_val+127).reshape(self.imshape))
 
       pylab.tick_params(\
         axis='both',          # changes apply to the x-axis
@@ -207,10 +207,10 @@ class ImageData(Dataset):
     plt.savefig(figfile, bbox_inches='tight', pad_inches=0.1)
     plt.cla()
     plt.clf()
-    print "done."
+    print("done.")
     plt.close()
     pylab.close()
-    #print 'Wrote plot to %s' % figfile
+    #print('Wrote plot to %s' % figfile)
     
 
   def plot_pcs(self, m, U, mu, k, S):
@@ -258,7 +258,7 @@ class ImageData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'PCs-sel-%d-k-%d.pdf' % (m, k))
     pylab.savefig(figfile)
-    print 'Wrote SVD to %s' % figfile
+    print('Wrote SVD to %s' % figfile)
 
 
   @classmethod
@@ -277,33 +277,31 @@ class ImageData(Dataset):
     imshape = (-1, -1, -1)
 
     # Read in the image data
-    files = sorted(os.listdir(dirname))
-    numimages = len(os.listdir(dirname))
-    print numimages
-    printt("Loading files:")
+    files = sorted([f for f in os.listdir(dirname) if
+                    (f.endswith('.jpg') or
+                     f.endswith('.JPG') or
+                     f.endswith('.png'))])
+    numimages = len(files)
+    printt("Loading %d files:" % numimages)
     counter = 0
     for idx,f in enumerate(files):
-      # Unix-style wildcards. 
-      if (fnmatch.fnmatch(f, '*.jpg') or
-          fnmatch.fnmatch(f, '*.JPG') or
-          fnmatch.fnmatch(f, '*.png')):
         # Read in the image
-        filename = dirname + '/' + f
+        filename = os.path.join(dirname, f)
         im = imread(filename)
 
         if imshape[0] == -1:
-          #data = np.zeros([], dtype=np.float32).reshape(numimages, np.prod(im.shape))
-          data = np.zeros([numimages, np.prod(im.shape)], dtype=np.float32)
-          #data = np.array([], dtype=np.float32).reshape(0,np.prod(im.shape))
-          imshape = im.shape
+            #data = np.zeros([], dtype=np.float32).reshape(numimages, np.prod(im.shape))
+            data = np.zeros([numimages, np.prod(im.shape)], dtype=np.float32)
+            #data = np.array([], dtype=np.float32).reshape(0,np.prod(im.shape))
+            imshape = im.shape
         else:
-          # Ensure that all images are the same dimensions
-          if imshape != im.shape:
-            if len(im.shape) == 2:
-              # Convert grayscale to rgb
-              im = np.dstack((im, im, im))
-            else:
-              raise ValueError('Images must all have the same dimensions.')
+            # Ensure that all images are the same dimensions
+            if imshape != im.shape:
+                if len(im.shape) == 2:
+                    # Convert grayscale to rgb
+                    im = np.dstack((im, im, im))
+                else:
+                    raise ValueError('Images must all have the same dimensions.')
 
         #data = np.vstack([data, im.reshape(1,np.prod(im.shape))])
         data[counter] = im.reshape(1, np.prod(im.shape))

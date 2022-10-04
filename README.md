@@ -20,14 +20,13 @@ selecting similar items in the future.
 Installation
 ------------
 
-Note: DEMUD currently requires Python 2.7.  We are in the process of 
-updating it to Python 3.  Stay tuned!
+Note: DEMUD now requires Python 3.
 
 You should be able to install demud (virtual environment suggested) with:
 
    `$ pip install -r requirements.txt`
    
-   `$ python setup.py install`
+   `$ pip install .`
 
 That will make the `demud` console script available system-wide.
 
@@ -68,9 +67,9 @@ To get started
 
    **Example 1: Images.**
 
-   To run DEMUD on a collection of images using the pixel
-   representation, specify the directory containing the images on the
-   `imagedatafolder` line in `demud.config`.  Then run
+   To run DEMUD on a collection of images (must be all the same size)
+   using their pixels as features, specify the directory containing
+   the images on the `imagedatafolder` line in `demud.config`.  Then run
 
    `$ demud -I`
 

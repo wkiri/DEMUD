@@ -19,8 +19,8 @@
 import os, sys, pickle, fnmatch
 import pylab, csv, math, copy
 import numpy as np
-from dataset import *
-from log import printt
+from .dataset import Dataset
+from ..log.log import printt
 
 ################### LIBS ##############
 class LIBSData(Dataset):
@@ -145,10 +145,10 @@ class LIBSData(Dataset):
       self.initdata = self.initdata[:,1:] # features x samples
       (self.initdata, unused_xvals) = \
           LIBSData.prune_and_normalize(self.initdata, wavelengths, shotnoisefilt)
-      print self.initdata.shape
+      print(self.initdata.shape)
 
       (self.initdata, unused_labels) = self.filter_data(self.initdata, unused_labels)
-      print self.initdata.shape
+      print(self.initdata.shape)
 
     ########## Subselect by sol, if specified ##########
     if startsol > -1 and endsol >=-1:
@@ -161,9 +161,9 @@ class LIBSData(Dataset):
                          if int(s.split('_')[0][3:]) < startsol]
         printt("Putting previous sols' (before %d) data in initialization model." % startsol)
         # Concatenate initdata with data from all previous sols
-        if self.initdata != []:
-          print self.initdata.shape
-          print self.data[:,previous_sols].shape
+        if len(self.initdata) > 0:
+          print(self.initdata.shape)
+          print(self.data[:,previous_sols].shape)
           self.initdata = np.hstack((self.initdata, self.data[:,previous_sols]))
         else:
           self.initdata = self.data[:,previous_sols]
@@ -198,7 +198,7 @@ class LIBSData(Dataset):
     #for i in [1461]: # test broad feature
     #for i in [3400]: # test broad feature
     for i in range(n):
-      waves     = range(data.shape[0])
+      waves     = list(range(data.shape[0]))
       this_data = data[waves,i]
       peak_ind  = this_data.argmax()
       peak_wave = self.xvals[waves[peak_ind]]
@@ -214,10 +214,10 @@ class LIBSData(Dataset):
         
       # Iterate over peaks sufficiently big to be of interest
       while this_data[peak_ind] >= min_peak:
-        #print "%d) Max peak: %f nm (index %d, %f)" % (i,
+        #print("%d) Max peak: %f nm (index %d, %f)" % (i,
         #                                              self.xvals[waves[peak_ind]],
         #                                              peak_ind,
-        #                                              this_data[peak_ind])
+        #                                              this_data[peak_ind]))
         red_waves = [waves[peak_ind]]
         
         # Set the low value to look for (indicates nice narrow peak)
@@ -248,20 +248,20 @@ class LIBSData(Dataset):
               ((self.xvals[waves[max_wave_ind]] -
                 self.xvals[waves[peak_ind]]) > 10)):
             filter_item = True
-            #print '%.2f: %.2f to %.2f' % (self.xvals[waves[peak_ind]],
+            #print('%.2f: %.2f to %.2f' % (self.xvals[waves[peak_ind]],
             #                              self.xvals[waves[min_wave_ind]],
-            #                              self.xvals[waves[max_wave_ind]])
+            #                              self.xvals[waves[max_wave_ind]]))
             break
           
-          #print 'checking %f, %f' % (self.xvals[waves[min_wave_ind]],
-          #                           self.xvals[waves[max_wave_ind]])
+          #print('checking %f, %f' % (self.xvals[waves[min_wave_ind]],
+          #                           self.xvals[waves[max_wave_ind]]))
           if this_data[min_wave_ind] <= low_value or \
              this_data[max_wave_ind] <= low_value:
             # success! data is good
-            #print '  %f: %f' % (self.xvals[waves[min_wave_ind]],
-            #                    this_data[min_wave_ind])
-            #print '  %f: %f' % (self.xvals[waves[max_wave_ind]],
-            #                    this_data[max_wave_ind])
+            #print('  %f: %f' % (self.xvals[waves[min_wave_ind]],
+            #                    this_data[min_wave_ind]))
+            #print('  %f: %f' % (self.xvals[waves[max_wave_ind]],
+            #                    this_data[max_wave_ind]))
             filter_item = False
             break
           
@@ -270,10 +270,10 @@ class LIBSData(Dataset):
 
         # Filter the item out
         if filter_item:
-          print "Filter item %d (%s) due to [%.2f, %.2f] nm " % (i,
+          print("Filter item %d (%s) due to [%.2f, %.2f] nm " % (i,
                                                                  labels[i],
                                                         self.xvals[min(red_waves)],
-                                                        self.xvals[max(red_waves)])
+                                                        self.xvals[max(red_waves)]))
           # record it for later removal
           remove_ind += [i]
 
@@ -326,8 +326,8 @@ class LIBSData(Dataset):
     newlabels = np.array([newlabels[i] for i in range(len(newlabels)) \
                           if i not in remove_ind])
 
-    print " ... from %d to %d items (%d removed)." % (n, newdata.shape[1],
-                                                      n-newdata.shape[1])
+    print(" ... from %d to %d items (%d removed)." % (n, newdata.shape[1],
+                                                      n-newdata.shape[1]))
 
     #sys.exit(0)
     
@@ -362,9 +362,9 @@ class LIBSData(Dataset):
         # Add 1 so shots are indexed from 1, not 0
         targets[sclk] = target + ':%d' % (n_prior + 1)
         sols[sclk]    = sol
-    print 'Read %d target names from %s.' % (len(targets), metafile)
+    print('Read %d target names from %s.' % (len(targets), metafile))
 
-    print 'Now reading LIBS data from %s.' % dirname
+    print('Now reading LIBS data from %s.' % dirname)
 
     data        = []
     labels      = []
@@ -389,7 +389,7 @@ class LIBSData(Dataset):
       
       # If it's a cal target, skip it
       if 'Cal Target' in target:
-        print 'Skipping %s' % target
+        print('Skipping %s' % target)
         continue
         
       #site_drive_seqid_target = '%s_%s_%s_%s' % (site, drive, seqid, target)
@@ -442,7 +442,7 @@ class LIBSData(Dataset):
         
         printt(' Read %d new items, %d features.' % mydata.shape[::-1])
 
-        if wavelengths != [] and np.any(wavelengths != mywaves):
+        if len(wavelengths) > 0 and np.any(wavelengths != mywaves):
           printt('Error: wavelengths in file %d do not match previous.' % f_ind)
         if f_ind == 0:
           data        = mydata
@@ -455,7 +455,7 @@ class LIBSData(Dataset):
         printt('Total so far: %d items, %d files.' % (data.shape[1], f_ind))
 
     print
-    if data == []:
+    if len(data) == 0:
       printt('No data files found, exiting.')
       sys.exit()
 
@@ -470,7 +470,7 @@ class LIBSData(Dataset):
     outf = open(outfile, 'w')
     pickle.dump((data, labels, wavelengths), outf)
     outf.close()
-    print 'Done!'
+    print('Done!')
     
 
   @classmethod
@@ -486,7 +486,7 @@ class LIBSData(Dataset):
     Return the pruned and normalized data.
     """
 
-    print 'Pruning and normalizing the data.'
+    print('Pruning and normalizing the data.')
 
     # Only use data between 270 and 820 nm (ends are noisy)
     use = np.where(np.logical_and(wavelengths >= 270,
@@ -543,17 +543,17 @@ class LIBSData(Dataset):
     zero are NOT weighted; they all participate normally.
     """
 
-    if data == []: 
-      print 'Error: empty data; cannot filter.'
+    if len(data) == 0:
+      print('Error: empty data; cannot filter.')
       return data
     
     if L < 3:
-      print 'Error: L (%d) is too small; minimum 3.' % L
+      print('Error: L (%d) is too small; minimum 3.' % L)
       return data
 
     printt('Filtering shot noise with a width of %d (this may take some time).' % L)
 
-    Lwing = (L-1)/2
+    Lwing = (L-1) // 2
 
     (d,n) = data.shape  # assume items are column vectors
     data2 = np.zeros_like(data)
@@ -563,15 +563,15 @@ class LIBSData(Dataset):
 
         # Specify the range over which to compute the median
         if (i < Lwing):
-          ind = range(0, i+Lwing+1)
+          ind = list(range(0, i+Lwing+1))
         elif (i >= d - Lwing):
-          ind = range(i-Lwing, d)
+          ind = list(range(i-Lwing, d))
         else:
-          ind = range(i-Lwing, i+Lwing+1)
+          ind = list(range(i-Lwing, i+Lwing+1))
 
         # If featureweights are specified,
         # adjust ind to only include the nonzero ones.
-        if fw != []:
+        if len(fw) > 0:
           # If there aren't any features with nonzero weights,
           # this won't use anything (set data value to 0)
           ind = [i for i in ind if fw[i]>0]
@@ -579,7 +579,7 @@ class LIBSData(Dataset):
         # Perform the median filter.
         # If there are no valid features to use, set this point to 0
         # (it won't be used later anyway)
-        if ind == []:
+        if len(ind) == 0:
           data2[i, j] = 0
         else:
           data2[i, j] = np.median(data[ind, j])
@@ -601,8 +601,8 @@ class LIBSData(Dataset):
         row    = datareader.next()
       # The last comment line contains the header strings
       # starting with 'wave' or 'nm'
-      #print lastrow
-      #print row
+      #print(lastrow)
+      #print(row)
       labels = lastrow[1:]
 
       data = [[float(x) for x in row]]
@@ -627,16 +627,16 @@ class LIBSData(Dataset):
     If feature_weights are specified, omit any 0-weighted features from the plot.
     """
 
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
   
     # Select the features to plot
-    if feature_weights != []:
+    if len(feature_weights) > 0:
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      goodfeat = range(len(self.xvals))
+      goodfeat = list(range(len(self.xvals)))
 
     pylab.clf()
     # xvals, x, and r need to be column vectors
@@ -650,7 +650,7 @@ class LIBSData(Dataset):
     pylab.title('DEMUD selection %d (%s), item %d, using K=%d' % \
                 (m, label, ind, k))
 
-    #print 'Reading in emission bands.'
+    #print('Reading in emission bands.')
     # Read in the emission bands
     emissions = {}
     with open('LIBS-elts-RCW-NL.txt') as f:
@@ -735,7 +735,7 @@ class LIBSData(Dataset):
       pylab.legend(fontsize=8)
     figfile = '%s/%s-sel-%d.pdf' % (outdir, self.name, m)
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
     # I don't think this works -- hasn't been tested?
@@ -782,7 +782,7 @@ class LIBSData(Dataset):
     waves.sort()
     lo_b = 0
     hi_b = len(waves)
-    b    = int(math.floor((hi_b + lo_b) / 2))
+    b    = (hi_b + lo_b) // 2
     while lo_b < hi_b:
       diff = float(waves[b]) - w
       ldiff = float('Inf')
@@ -799,7 +799,7 @@ class LIBSData(Dataset):
         hi_b = b
       else:  # too low
         lo_b = b
-      b = int(math.floor((hi_b + lo_b) / 2))
+      b = (hi_b + lo_b) // 2
 
     # Quality control: must be within match nm
     if abs(float(waves[b]) - w) > min_match_nm:

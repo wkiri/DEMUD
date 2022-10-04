@@ -2,23 +2,23 @@
 
 from setuptools import setup
 
-execfile('demud/version.py')  # brings in a "version" variable
+exec(open('demud/version.py').read())  # brings in a "version" variable
 
-description = ''
 with open('README.md') as f:
     long_description = f.read()
 
 setup(name='DEMUD',
       version=version,
-      description=description,
+      description='DEMUD novelty detection',
       long_description=long_description,
       author='Kiri Wagstaff',
       author_email='kiri.wagstaff@jpl.nasa.gov',
       url='https://github.com/wkiri/DEMUD',
-      packages=['demud'],
+      packages=['demud', 'demud.dataset', 'demud.log'],
       install_requires=['matplotlib',
                         'numpy',
                         'scipy',
                         'pillow'],
-      entry_points={'console_scripts': ['demud=demud.demud:main']}
+      entry_points={'console_scripts': ['demud=demud.demud:main']},
+      python_requires='>=3.0',
      )

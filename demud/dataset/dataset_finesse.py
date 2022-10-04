@@ -18,7 +18,7 @@
 
 import os, sys, pickle, fnmatch
 import pylab, math
-from dataset import *
+from .dataset import Dataset
 
 ################### FINESSE ##############
 class FINESSEData(Dataset):
@@ -41,7 +41,7 @@ class FINESSEData(Dataset):
 
     Dataset.__init__(self, filename, 'finesse-%s' % self.data_type, '')
 
-    print 'Reading %s data from %s.' % (self.data_type, self.filename)
+    print('Reading %s data from %s.' % (self.data_type, self.filename))
 
     if not os.path.exists(filename):
       FINESSEData.read_dir(rawdirname, filename, self.data_type)
@@ -80,7 +80,7 @@ class FINESSEData(Dataset):
     Follow this with a call to readin().
     """
 
-    print 'Reading FINESSE data from %s.' % rawdirname
+    print('Reading FINESSE data from %s.' % rawdirname)
 
     # Read in the normalization coefficients
     norm_fn     = os.path.join(rawdirname, 'scalings_forKiri.csv')
@@ -106,7 +106,7 @@ class FINESSEData(Dataset):
 
         # Save the wavelengths, if needed
         # (note: we ASSUME this is the same for all planets!)
-        if wavelengths == []:
+        if len(wavelengths) == 0:
           wavelengths = planet_data[:,0]
 
         pd = planet_data[:,1].reshape((-1,1))
@@ -114,8 +114,8 @@ class FINESSEData(Dataset):
         # Find the normalization entry that matches this id
         file_id = int(f[0:10])
         ind = np.where(norm_data['file_identifier'] == file_id)
-        if ind == []:
-          print 'Error: could not find norm constants for file id %d' % file_id
+        if len(ind) == 0:
+          print('Error: could not find norm constants for file id %d' % file_id)
           break
         else:
           ind = ind[0]
@@ -142,7 +142,7 @@ class FINESSEData(Dataset):
         else:
           truelabel = 'not' #not interesting
           
-        if data == []:
+        if len(data) == 0:
           data   = pd
           labels = [truelabel]
         else:
@@ -154,14 +154,14 @@ class FINESSEData(Dataset):
 
     print
     # Data is now d x n, where d = # wavelengths and n = # planets 
-    print 'Read data set with %d wavelengths, %d planets.' % data.shape
+    print('Read data set with %d wavelengths, %d planets.' % data.shape)
     labels = np.array(labels)
 
-    print 'Saving to %s.' % outfile
+    print('Saving to %s.' % outfile)
     outf = open(outfile, 'w')
     pickle.dump((data, labels, wavelengths), outf)
     outf.close()
-    print 'Done!'
+    print('Done!')
 
 
   def  plot_item(self, m, ind, x, r, k, label):
@@ -171,8 +171,8 @@ class FINESSEData(Dataset):
     with k and label to annotate of the plot.
     """
     
-    if x == [] or r == []: 
-      print "Error: No data in x and/or r."
+    if len(x) == 0 or len(r) == 0:
+      print("Error: No data in x and/or r.")
       return
   
     pylab.clf()
@@ -198,5 +198,5 @@ class FINESSEData(Dataset):
       os.mkdir(outdir)
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).png' % (m, k, label))
     pylab.savefig(figfile)
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()

@@ -23,10 +23,10 @@ import pylab, math, struct, pickle
 import matplotlib
 import h5py
 from matplotlib.patches import Rectangle
-from dataset import *
-from dataset_libs import LIBSData
+from .dataset import Dataset
+from .dataset_libs import LIBSData
 #from nims_data import NimsQube
-from log import printt
+from ..log.log import printt
 
 ################### ENVI ##############
 class ENVIData(Dataset):
@@ -81,10 +81,10 @@ class ENVIData(Dataset):
     # Otherwise, read in raw data and write that pickled file.
     if self.filename.endswith('.pkl'):
       if os.path.exists(self.filename):
-        print 'Reading ENVI data from pickled file %s (pre-processing already done).' % filename
+        print('Reading ENVI data from pickled file %s (pre-processing already done).' % filename)
         self.readin()
       else: 
-        print 'Reading from ENVI file %s and writing to pickled file %s.' % (filename, self.filename)
+        print('Reading from ENVI file %s and writing to pickled file %s.' % (filename, self.filename))
         # Read in the ENVI file and apply any preprocessing needed
         self.read_from_scratch(filename, shotnoisefilt, fwfile)
         # Save results to a pickled file.
@@ -162,10 +162,10 @@ class ENVIData(Dataset):
       if shotnoisefilt >= 3:
         self.data = LIBSData.medfilter(self.data, shotnoisefilt)
 
-      print self.xvals
+      print(self.xvals)
 
     else:
-      print 'Reading from ENVI file %s, no pre-processing.' % filename
+      print('Reading from ENVI file %s, no pre-processing.' % filename)
       self.read_from_scratch(filename)
 
     # Set up the priority map - 0 means not yet prioritized
@@ -182,7 +182,7 @@ class ENVIData(Dataset):
     (self.lines, self.samples, self.data, self.rgb_data,
      self.xlabel, self.ylabel, self.xvals, self.labels) = \
         pickle.load(inf)
-    print ' Dimensions: %d lines, %d samples.' % (self.lines, self.samples)
+    print(' Dimensions: %d lines, %d samples.' % (self.lines, self.samples))
 
     inf.close()
 
@@ -214,7 +214,7 @@ class ENVIData(Dataset):
     info = ENVIData.read_envihdr(hdrfile)
     self.lines   = info['lines']
     self.samples = info['samples']
-    print '%d lines, %d samples, %d bands.' % (self.lines, self.samples, info['bands'])
+    print('%d lines, %d samples, %d bands.' % (self.lines, self.samples, info['bands']))
 
     # Set binary format parameters
     byte_order = info['byte order']
@@ -237,11 +237,11 @@ class ENVIData(Dataset):
     elif (dtype == 5):
       format = 'float64'  # Note: 'float' is the same as 'float64'
     elif (dtype == 6):
-      print ':: Sorry, Complex (2x32 bits) data currently not supported.'
-      print ':: Importing as double-precision instead.'
+      print(':: Sorry, Complex (2x32 bits) data currently not supported.')
+      print(':: Importing as double-precision instead.')
       format = 'float64'
     elif (dtype == 9):
-      print ':: Sorry, double-precision complex (2x64 bits) data currently not supported.'
+      print(':: Sorry, double-precision complex (2x64 bits) data currently not supported.')
       return
     elif (dtype == 12):
       format = 'uint16'
@@ -252,15 +252,15 @@ class ENVIData(Dataset):
     elif (dtype == 15):
       format = 'uint64'
     else:
-      print 'Error: File type number: %d not supported' % dtype
+      print('Error: File type number: %d not supported' % dtype)
       return None
-    print 'Reading data format %s' % format
+    print('Reading data format %s' % format)
 
     # Read in the data
     try:
       dfile = open(envi_file, 'r')
     except IOError:
-      print ":: Error: data file '%s' not found." % envi_file
+      print(":: Error: data file '%s' not found." % envi_file)
       return None
 
     self.data = np.zeros((info['bands'], info['lines'] * info['samples']),
@@ -272,25 +272,25 @@ class ENVIData(Dataset):
     band_format = info['interleave'].lower()
 
     if (band_format == 'bsq'):
-      print "Reading BSQ: Band, Row, Col; %s" % machine
+      print("Reading BSQ: Band, Row, Col; %s" % machine)
       raw_data = raw_data.reshape((info['bands'],info['lines'],info['samples']))
       for b in range(info['bands']):
         for i in range(info['lines'] * info['samples']):
-          l = int(i / info['samples'])
+          l = i // info['samples']
           s = i % info['samples']
           self.data[b,i] = raw_data[b,l,s]
 
     elif (band_format == 'bil'):
-      print "Reading BIL: Row, Band, Col; %s" % machine
+      print("Reading BIL: Row, Band, Col; %s" % machine)
       raw_data = raw_data.reshape((info['lines'],info['bands'],info['samples']))
       for b in range(info['bands']):
         for i in range(info['lines'] * info['samples']):
-          l = int(i / info['samples'])
+          l = i // info['samples']
           s = i % info['samples']
           self.data[b,i] = raw_data[l,b,s]
     
     elif (band_format == 'bip'):
-      print "Reading BIP: Row, Col, Band; %s" % machine
+      print("Reading BIP: Row, Col, Band; %s" % machine)
       raw_data = raw_data.reshape((info['lines'],info['samples'],info['bands']))
       for b in range(info['bands']):
         self.data[b,:] = raw_data[:,:,b].reshape(-1)
@@ -364,7 +364,7 @@ class ENVIData(Dataset):
     try:
       hfile = open(hdrfile, 'r')
     except IOError:
-      print ":: Error: header file '%s' not found." % hdrfile
+      print(":: Error: header file '%s' not found." % hdrfile)
       return None
 
     info = {}
@@ -446,10 +446,10 @@ class ENVIData(Dataset):
       g_band = np.argmin([abs(w-1.300) for w in waves]) # water ice absorption
       b_band = np.argmin([abs(w-0.730) for w in waves])
 
-    print 'Using bands: %d red (%f), %d green (%f), %d blue (%f), zero-indexed.' % \
+    print('Using bands: %d red (%f), %d green (%f), %d blue (%f), zero-indexed.' % \
         (r_band, waves[r_band],
          g_band, waves[g_band],
-         b_band, waves[b_band])
+         b_band, waves[b_band]))
 
     # Convert data to 8-bit format (was 16...)
     rgb_data = np.zeros((self.lines, self.samples, 3),
@@ -478,7 +478,7 @@ class ENVIData(Dataset):
     #rgb_data = self.get_RGB()
     png = Image.fromarray(self.rgb_data, 'RGB')
     png.save(filename)
-    print "Wrote PNG visualization to %s." % filename
+    print("Wrote PNG visualization to %s." % filename)
 
 
   # Augment plot with spatial locator map
@@ -497,18 +497,18 @@ class ENVIData(Dataset):
     If feature_weights are specified, omit any 0-weighted features from the plot.
     """
     
-    if x == [] or r == []: 
+    if len(x) == 0 or len(r) == 0: 
       printt("Error: No data in x and/or r.")
       return
 
     (l,s) = [int(v) for v in label.split('_')]
 
     # Select the features to plot
-    if feature_weights != []:
+    if len(feature_weights) > 0:
       goodfeat = [f for f in range(len(feature_weights)) \
                     if feature_weights[f] > 0]
     else:
-      #goodfeat = range(len(self.xvals))
+      #goodfeat = list(range(len(self.xvals)))
       # Avoid NaNs
       goodfeat = np.where(~np.isnan(x) & ~np.isnan(r))[0]
 
@@ -556,14 +556,14 @@ class ENVIData(Dataset):
     # Plot #2: zoom of selected pixel, 20x20 context
     pylab.subplot(2,2,2)
     winwidth = 20
-    minl = max(0, l-winwidth/2)
-    mins = max(0, s-winwidth/2)
-    maxl = min(self.lines,   l+winwidth/2)
-    maxs = min(self.samples, s+winwidth/2)
+    minl = max(0, l - winwidth // 2)
+    mins = max(0, s - winwidth // 2)
+    maxl = min(self.lines,   l + winwidth // 2)
+    maxs = min(self.samples, s + winwidth // 2)
     pylab.imshow(self.rgb_data[minl:maxl, mins:maxs],
                  interpolation='none') #, alpha=0.85)
-    pylab.gca().add_patch(Rectangle((min(winwidth/2,s)-1,
-                                     min(winwidth/2,l)-1),
+    pylab.gca().add_patch(Rectangle((min(winwidth // 2, s) - 1,
+                                     min(winwidth // 2, l) - 1),
                                      2, 2,
                                      fill=None, alpha=1))
     pylab.axis('off')
@@ -584,7 +584,7 @@ class ENVIData(Dataset):
 
     # Also update the priority map.
     self.pr_map[l,s] = m+1
-    #print 'setting %d, %d to %d' % (l, s, -m)
+    #print('setting %d, %d to %d' % (l, s, -m))
     n_tot = self.lines * self.samples
     n_pri = len(self.pr_map.nonzero()[0])
     n_unp = n_tot - n_pri
@@ -647,7 +647,7 @@ class ENVIData(Dataset):
 
     figfile = os.path.join(outdir, 'sel-%d-k-%d-(%s).pdf' % (m, k, label))
     pylab.savefig(figfile, bbox_inches='tight')
-    print 'Wrote plot to %s' % figfile
+    print('Wrote plot to %s' % figfile)
     pylab.close()
 
     # Write the priority map to an image file
@@ -675,7 +675,7 @@ class ENVIData(Dataset):
     if (m % 10) == 0:
       prmapfig = os.path.join(outdir, 'prmap-k-%d-m-%d.png' % (k, m))
       pylab.savefig(prmapfig)
-    print 'Wrote priority map figure to %s (max_c %d)' % (prmapfig, max_c)
+    print('Wrote priority map figure to %s (max_c %d)' % (prmapfig, max_c))
     pylab.close()
 
     # Write the priority map contents to a file as a 64-bit float map 
@@ -685,7 +685,7 @@ class ENVIData(Dataset):
     fid = open(prmapfile, 'wb')
     self.pr_map.astype('float64').tofile(fid)
     fid.close()
-    print "Wrote Hua's priority map (data) to %s" % prmapfile
+    print("Wrote Hua's priority map (data) to %s" % prmapfile)
 
     # Write an ENVI data file and header file
     prmapfile = os.path.join(outdir, 'prmap-k-%d.dat' % k)
@@ -712,7 +712,7 @@ class ENVIData(Dataset):
               ',\n                '.join([' %d, %d, %d' % (r*255,g*255,b*255) for (r,g,b,a) in jet_map_v]) + 
               ' }\n')
     fid.close()
-    print 'Wrote ENVI data/header to priority map figure to %s[.hdr]' % prmapfile
+    print('Wrote ENVI data/header to priority map figure to %s[.hdr]' % prmapfile)
 
     # Write the selections (spectra) in ASCII format
     selfile = os.path.join(outdir, 'selections-k%d.txt' % k)
@@ -728,7 +728,7 @@ class ENVIData(Dataset):
 
       # If scores is empty, the (first) selection was pre-specified,
       # so there are no scores.  Output 0 for this item.
-      if scores == []:
+      if len(scores) == 0:
         fid.write('%d,0.0,' % (m))
     else:
       fid = open(selfile, 'a')
@@ -773,7 +773,7 @@ class SegENVIData(ENVIData):
       printt('Error: mismatch in number of pixels between image and segmap.')
       return
 
-    goodbands = range(len(self.xvals))
+    goodbands = list(range(len(self.xvals)))
     # For AVIRIS data:
     if 'f970619' in self.name:
       printt('Removing known bad bands, assuming AVIRIS data.')
@@ -781,7 +781,7 @@ class SegENVIData(ENVIData):
       # Indexing from 1: [10:100 116:150 180:216]
       # Subtract 1 to index from 0, but not to the end values
       # because range() is not inclusive of end
-      goodbands  = range(9,100) + range(115,150) + range(179,216)
+      goodbands  = list(range(9,100)) + list(range(115,150)) + list(range(179,216))
     # For UCIS data:
     elif 'mars_yard' in self.name:
       printt('Removing known bad bands, assuming UCIS data.')
@@ -789,14 +789,14 @@ class SegENVIData(ENVIData):
       # Exclude 1.4-1.9 um (per Diana).
       waterband_min = np.argmin([abs(x-1400) for x in self.xvals])
       waterband_max = np.argmin([abs(x-1900) for x in self.xvals])
-      waterbands    = range(waterband_min, waterband_max+1)
+      waterbands    = list(range(waterband_min, waterband_max+1))
       # Based on Hua's visual examination, exclude bands
       # 1-6, 99-105, and 145-155.
       # Good bands are therefore 7-98, 106-144, and 156-maxband.
       # Subtract 1 to index from 0, but not to the end values
       # because range() is not inclusive of end
       maxband    = len(self.xvals)
-      goodbands  = range(6,98) + range(105,144) + range(155,maxband)
+      goodbands  = list(range(6,98)) + list(range(105,144)) + list(range(155,maxband))
       # Remove the water bands
       printt('Removing water absorption bands.')
       printt('%d good bands -> ' % len(goodbands))
@@ -812,7 +812,7 @@ class SegENVIData(ENVIData):
     newdata = np.zeros((self.data.shape[0], len(self.labels)))
     for i, s in enumerate(self.labels):
       pixels  = np.where(self.segmap == s)[0]
-      #print '%d: %s: %d pixels' % (i, str(s), len(pixels))
+      #print('%d: %s: %d pixels' % (i, str(s), len(pixels)))
       # Compute and store the mean
       newdata[:,i] = self.data[:,pixels].mean(1)
 
