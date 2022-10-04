@@ -20,8 +20,7 @@ selecting similar items in the future.
 Installation
 ------------
 
-Note: DEMUD currently requires Python 2.7.  We are in the process of 
-updating it to Python 3.  Stay tuned!
+Note: DEMUD now requires Python 3.
 
 You should be able to install demud (virtual environment suggested) with:
 
