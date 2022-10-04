@@ -28,29 +28,27 @@ import matplotlib
 matplotlib.use('Agg') 
 import pylab
 
-from dataset_uci_classes import GlassData, IrisData, EcoliData, AbaloneData, IsoletData
-from dataset_float import FloatDataset
-from dataset_float_classes import *
-#from dataset_decals import DECaLSData
-from dataset_des import DESData
-#from dataset_gbtfil import GBTFilterbankData
-#from dataset_misr import MISRDataTime
-#from dataset_libs import LIBSData
-#from dataset_finesse import FINESSEData
-#from dataset_envi import ENVIData
-#from dataset_envi import SegENVIData
-#from dataset_irs  import IRSData
-#from dataset_kepler import KeplerData
-#from dataset_mastcam import MastcamData
-#from dataset_tc import TCData
-#from dataset_navcam import NavcamData
-from dataset_images import ImageData
-#from exoplanet_lookup import ExoplanetLookup
-#import kepler_lookup
-import log
-from log import printt
+from .dataset.dataset_uci_classes import GlassData, IrisData, EcoliData, AbaloneData, IsoletData
+from .dataset.dataset_float import FloatDataset
+from .dataset.dataset_float_classes import *
+from .dataset.dataset_images import ImageData
+#from .dataset.dataset_decals import DECaLSData
+from .dataset.dataset_des import DESData
+#from .dataset.dataset_gbtfil import GBTFilterbankData
+#from .dataset.dataset_misr import MISRDataTime
+#from .dataset.dataset_libs import LIBSData
+#from .dataset.dataset_finesse import FINESSEData
+#from .dataset.dataset_envi import ENVIData
+#from .dataset.dataset_envi import SegENVIData
+#from .dataset.dataset_irs  import IRSData
+#from .dataset.dataset_kepler import KeplerData
+#from .dataset.dataset_mastcam import MastcamData
+#from PIL import Image  # for MastcamData
+#from .dataset.dataset_tc import TCData
+#from .dataset.dataset_navcam import NavcamData
+#import log
+from .log.log import printt, opts, logfilename, logfile
 
-#from PIL import Image
 import pickle
 
 import optparse
@@ -223,8 +221,8 @@ def  select_next(X, U, mu,
   print("------------ SELECTING --------------")
   if len(U) == 0:
     printt("Empty DEMUD model: selecting item number %d from data set" % \
-             (log.opts['iitem']))
-    return log.opts['iitem'], [], []
+             (opts['iitem']))
+    return opts['iitem'], [], []
 
   if X.shape[1] < 1 or len(U) == 0 or len(mu) == 0:
     printt("Error: No data in X and/or U and/or mu.")
@@ -580,7 +578,7 @@ def  update_model(X, U, S, k, n, mu,
   indivpcts = None
 
   # This only works if a full SVD was done
-  if (svdmethod == 'full' and output_k and log.opts['k_var'] == -773038.0):
+  if (svdmethod == 'full' and output_k and opts['k_var'] == -773038.0):
     # Calculate percent variance captured by each 
     cumsum      = np.cumsum(S_full)
     #print(cumsum.shape)
@@ -597,7 +595,7 @@ def  update_model(X, U, S, k, n, mu,
     else:
       printt("Selected value of k=%d captures %5.2f%% of the data variance" % \
              (k, cumpercents[k-1] * 100))
-    if log.opts['pause']: input("Press enter to continue\n")
+    if opts['pause']: input("Press enter to continue\n")
 
   #print('U:', U)
   #print('mu:', mu)
@@ -652,42 +650,42 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   elif nsel == 0:
     printt("Warning: nsel = 0.  This means demud will do nothing, slowly.")
 
-  if 'iitem' not in log.opts or flush_parameters:
+  if 'iitem' not in opts or flush_parameters:
     # Temporary hack to allow the demud() method to be called from external scripts.
     #   Better long-term support for this should probably exist.
-    log.opts['iitem'] = 'mean'
-    log.opts['shotfilt'] = 0
-    log.opts['fft'] = False
-    log.opts['static'] = False
-    log.opts['coi'] = None
-    log.opts['note'] = None
-    log.opts['coiaction'] = None
-    log.opts['plotvariance'] = False
-    log.opts['kepler'] = False
-    log.opts['plot'] = True
-    log.opts['mastcam'] = False
-    log.opts['interactive'] = False
-    log.opts['alwaysupdate'] = False
-    log.opts['start_sol'] = start_sol
-    log.opts['end_sol'] = end_sol
-    log.opts['log'] = True
-    log.opts['k'] = k
-    log.opts['k_var'] = False
-    log.opts['svdmethod'] = svdmethod
-    log.opts['missingdatamethod'] = missingmethod
-    log.opts['svd_print'] = False
-    log.opts['md_print'] = False
-    log.opts['clean'] = False
-    log.opts['printk'] = False
-    log.opts['score_print'] = False
-    log.opts['fw_print'] = False
-    log.opts['fun'] = False # no fun for you!
-    log.opts['pause'] = False
+    opts['iitem'] = 'mean'
+    opts['shotfilt'] = 0
+    opts['fft'] = False
+    opts['static'] = False
+    opts['coi'] = None
+    opts['note'] = None
+    opts['coiaction'] = None
+    opts['plotvariance'] = False
+    opts['kepler'] = False
+    opts['plot'] = True
+    opts['mastcam'] = False
+    opts['interactive'] = False
+    opts['alwaysupdate'] = False
+    opts['start_sol'] = start_sol
+    opts['end_sol'] = end_sol
+    opts['log'] = True
+    opts['k'] = k
+    opts['k_var'] = False
+    opts['svdmethod'] = svdmethod
+    opts['missingdatamethod'] = missingmethod
+    opts['svd_print'] = False
+    opts['md_print'] = False
+    opts['clean'] = False
+    opts['printk'] = False
+    opts['score_print'] = False
+    opts['fw_print'] = False
+    opts['fun'] = False # no fun for you!
+    opts['pause'] = False
 
     print("No method of initializing the dataset was chosen.  Defaulting to mean.")
 
-  log.opts['start_sol'] = start_sol
-  log.opts['end_sol']   = end_sol
+  opts['start_sol'] = start_sol
+  opts['end_sol']   = end_sol
 
   ###############################################
   # Add experiment information to dataset name
@@ -699,22 +697,22 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   ds.name += '-' + svdmethod
   if scoremethod != 'lowhigh': ds.name += '-score=' + scoremethod
   if missingmethod != "none": ds.name += '-missing=' + missingmethod
-  if len(feature_weights) != 0: ds.name += '-featureweight=' + os.path.basename(log.opts['fw'])
-  if log.opts['sol'] != -1: ds.name += '-sol%d' % log.opts['sol']
-  if log.opts['sols'] != None: ds.name += '-sol%d' % log.opts['start_sol']
-  if log.opts['sols'] != None: ds.name += '-%d' % log.opts['end_sol']
+  if len(feature_weights) != 0: ds.name += '-featureweight=' + os.path.basename(opts['fw'])
+  if opts['sol'] != -1: ds.name += '-sol%d' % opts['sol']
+  if opts['sols'] != None: ds.name += '-sol%d' % opts['start_sol']
+  if opts['sols'] != None: ds.name += '-%d' % opts['end_sol']
   if ds.initfilename != '' and ds.initfilename != None:
     ds.name += '-init-file'
-  if log.opts['init_prior_sols'] == True:
+  if opts['init_prior_sols'] == True:
     ds.name += '-init-prior'
   else:
-    ds.name += '-init_item=' + str(log.opts['iitem'])
-  if log.opts['shotfilt'] != 0: ds.name += '-shotfilt=%d' % log.opts['shotfilt']
-  if log.opts['fft']: ds.name += "-fft"
-  if log.opts['static']: ds.name += '-static' 
-  if log.opts['coi'] != None: ds.name += '-coi-' + log.opts['coiaction'] \
-      + '=' + log.opts['coi']
-  if log.opts['note'] != None: ds.name += '-' + log.opts['note']
+    ds.name += '-init_item=' + str(opts['iitem'])
+  if opts['shotfilt'] != 0: ds.name += '-shotfilt=%d' % opts['shotfilt']
+  if opts['fft']: ds.name += "-fft"
+  if opts['static']: ds.name += '-static' 
+  if opts['coi'] != None: ds.name += '-coi-' + opts['coiaction'] \
+      + '=' + opts['coi']
+  if opts['note'] != None: ds.name += '-' + opts['note']
   
   ###############################################
   # Set up output directories for plots and logging
@@ -723,8 +721,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   outdir = os.path.join('results', ds.name)
   if not os.path.exists(outdir):
     os.mkdir(outdir)
-  log.logfilename = os.path.join(outdir, 'demud.log')
-  log.logfile     = open(log.logfilename, 'w')
+  logfilename = os.path.join(outdir, 'demud.log')
+  global logfile
+  logfile     = open(logfilename, 'w')
   # Save RGB visualization, if appropriate
   try:
     if (isinstance(ds, SegENVIData) or
@@ -742,7 +741,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
  
   ###############################################
   # Plot variance
-  if log.opts['plotvariance']:
+  if opts['plotvariance']:
     plot_variance(ds)
 
   ###############################################
@@ -786,28 +785,28 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   
   # Initial dataset is supplied
   if ds.initfilename != '' and ds.initfilename != None:
-    log.opts['iitem'] = -1  # not really, but default is 0
+    opts['iitem'] = -1  # not really, but default is 0
     printt('Initializing model with data from %s' % ds.initfilename)
     U, S, mu, n, pcts = update_model(ds.initdata, U, S, k, n=0, mu=[],
                                      svdmethod=svdmethod,
                                      missingmethod=missingmethod)
     
   # Doing a full SVD
-  elif log.opts['static'] or log.opts['iitem'] in ('-1','svd','SVD'):
-    log.opts['iitem'] = -1
+  elif opts['static'] or opts['iitem'] in ('-1','svd','SVD'):
+    opts['iitem'] = -1
     printt('Doing initial SVD to get started.')
     U, S, mu, n, pcts = update_model(X, U, S, k, n=0, mu=[],
                                      svdmethod=svdmethod, 
                                      missingmethod=missingmethod)
     
   # Select random item
-  elif log.opts['iitem'] in ('r','R','random','RANDOM'):
+  elif opts['iitem'] in ('r','R','random','RANDOM'):
     randitem = np.random.randint(X.shape[1])
     printt('Selecting random item = %d to get started.'%randitem)
-    log.opts['iitem'] = randitem
+    opts['iitem'] = randitem
   
   # Use dataset mean
-  elif log.opts['iitem'] in ('mean', 'average', 'mu', '-2', -2):
+  elif opts['iitem'] in ('mean', 'average', 'mu', '-2', -2):
     printt('Initializing model to mean and skipping to selection 1')
     mu = nanmean(X, axis=1).reshape(-1,1)
     # if we have missingmethod set to 'ignore', and some features are entirely NaNs,
@@ -823,9 +822,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     S    = np.array([0])
 
     pcts = [1.0]
-    log.opts['iitem'] = -2
+    opts['iitem'] = -2
 
-  log.opts['iitem'] = int(log.opts['iitem'])
+  opts['iitem'] = int(opts['iitem'])
   
   printt('')
   
@@ -861,7 +860,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     # Instead, do a nearest-neighbor search through X based on sels[-1].
     
     if len(whencoiswerefound) > 0 and (whencoiswerefound[-1] == i-1) and \
-        (log.opts['coiaction'] == 'seek'):
+        (opts['coiaction'] == 'seek'):
       printt("Actively searching for the next COI based on item %d"
              % sels[-1])
       ind = select_next_NN(X, ds.data[:,sels[-1]])
@@ -881,7 +880,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     else:
       # If using a static model, pass in oldscores and oldreproj
       # to avoid re-calculating scores
-      if log.opts['static']:
+      if opts['static']:
         ind, scores, reproj = select_next(X, U, mu, scoremethod,
                                           missingmethod, feature_weights,
                                           oldscores=scores, oldreproj=reproj)
@@ -941,25 +940,25 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     ###############################################
     # Plot item using dataset's plotting method.
     label = ds.labels[orig_ind[ind]]
-    if log.opts['kepler']:
-      dc = log.opts['static'] or (len(U) > 0 and U.shape[1] > 1)
-      dsvd = (log.opts['static'] and i == 0) or (len(U) > 0 and U.shape[1] > 1)
-      if log.opts['plot']:
+    if opts['kepler']:
+      dc = opts['static'] or (len(U) > 0 and U.shape[1] > 1)
+      dsvd = (opts['static'] and i == 0) or (len(U) > 0 and U.shape[1] > 1)
+      if opts['plot']:
         ds.plot_item(i, orig_ind[ind], x, r, k, label,
                      U, mu, S, X, pcts, scores, drawsvd=dsvd, drawcloud=dc)
-    elif log.opts['navcam']:
-      if log.opts['plot']:
+    elif opts['navcam']:
+      if opts['plot']:
         ds.save_rec(r, orig_ind[ind], X[:,ind], k)
         ds.plot_item(i, orig_ind[ind], x, r, k, label)
     else:
-      if log.opts['plot']:
+      if opts['plot']:
         ds.plot_item(i, orig_ind[ind], x, r, k, label,
                      U, scores, feature_weights)
     
     ds.write_selections_csv(i, k, orig_ind[ind], label, ind, scores)
 
 
-    if log.opts['decals']:
+    if opts['decals']:
       #####################################################
       # Write a list of selections that are similar to this selection (x).
       # First, score all items with respect to a single-item model of x.
@@ -981,8 +980,8 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
     ###############################################
     # Don't update if class of interest is found in item label
-    if log.opts['coi'] is not None:
-      if log.opts['coi'] in ds.labels[orig_ind[ind]]: 
+    if opts['coi'] is not None:
+      if opts['coi'] in ds.labels[orig_ind[ind]]: 
         do_update = False
         printt("Not updating, it's the class of interest!")
         ncois = ncois + 1
@@ -994,9 +993,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
         #  in select_next().
 
         # If we've hit n_conts, exit
-        if ncois == log.opts['n_coi']:
+        if ncois == opts['n_coi']:
           printt("\nFound class of interest on these picks:\n")
-          if not log.opts['kepler']:
+          if not opts['kepler']:
             for ff in whencoiswerefound: printt(ff)
           else:    
             el = ExoplanetLookup()
@@ -1012,7 +1011,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
     ###############################################
     # Be interactive!
-    if log.opts['interactive']:
+    if opts['interactive']:
       userpref = input("Do you want to add this to the model of "
                        "uninteresting data?\n(Y/N) ")
       printt(userpref)
@@ -1036,11 +1035,11 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
     
     ###############################################
     # Check for static SVD
-    if log.opts['alwaysupdate'] and do_update == False: 
+    if opts['alwaysupdate'] and do_update == False: 
       do_update = True
       printt("Doing an update!")
       
-    if log.opts['static']: do_update = False
+    if opts['static']: do_update = False
           
     ###############################################
     # Update the model
@@ -1080,9 +1079,9 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
 
     ###############################################
     # Plot the top 4 principal components of the new model
-    if len(U) > 0 and log.opts['plot'] and log.opts['dan']:
+    if len(U) > 0 and opts['plot'] and opts['dan']:
       ds.plot_pcs(i, U, mu, k, S)
-    # if log.opts['misr']:
+    # if opts['misr']:
     #   pylab.clf()
     #   pylab.imshow(U.reshape([ds.along_track, -1]))
     #   pylab.show()
@@ -1093,7 +1092,7 @@ def  demud(ds, k, nsel, scoremethod='lowhigh', svdmethod='full',
   # Report on when observations from the class of interest were found (if any)
   if len(whencoiswerefound) > 0:
     printt("\nFound class of interest on these picks:\n")
-    if not log.opts['kepler']:
+    if not opts['kepler']:
       for ff in whencoiswerefound: printt(ff)
     else:    
       el = ExoplanetLookup()
@@ -1122,17 +1121,17 @@ def  generate_feature_weights(d, xvals):
   
   """
   
-  if log.opts['fw'] == 'flat' or log.opts['fw'] == '':
+  if opts['fw'] == 'flat' or opts['fw'] == '':
     return []
-  elif log.opts['fw'] == 'boostlow':  
+  elif opts['fw'] == 'boostlow':  
     return [(1. / (i ** (1. / math.log(d, 2)))) for i in range(1, d+1)]
-  elif log.opts['fw'] == 'boosthigh':
+  elif opts['fw'] == 'boosthigh':
     ocelot = [(1. / (i ** (1. / math.log(d, 2)))) for i in range(1, d+1)]
     ocelot.reverse()
     return ocelot
   else:
     # Assume it's a filename and attempt to read weights from the file
-    return read_feature_weights(log.opts['fw'], xvals)
+    return read_feature_weights(opts['fw'], xvals)
 
   return []
 
@@ -1309,7 +1308,7 @@ def  fw_print():
 # Remake demud.config. 
 def  clean():
 
-  #global log.opts
+  #global opts
 
   # Figure out if we're clobbering an existing config file
   if os.path.exists(os.path.join(os.getcwd(), 'demud.config')):
@@ -1323,7 +1322,7 @@ def  clean():
       exit()
     
     if y.lower() == 'yes please': 
-      if log.opts['fun']:
+      if opts['fun']:
         printt("Certainly!  Thank you for saying please!")
     
   printt("\nWriting to demud.config\n")
@@ -1616,24 +1615,24 @@ def  check_opts(datatypes):
 
   # Check if a function argument was supplied
   global opts, use_max_n
-  if (log.opts['svd_print'] or log.opts['md_print'] or log.opts['clean'] 
-      or log.opts['printk'] or log.opts['score_print'] or log.opts['fw_print']):
-    if len(sys.argv) == 3 and log.opts['fun']:
+  if (opts['svd_print'] or opts['md_print'] or opts['clean'] 
+      or opts['printk'] or opts['score_print'] or opts['fw_print']):
+    if len(sys.argv) == 3 and opts['fun']:
         pass
     elif len(sys.argv) > 2:
       printt("Error: conflicting arguments.  Use -h for help.")
       exit()
-    if log.opts['svd_print']:
+    if opts['svd_print']:
       svd_print()
-    elif log.opts['printk']:
+    elif opts['printk']:
       print_default_k_values()
-    elif log.opts['md_print']:
+    elif opts['md_print']:
       md_print()
-    elif log.opts['fw_print']:
+    elif opts['fw_print']:
       fw_print()
-    elif log.opts['clean']:
+    elif opts['clean']:
       clean()
-    elif log.opts['score_print']:
+    elif opts['score_print']:
       score_print()
     else:
       printt("Python is tired now.  Go bother somebody else.")
@@ -1643,8 +1642,8 @@ def  check_opts(datatypes):
   sum = 0
   selected = None
            
-  for k in log.opts: 
-    if log.opts[k] == True and k in datatypes: 
+  for k in opts: 
+    if opts[k] == True and k in datatypes:
       sum += 1
       selected = k
   
@@ -1653,132 +1652,132 @@ def  check_opts(datatypes):
     exit()
     
   # Check to make sure that --k and --variance are not both specified
-  if log.opts['k'] != -773038 and log.opts['k_var'] != -773038.0:
+  if opts['k'] != -773038 and opts['k_var'] != -773038.0:
     printt("Error: conflicting arguments: --k and --variance.  Use -h for help.")
     exit()
     
   # Check to make sure that --missingdatamethod has an appropriate argument
   mdmethods = ('none', 'ignore', 'zero')
-  if (log.opts['missingdatamethod'] != None):
-    if (log.opts['missingdatamethod'] not in mdmethods):
+  if (opts['missingdatamethod'] != None):
+    if (opts['missingdatamethod'] not in mdmethods):
       printt("Error: missing data method %s not supported." % 
-             log.opts['missingdatamethod'])
+             opts['missingdatamethod'])
       printt("Choose between 'zero', 'ignore', and 'none'.")
       printt("Use --missingdatamethods for more info.")
       exit()
           
   # Check to make sure that --svdmethod has an appropriate argument
-  if log.opts['svdmethod'] != 'increm-brand' and log.opts['svdmethod'] != 'default' and log.opts['increm']:
+  if opts['svdmethod'] != 'increm-brand' and opts['svdmethod'] != 'default' and opts['increm']:
     printt("Error: cannot specify --increm along with different svdmethod.")
     printt("Use --svdmethods for more info.")
     exit()
   
-  if log.opts['svdmethod'] == 'default': log.opts['svdmethod'] = 'full'    
+  if opts['svdmethod'] == 'default': opts['svdmethod'] = 'full'    
   
-  if log.opts['increm']: 
-    log.opts['svdmethod'] = 'increm-brand'
+  if opts['increm']: 
+    opts['svdmethod'] = 'increm-brand'
     printt("Using increm")
     
   svdmethods = ('full', 'increm-ross', 'increm-brand')
-  if (log.opts['svdmethod'] != None):
-    if (log.opts['svdmethod'] not in svdmethods):
-      printt("Error: SVD method %s not supported." % log.opts['svdmethod'])
+  if (opts['svdmethod'] != None):
+    if (opts['svdmethod'] not in svdmethods):
+      printt("Error: SVD method %s not supported." % opts['svdmethod'])
       printt("Choose between 'full', 'increm-ross', and 'increm-brand'.")
       printt("Use --svdmethods for more info.")
       exit()
       
   # Check to make sure that --scoremethod has an appropriate argument
   scoremethods = ('low', 'high', 'lowhigh')
-  if (log.opts['scoremethod'] != None):
-    if (log.opts['scoremethod'] not in scoremethods):
-      printt("Error: score method %s not supported." % log.opts['scoremethod'])
+  if (opts['scoremethod'] != None):
+    if (opts['scoremethod'] not in scoremethods):
+      printt("Error: score method %s not supported." % opts['scoremethod'])
       printt("Choose between 'low', 'high', and 'lowhigh'.")
       printt("Use --scoremethods for more info.")
       exit()
   
   # Check to make sure that --shotnoisefilt was supplied only with a valid argument
-  if log.opts['shotfilt'] > 0:
-    if log.opts['shotfilt'] < 3:
+  if opts['shotfilt'] > 0:
+    if opts['shotfilt'] < 3:
       printt('Error: Shot noise filter is only meaningful for values >= 3.  Odd values are best.')
       exit()
-    if not log.opts['chemcam'] and not log.opts['ucis']:
+    if not opts['chemcam'] and not opts['ucis']:
       printt('Error: Shot noise filter is only used for ChemCam (-c) or UCIS (-u) data.')
       exit()
 
   # Check to make sure that --fft was supplied only with a valid argument
-  if (log.opts['fft']):
-    if not (log.opts['kepler']):
+  if (opts['fft']):
+    if not (opts['kepler']):
       printt("Error: FFT not supported with datatype %s" % selected)
       exit()
       
   # Check to make sure that --lookup was only supplied with a valid argument
-  if (log.opts['lookup']):
-    if not (log.opts['kepler']):
+  if (opts['lookup']):
+    if not (opts['kepler']):
       printt("Error: --lookup supplied with invalid datatype.  Use -h for help.")
       exit()
       
   # Check to make sure that --no-report was only supplied with a valid argument
-  if not (log.opts['report']):
-    if not (log.opts['glass'] or log.opts['iris'] or log.opts['ecoli'] or 
-            log.opts['abalone'] or log.opts['isolet']):
+  if not (opts['report']):
+    if not (opts['glass'] or opts['iris'] or opts['ecoli'] or 
+            opts['abalone'] or opts['isolet']):
       printt("Error: --no-report supplied with invalid datatype.  Use -h for help.")
       exit()
   if selected not in ['glass', 'iris', 'ecoli', 'abalone', 'isolet']:
-    log.opts['report'] = False
+    opts['report'] = False
       
   # Check to make sure that a valid value of k or k_var and n were given
-  if (log.opts['k'] != -773038 and log.opts['k'] < 1):
+  if (opts['k'] != -773038 and opts['k'] < 1):
     printt("Error: bad argument to --k.  Number of PCs must be at least 1.")
     exit()
-  if (log.opts['k_var'] != -773038.0 and (log.opts['k_var'] < 0 or log.opts['k_var'] > 1)):
+  if (opts['k_var'] != -773038.0 and (opts['k_var'] < 0 or opts['k_var'] > 1)):
     printt("Error: bad argument to --variance.  Must be between 0.0 and 1.0.")
     exit()
-  if (log.opts['n'] != -773038 and log.opts['n'] < 1):
+  if (opts['n'] != -773038 and opts['n'] < 1):
     printt("Error: bad argument to --n.  Number of iterations must be at least 1.")
     exit()
 
   # Check specified sol number for nonnegative and appropriate data type
-  if log.opts['sol'] > -1 and log.opts['sols'] != None:
+  if opts['sol'] > -1 and opts['sols'] != None:
     printt("Error: Can only use either -sol or -sols, not both.")
     exit()
-  elif log.opts['sol'] > -1:
-    if not log.opts['chemcam']:
+  elif opts['sol'] > -1:
+    if not opts['chemcam']:
       printt("Error: Sol number specification is only supported for ChemCam (-c).")
       exit()
     else:
-      log.opts['start_sol'] = log.opts['sol']
-      log.opts['end_sol']   = log.opts['sol']
+      opts['start_sol'] = opts['sol']
+      opts['end_sol']   = opts['sol']
   # If a sol range was specified, use that
-  elif log.opts['sols'] != None:
-    svals = log.opts['sols'].split('-')
+  elif opts['sols'] != None:
+    svals = opts['sols'].split('-')
     if len(svals) != 2:
-      printt("Error parsing start and end sols from %s (format: s1-s2)." % log.opts['sols'])
+      printt("Error parsing start and end sols from %s (format: s1-s2)." % opts['sols'])
       exit()
     (start, end) = list(map(int, svals))
     if start >= 0 and end >= 0 and start <= end:
       printt("Analyzing data from sols %d-%d, inclusive." % (start, end))
-      log.opts['start_sol'] = start
-      log.opts['end_sol']   = end
+      opts['start_sol'] = start
+      opts['end_sol']   = end
     else:
-      printt("Error parsing start and end sols from %s." % log.opts['sols'])
+      printt("Error parsing start and end sols from %s." % opts['sols'])
       exit()
    
   # Check to see if n-coi was given
-  if (log.opts['n_coi'] != -773038 and log.opts['coi'] == None):
+  if (opts['n_coi'] != -773038 and opts['coi'] == None):
     printt("Error: cannot supply --n-coi without specifying --coi.")
     exit()
-  if (log.opts['n_coi'] > 0 and (log.opts['n_coi'] >= log.opts['n'])):
+  if (opts['n_coi'] > 0 and (opts['n_coi'] >= opts['n'])):
     use_max_n = True
   # Check the coiaction
-  if (log.opts['coiaction'] and log.opts['coi'] == None):
+  if (opts['coiaction'] and opts['coi'] == None):
     printt("Eror: cannot specify --coi-action without specifying --coi.")
     exit()
-  if (log.opts['coiaction'] not in [None, 'keep', 'seek']):
+  if (opts['coiaction'] not in [None, 'keep', 'seek']):
     printt("Error: --coi-action must be specified as 'keep' or 'seek'.")
     exit()
     
   # Check to see if all was given
-  if (log.opts['all']):
+  if (opts['all']):
     printt("Using the whole data set.")
     use_max_n = True
 
@@ -1988,7 +1987,7 @@ def  optimize_k(ds, v):
   printt("\nChose k = %d, capturing %5.2f%% of the data variance\n" % \
         (minind + 1, 100 * cumpercents[minind]))
   
-  if log.opts['pause']: input("Press enter to continue\n")
+  if opts['pause']: input("Press enter to continue\n")
   
   return minind + 1
   
@@ -2094,10 +2093,10 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## CHEMCAM DATA SET
   elif data_choice == 'chemcam' or data_choice.startswith('libs'):
     ds = LIBSData(data_files[0], data_files[1],
-                  startsol       = log.opts['start_sol'],
-                  endsol         = log.opts['end_sol'],
-                  initpriorsols  = log.opts['init_prior_sols'],
-                  shotnoisefilt  = log.opts['shotfilt'])
+                  startsol       = opts['start_sol'],
+                  endsol         = opts['end_sol'],
+                  initpriorsols  = opts['init_prior_sols'],
+                  shotnoisefilt  = opts['shotfilt'])
   ## FINESSE DATA SET
   elif data_choice == 'finesse':
     ds = FINESSEData(data_files[0])
@@ -2182,8 +2181,8 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
   ## UCIS (ENVI) DATA SET
   elif data_choice == 'ucis':
     ds = ENVIData(data_files[0], 
-                  shotnoisefilt = log.opts['shotfilt'],
-                  fwfile        = log.opts['fw'])
+                  shotnoisefilt = opts['shotfilt'],
+                  fwfile        = opts['fw'])
   else:
     ## should never get here
     printt("Invalid data set choice.")
@@ -2203,10 +2202,11 @@ def load_data(data_choice, data_files, sol_number = None, initsols = None, scale
 def  main():
 
   printt("DEMUD version " + __VERSION__ + "\n")
-  
-  log.opts = parse_args()
-  log.opts['start_sol'] = None
-  log.opts['end_sol']   = None
+
+  global opts  # So any updates stay visible elsewhere
+  opts = parse_args()
+  opts['start_sol'] = None
+  opts['end_sol']   = None
   
   ###########################################################################
   ## Check to ensure a valid set of arguments was given.
@@ -2219,16 +2219,16 @@ def  main():
   
   data_choice = check_opts(datatypes)
   
-  (config, fft) = (log.opts['config'], log.opts['fft'])
-  (lookup, report) = (log.opts['lookup'], log.opts['report'])   
-  (q, sm, mm) = (log.opts['svdmethod'], 
-      log.opts['scoremethod'], log.opts['missingdatamethod'])
+  (config, fft) = (opts['config'], opts['fft'])
+  (lookup, report) = (opts['lookup'], opts['report'])   
+  (q, sm, mm) = (opts['svdmethod'], 
+      opts['scoremethod'], opts['missingdatamethod'])
   
   ###########################################################################
   ## Check for config file and read it in
 
   # Read in config file
-  config = 'demud.config' if log.opts['config'] == None else log.opts['config']
+  config = 'demud.config' if opts['config'] == None else opts['config']
   
   if check_if_files_exist([config], 'config') == False:
     sys.exit(1)
@@ -2264,16 +2264,16 @@ def  main():
     ds.fftransform()
     fw = finish_initialization(ds, action="performing FFT")
 
-  k = log.opts['k'] if log.opts['k'] != -773038 else default_k_values[data_choice]
-  if log.opts['k_var'] != -773038.0: k = optimize_k(ds, log.opts['k_var'])
-  n = log.opts['n'] if log.opts['n'] != -773038 else default_n_value
-  if log.opts['n'] == -1: n = ds.data.shape[1]
+  k = opts['k'] if opts['k'] != -773038 else default_k_values[data_choice]
+  if opts['k_var'] != -773038.0: k = optimize_k(ds, opts['k_var'])
+  n = opts['n'] if opts['n'] != -773038 else default_n_value
+  if opts['n'] == -1: n = ds.data.shape[1]
 
   # Run DEMUD!
   sels, sels_idx = demud(ds, k=k, nsel=n, scoremethod=sm, svdmethod=q,
                          missingmethod=mm, feature_weights=fw,
-                         start_sol=log.opts['start_sol'],
-                         end_sol=log.opts['end_sol'])
+                         start_sol=opts['start_sol'],
+                         end_sol=opts['end_sol'])
 
   # Report the results
   if report:
@@ -2341,10 +2341,11 @@ def  main():
   printt("Total elapsed processor time:",
          '%.1f sec' % time.perf_counter())
 
-  log.logfile.close()
-  print("Wrote log to %s\n" % log.logfilename)
+  global logfile
+  logfile.close()
+  print("Wrote log to %s\n" % logfilename)
 
-  if (log.opts['fun']):
+  if (opts['fun']):
     print(base64.b64decode('VGhhbmsgeW91LCBjb21lIGFnYWlu'))
     print
 
