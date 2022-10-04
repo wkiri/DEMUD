@@ -18,7 +18,7 @@
 
 import os, sys, re
 import csv, numpy, pylab
-from dataset import Dataset
+from .dataset import Dataset
 
 class UCIDataset(Dataset):
   # Supersubclass for data sets

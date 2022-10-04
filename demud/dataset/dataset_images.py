@@ -18,12 +18,13 @@
 
 import os, sys, fnmatch
 import numpy as np
-from dataset import *
+import pylab
+from .dataset import Dataset
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import imread
 import glob
-from log import printt
+from ..log.log import printt
 
 def progbar(current, to, width=40, show=True):
     percent = float(current) / float(to)

@@ -22,7 +22,7 @@ import numpy as np
 import pylab
 from scipy.stats import nanmean
 from pyhdf import HDF, SD
-from dataset import Dataset
+from .dataset import Dataset
 import matplotlib
 #import matplotlib.plyplot as plt
 import datetime

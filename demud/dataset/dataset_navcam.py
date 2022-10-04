@@ -23,7 +23,7 @@ import matplotlib.cm as cm
 import matplotlib as mpl
 import pylab
 import pickle as pickle
-from dataset import *
+from .dataset import Dataset
 
 # For color_mask_img function
 from mpl_toolkits.axes_grid1 import make_axes_locatable

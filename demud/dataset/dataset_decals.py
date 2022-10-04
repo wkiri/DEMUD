@@ -21,7 +21,7 @@
 import os, sys, re
 import numpy as np
 import pyfits, pylab
-from dataset import Dataset
+from .dataset import Dataset
 
 class DECaLSData(Dataset):
 

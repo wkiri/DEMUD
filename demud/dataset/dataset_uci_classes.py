@@ -2,7 +2,7 @@
 # File: dataset_uci_classes.py
 # Author: James Bedell, 8/20/13
 #
-# Specififc details for UCI CSV data sets
+# Specific details for UCI CSV data sets
 #
 # Copyright 2013-2015, by the California Institute of Technology. ALL
 # RIGHTS RESERVED.  United States Government Sponsorship
@@ -18,7 +18,7 @@
 
 import os, sys
 import csv, numpy, pylab
-from dataset_uci import UCIDataset
+from .dataset_uci import UCIDataset
 
 ################################################################################
 #

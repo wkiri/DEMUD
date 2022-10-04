@@ -19,8 +19,8 @@
 
 import os, sys, re
 import csv, numpy, pylab, math
-from dataset import Dataset
-from log import printt
+from .dataset import Dataset
+#from ..log.log import log.printt
 
 
 class FloatDataset(Dataset):

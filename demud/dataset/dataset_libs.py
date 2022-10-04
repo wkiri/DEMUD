@@ -19,8 +19,8 @@
 import os, sys, pickle, fnmatch
 import pylab, csv, math, copy
 import numpy as np
-from dataset import *
-from log import printt
+from .dataset import Dataset
+from ..log.log import printt
 
 ################### LIBS ##############
 class LIBSData(Dataset):

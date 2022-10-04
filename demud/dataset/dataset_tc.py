@@ -20,7 +20,7 @@ import os, sys, pickle
 import numpy as np
 import pylab, math
 import Image
-from dataset import *
+from .dataset import Dataset
 
 ################### TEXTURECAM ##############
 class TCData(Dataset):

@@ -21,7 +21,7 @@ from PIL import Image
 import pyfits
 import scipy, pylab, math
 from scipy import signal
-from dataset import *
+from .dataset import Dataset
 
 ################### ENVI ##############
 class IRSData(Dataset):

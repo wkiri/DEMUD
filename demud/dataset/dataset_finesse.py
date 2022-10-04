@@ -18,7 +18,7 @@
 
 import os, sys, pickle, fnmatch
 import pylab, math
-from dataset import *
+from .dataset import Dataset
 
 ################### FINESSE ##############
 class FINESSEData(Dataset):

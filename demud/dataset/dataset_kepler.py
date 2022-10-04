@@ -27,7 +27,7 @@ import matplotlib.ticker
 import matplotlib.cm as cm
 # import pylab
 # import scipy.stats as ss
-from dataset import Dataset
+from .dataset import Dataset
 import glob, optparse
 
 import warnings

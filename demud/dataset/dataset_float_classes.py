@@ -19,7 +19,7 @@
 import os, sys
 import csv,  pylab
 import numpy as np
-from dataset_float import FloatDataset
+from .dataset_float import FloatDataset
 
 ###############################################################################
 #

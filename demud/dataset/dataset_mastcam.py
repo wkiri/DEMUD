@@ -29,7 +29,7 @@ import matplotlib.cm as cm
 import cv2
 # import pylab
 # import scipy.stats as ss
-from dataset import Dataset
+from .dataset import Dataset
 import glob, optparse
 import pylab
 import matplotlib

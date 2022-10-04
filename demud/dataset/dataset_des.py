@@ -24,7 +24,7 @@ import math
 import matplotlib
 matplotlib.use('Agg') 
 import pylab
-from dataset import Dataset
+from .dataset import Dataset
 
 class DESData(Dataset):
 

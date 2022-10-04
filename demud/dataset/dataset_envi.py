@@ -23,10 +23,10 @@ import pylab, math, struct, pickle
 import matplotlib
 import h5py
 from matplotlib.patches import Rectangle
-from dataset import *
-from dataset_libs import LIBSData
+from .dataset import Dataset
+from .dataset_libs import LIBSData
 #from nims_data import NimsQube
-from log import printt
+from ..log.log import printt
 
 ################### ENVI ##############
 class ENVIData(Dataset):

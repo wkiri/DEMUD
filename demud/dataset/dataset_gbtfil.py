@@ -19,7 +19,7 @@
 import os, fnmatch, sys, pickle
 import numpy as np
 import pylab
-from dataset import Dataset
+from .dataset import Dataset
 import matplotlib
 import datetime
 
