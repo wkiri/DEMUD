@@ -27,7 +27,7 @@ You should be able to install demud (virtual environment suggested) with:
 
    `$ pip install -r requirements.txt`
    
-   `$ python setup.py install`
+   `$ pip install .`
 
 That will make the `demud` console script available system-wide.
 
