@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-execfile('demud/version.py')  # brings in a "version" variable
+exec(open('demud/version.py').read())  # brings in a "version" variable
 
 description = ''
 with open('README.md') as f:
